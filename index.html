@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOCAFACILMOTOS | Locação com Opção de Compra</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Estilos Personalizados Separados -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Meta Pixel Code -->
+    <script>
+        ! function (f, b, e, v, n, t, s) {
+            if (f.fbq) return;
+            n = f.fbq = function () {
+                n.callMethod ?
+                    n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n;
+            n.push = n;
+            n.loaded = !0;
+            n.version = '2.0';
+            n.queue = [];
+            t = b.createElement(e);
+            t.async = !0;
+            t.src = v;
+            s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1431840288981017');
+        fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+            src="https://www.facebook.com/tr?id=1431840288981017&ev=PageView&noscript=1" /></noscript>
+    <!-- End Meta Pixel Code -->
+</head>
+
+<body class="bg-white text-gray-800 font-sans antialiased">
+
+    <!-- Navegação -->
+    <nav class="flex justify-between items-center py-5 px-6 md:px-12 max-w-7xl mx-auto">
+        <div class="text-3xl font-extrabold text-gray-900 tracking-tighter">
+            LOCAFACIL<span class="text-orange-600">MOTOS</span>
+        </div>
+        <div class="hidden md:flex space-x-8 font-semibold text-sm text-gray-600">
+            <a href="#planos" class="hover:text-orange-600 transition">Planos</a>
+            <a href="#vantagens" class="hover:text-orange-600 transition">Vantagens</a>
+            <a href="#faq" class="hover:text-orange-600 transition">Dúvidas</a>
+        </div>
+        <button onclick="abrirModal()"
+            class="bg-orange-600 text-white font-bold py-2.5 px-6 rounded-full hover:bg-orange-700 transition shadow-md">
+            Alugar Agora
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="bg-black text-white relative overflow-hidden">
+        <div
+            class="absolute top-0 right-0 w-1/2 h-full bg-orange-600 opacity-20 transform skew-x-12 translate-x-32 hidden md:block">
+        </div>
+
+        <div
+            class="max-w-7xl mx-auto px-6 md:px-12 py-20 lg:py-32 flex flex-col md:flex-row items-center relative z-10">
+            <div class="md:w-1/2 flex justify-center">
+                <!-- URL direta do Supabase para a moto Honda -->
+                <img src="https://xbjwhjwqwmllbrybpycd.supabase.co/storage/v1/object/public/frota/moto-honda.png"
+                    alt="Moto Honda" class="w-full max-w-lg drop-shadow-2xl -mt-16 md:-mt-28">
+            </div>
+            <div class="md:w-1/2 md:pr-12 text-center md:text-left mb-12 md:mb-0">
+                <h1 class="text-5xl md:text-6xl font-extrabold mb-6 uppercase leading-tight">
+                    Sua moto <br><span class="text-orange-500">pronta para rodar.</span>
+                </h1>
+                <div
+                    class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center md:justify-start">
+                    <button onclick="abrirModal()"
+                        class="bg-orange-600 text-white font-bold py-4 px-8 rounded-full hover:bg-orange-700 transition text-center shadow-[0_0_15px_rgba(234,88,12,0.5)]">
+                        Escolher minha Moto
+                    </button>
+                    <a href="#planos"
+                        class="bg-transparent border-2 border-white text-white font-bold py-4 px-8 rounded-full hover:bg-white hover:text-black transition text-center">
+                        Ver Planos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Planos / Motos Disponíveis -->
+    <section id="planos" class="py-24 bg-white relative">
+        <div class="max-w-7xl mx-auto px-6 md:px-12 text-center">
+            <span class="text-gray-500 font-bold tracking-widest uppercase text-sm">Modelos Disponíveis</span>
+            <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mt-2 mb-16">Todos os planos para atender você
+            </h2>
+
+            <!-- Os cards das motos serão injetados dinamicamente aqui pelo backend/JS -->
+            <div id="grid-motos" class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto"></div>
+        </div>
+    </section>
+
+    <!-- Vantagens -->
+    <section id="vantagens" class="py-24 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6 md:px-12">
+            <div class="text-center mb-16">
+                <span class="text-orange-600 font-bold tracking-widest uppercase text-sm">Por que a LocaFácil?</span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mt-2">Condições exclusivas para você
+                    faturar</h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-10">
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="text-orange-600 text-4xl mb-4">🏍️</div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-900">Opção de compra</h3>
+                    <p class="text-gray-600 leading-relaxed">Não jogue dinheiro fora. No final do seu contrato de
+                        locação, a moto pode ser sua.</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="text-orange-600 text-4xl mb-4">⚡</div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-900">Aprovação Descomplicada</h3>
+                    <p class="text-gray-600 leading-relaxed">Nossa análise é focada no seu perfil como motorista de
+                        aplicativo. Processo rápido, digital e sem burocracia para você pegar a chave o quanto antes.
+                    </p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="text-orange-600 text-4xl mb-4">🛡️</div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-900">Frota Protegida</h3>
+                    <p class="text-gray-600 leading-relaxed">Motos equipadas com telemetria avançada e bloqueio remoto.
+                        Trabalhe tranquilo sabendo que seu instrumento de trabalho tem suporte.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="bg-[#0a0a0a] text-white pt-24 pb-12 border-t border-gray-900">
+        <div class="max-w-4xl mx-auto px-6 md:px-12 mb-20">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-12">Perguntas Frequentes</h2>
+
+            <div class="space-y-4">
+                <div class="bg-[#111] border border-gray-800 rounded-lg p-6">
+                    <h3 class="font-bold text-lg text-orange-500 mb-2">Como funciona a opção de compra?</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">No modelo de opção de compra, ao finalizar o
+                        pagamento das parcelas semanais do seu contrato (ex: 42 meses), nós emitimos o documento de
+                        transferência para o seu NOME.</p>
+                </div>
+                <div class="bg-[#111] border border-gray-800 rounded-lg p-6">
+                    <h3 class="font-bold text-lg text-orange-500 mb-2">A manutenção é inclusa?</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Como a moto será sua no final do plano, a
+                        manutenção preventiva e de desgaste (óleo, relação, freios) fica sob sua responsabilidade. Isso
+                        garante que você cuide do que é seu desde o primeiro dia, mantendo o seu patrimônio em dia.</p>
+                </div>
+                <div class="bg-[#111] border border-gray-800 rounded-lg p-6">
+                    <h3 class="font-bold text-lg text-orange-500 mb-2">Preciso ter nome limpo?</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Nossa análise de crédito é flexível e focada no seu
+                        perfil como motorista de aplicativo. Faça o cadastro e analisaremos o seu caso individualmente.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 border-t border-gray-800 pt-8 mt-12">
+            <div class="mb-4 md:mb-0 text-center md:text-left">
+                <p class="font-bold text-gray-400 text-sm mb-1">LOCAFACILMOTOS LTDA</p>
+            </div>
+            <div class="text-center md:text-right">
+                <p>© 2026 - Todos os direitos reservados</p>
+                <p class="mt-1">Feito para quem faz o corre acontecer.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal de Região -->
+    <div id="modal-regiao"
+        class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-50 transition-opacity">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 border-t-4 border-orange-600">
+            <h3 class="text-2xl font-black text-gray-900 uppercase mb-2">Onde você vai rodar?</h3>
+            <p class="text-gray-500 text-sm mb-6">Selecione sua cidade para vermos a disponibilidade de motos no pátio.
+            </p>
+
+            <select id="select-cidade"
+                class="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-gray-700 mb-4 cursor-pointer">
+                <option value="" disabled selected>Selecione sua cidade...</option>
+                <option value="santo_andre">Santo André</option>
+                <option value="outra">Outra Cidade</option>
+            </select>
+
+            <p id="msg-fora-area" class="text-red-500 text-xs font-bold mb-4 hidden">Poxa Infelizmente no momento nosso
+                seguro só aceita locatários de Santo André. Quando ampliar entraremos em contato.</p>
+
+            <div class="flex space-x-3">
+                <button onclick="fecharModal()"
+                    class="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-300 transition">Cancelar</button>
+                <button onclick="validarRegiao()"
+                    class="flex-1 bg-orange-600 text-white font-bold py-3 rounded-xl hover:bg-orange-700 transition shadow-md">Continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Flutuante do WhatsApp -->
+    <a href="https://wa.me/5511996558239?text=Olá!%20Gostaria%20de%20alugar%20uma%20moto." target="_blank"
+        rel="noopener noreferrer"
+        class="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-4 md:p-5 rounded-full shadow-[0_0_20px_rgba(37,211,102,0.6)] hover:bg-[#128C7E] transition-all duration-300 animate-bounce flex items-center justify-center border-4 border-white hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="w-10 h-10 md:w-12 md:h-12 fill-current">
+            <path
+                d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zM223.9 414.8c-32 0-63.1-8.5-90.6-24.6l-6.5-3.9-67.3 17.7 18-65.6-4.3-6.8C54.7 296 43 260.6 43 223.9 43 124.3 124.3 43 223.9 43c48.3 0 93.7 18.8 127.8 52.9 34.1 34.1 52.9 79.5 52.9 127.8 0 99.6-81 180.8-180.7 180.8zm99.1-135.5c-5.4-2.7-32-15.8-37-17.6-5-1.9-8.6-2.7-12.2 2.7-3.6 5.4-14 17.6-17.2 21.2-3.2 3.6-6.3 4.1-11.8 1.4-5.4-2.7-22.8-8.4-43.4-26.8-16.1-14.3-26.9-32-30.1-37.4-3.2-5.4-.3-8.4 2.4-11.1 2.5-2.5 5.4-6.3 8.1-9.5 2.7-3.2 3.6-5.4 5.4-9 1.8-3.6.9-6.8-.5-9.5-1.4-2.7-12.2-29.4-16.7-40.3-4.4-10.7-8.8-9.2-12.2-9.4-3.2-.2-6.8-.2-10.4-.2-3.6 0-9.5 1.4-14.5 6.8-5 5.4-19 18.5-19 45.1s19.5 52.2 22.2 55.8c2.7 3.6 38.1 58.2 92.3 81.6 12.9 5.6 23 8.9 30.9 11.4 13 4.1 24.8 3.5 34.2 2.1 10.5-1.6 32-13 36.5-25.6 4.5-12.6 4.5-23.4 3.2-25.6-1.4-2.1-5-3.5-10.4-6.2z" />
+        </svg>
+    </a>
+
+    <!-- Scripts da aplicação em módulo -->
+    <script type="module" src="js/index.js"></script>
+</body>
+
+</html>

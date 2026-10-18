@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alugue sua Moto | LOCAFACILMOTOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Meta Pixel Code -->
+    <script>
+        ! function (f, b, e, v, n, t, s) {
+            if (f.fbq) return;
+            n = f.fbq = function () {
+                n.callMethod ?
+                    n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n;
+            n.push = n;
+            n.loaded = !0;
+            n.version = '2.0';
+            n.queue = [];
+            t = b.createElement(e);
+            t.async = !0;
+            t.src = v;
+            s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1431840288981017');
+        fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+            src="https://www.facebook.com/tr?id=1431840288981017&ev=PageView&noscript=1" /></noscript>
+    <!-- End Meta Pixel Code -->
+    <style>
+        body {
+            border-top: 5px solid #ea580c;
+            background-color: #f3f4f6;
+        }
+
+        .passo-container {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .passo-ativo {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .step-completed {
+            background-color: #ea580c;
+            color: #fff;
+            border-color: #ea580c;
+        }
+
+        .step-active {
+            background-color: #000;
+            color: #fff;
+            border-color: #000;
+        }
+
+        .step-inactive {
+            background-color: #fff;
+            color: #9ca3af;
+            border-color: #e5e7eb;
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased text-gray-800">
+
+    <div class="bg-white py-4 shadow-sm text-center relative border-b border-gray-200">
+        <a href="https://locafacilmotos.com.br"
+            class="absolute left-4 top-5 text-gray-400 hover:text-orange-600 font-bold text-sm flex items-center">
+            <span class="mr-1">←</span> Voltar
+        </a>
+        <div class="text-2xl font-black tracking-tighter">
+            LOCAFACIL<span class="text-orange-600">MOTOS</span>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-6 py-8" id="stepper-header">
+        <div class="flex items-center justify-between relative">
+            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                <div class="w-full h-0.5 bg-gray-200"></div>
+            </div>
+            <div class="relative flex flex-col items-center">
+                <div id="bolinha-1"
+                    class="w-8 h-8 flex items-center justify-center rounded-full border-2 font-bold step-active z-10 text-sm">
+                    1</div>
+                <span
+                    class="absolute -bottom-6 text-[10px] font-bold uppercase text-gray-900 whitespace-nowrap">Moto</span>
+            </div>
+            <div class="relative flex flex-col items-center">
+                <div id="bolinha-2"
+                    class="w-8 h-8 flex items-center justify-center rounded-full border-2 font-bold step-inactive z-10 text-sm">
+                    2</div>
+                <span id="texto-passo-2"
+                    class="absolute -bottom-6 text-[10px] font-bold uppercase text-gray-400 whitespace-nowrap">Plano</span>
+            </div>
+            <div class="relative flex flex-col items-center">
+                <div id="bolinha-3"
+                    class="w-8 h-8 flex items-center justify-center rounded-full border-2 font-bold step-inactive z-10 text-sm">
+                    3</div>
+                <span id="texto-passo-3"
+                    class="absolute -bottom-6 text-[10px] font-bold uppercase text-gray-400 whitespace-nowrap">Ficha</span>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-4xl mx-auto px-4 pb-24">
+
+        <!-- PASSO 1: VITRINE DINÂMICA DE MODELOS & ESTOQUE -->
+        <div id="passo-1" class="passo-container passo-ativo pt-4">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-2 uppercase">Escolha a Moto</h2>
+            </div>
+            
+            <div id="grid-vitrine-modelos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <p class="text-center text-gray-500 font-bold col-span-full py-8 text-xs uppercase animate-pulse">
+                    Consultando motos disponíveis no pátio...
+                </p>
+            </div>
+        </div>
+
+        <!-- PASSO 2: PLANOS -->
+        <div id="passo-2" class="passo-container pt-4">
+            <div class="text-center mb-8 relative">
+                <button onclick="voltarPara(1)"
+                    class="absolute left-0 top-1 text-gray-400 hover:text-orange-600 font-bold text-sm">←
+                    Voltar</button>
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-2 uppercase">Selecione o Plano</h2>
+                <p class="text-gray-500 font-medium">Moto: <span id="badge-moto"
+                        class="font-bold text-orange-600"></span></p>
+            </div>
+            <div id="grid-planos" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto"></div>
+        </div>
+
+        <!-- PASSO 3: CADASTRO DE INTERESSE -->
+        <div id="passo-3" class="passo-container pt-4 max-w-2xl mx-auto">
+            <div class="text-center mb-8 relative">
+                <button onclick="voltarPara(2)"
+                    class="absolute left-0 top-1 text-gray-400 hover:text-orange-600 font-bold text-sm">←
+                    Voltar</button>
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-2 uppercase">Cadastro de Interesse</h2>
+                <p class="text-gray-500 font-medium">Preenchimento obrigatório de todos os campos.</p>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100">
+                <div class="space-y-5">
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Nome
+                            Completo</label>
+                        <input type="text" id="form-nome" required
+                            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none uppercase font-bold text-sm"
+                            placeholder="DIGITE SEU NOME COMPLETO">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">CPF</label>
+                            <input type="text" id="form-cpf" required
+                                class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-bold text-sm"
+                                placeholder="000.000.000-00">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Data de
+                                Nascimento</label>
+                            <input type="date" id="form-nascimento" required
+                                class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-bold text-sm text-gray-700">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">E-mail</label>
+                            <input type="email" id="form-email" required
+                                class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-bold text-sm"
+                                placeholder="seu@email.com">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">WhatsApp
+                                / Celular</label>
+                            <input type="text" id="form-telefone" required
+                                class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-bold text-sm"
+                                placeholder="(11) 90000-0000">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Endereço
+                            Residencial Completo</label>
+                        <input type="text" id="form-endereco" required
+                            class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none font-bold text-sm uppercase"
+                            placeholder="RUA, NÚMERO, BAIRRO - CIDADE">
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-100">
+                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">
+                            Foto da CNH <span class="text-red-600 font-black">(Aberto com QR Code)</span>
+                        </label>
+                        <input type="file" id="file-cnh" required accept="image/*, application/pdf"
+                            class="w-full p-2 border border-gray-200 bg-gray-50 rounded-lg text-sm font-bold text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-orange-100 file:text-orange-700 cursor-pointer">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">
+                            Comprovante de Endereço <span class="text-red-600 font-black">(Em seu nome)</span>
+                        </label>
+                        <input type="file" id="file-endereco" required accept="image/*,application/pdf"
+                            class="w-full p-2 border border-gray-200 bg-gray-50 rounded-lg text-sm font-bold text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-orange-100 file:text-orange-700 cursor-pointer">
+                    </div>
+                    <div
+                        class="bg-orange-50 border border-orange-200 p-4 rounded-xl mt-2 flex items-start gap-3 shadow-sm">
+                        <input type="checkbox" id="form-caucao" required
+                            class="mt-1 w-6 h-6 text-orange-600 border-gray-300 rounded focus:ring-orange-500 cursor-pointer accent-orange-600">
+                        <label for="form-caucao"
+                            class="text-xs font-black text-gray-900 cursor-pointer uppercase leading-relaxed">
+                            Disponho do valor da caução + 1ª semana (Total: R$ 1.000,00)
+                        </label>
+                    </div>
+                    <button id="btn-enviar" onclick="finalizarCadastro()"
+                        class="w-full bg-orange-600 text-white font-black text-lg py-5 rounded-xl hover:bg-orange-700 transition shadow-lg mt-4 uppercase tracking-wide">
+                        Enviar Ficha
+                    </button>
+                    <p id="msg-erro-form" class="text-red-500 text-xs font-bold text-center mt-2 hidden">⚠️ Todos os
+                        campos e fotos são obrigatórios.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PASSO 4: SUCESSO -->
+        <div id="passo-4" class="passo-container pt-16 text-center">
+            <div
+                class="w-20 h-20 bg-green-500 text-white rounded-full flex items-center justify-center text-4xl mx-auto mb-6 shadow-lg shadow-green-200">
+                ✓</div>
+            <h2 class="text-4xl font-extrabold text-gray-900 mb-4 uppercase">Ficha na Fila de Análise!</h2>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-md mx-auto">
+                <p class="text-gray-600 text-base leading-relaxed font-medium">
+                    Nossa equipe avalia os Cadastros <strong>uma vez ao dia</strong>. <br><br>
+                    Se o seu perfil for aprovado, chamaremos você no WhatsApp cadastrado.
+                </p>
+                <a href="https://locafacilmotos.com.br"
+                    class="block mt-6 text-orange-600 font-bold uppercase text-sm hover:underline">Voltar para o
+                    site</a>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- SCRIPTS DE INTEGRAÇÃO COM A API CENTRALIZADA -->
+    <script type="module">
+        import { API_BASE } from './js/api.js';
+
+        let estadoFunil = {
+            moto: '',
+            plano: '',
+            valor: ''
+        };
+
+        window.mostrarPasso = function(numero) {
+            document.querySelectorAll('.passo-container').forEach(el => el.classList.remove('passo-ativo'));
+            document.getElementById(`passo-${numero}`).classList.add('passo-ativo');
+            atualizarStepper(numero);
+            window.scrollTo(0, 0);
+        };
+
+        window.voltarPara = function(numero) {
+            mostrarPasso(numero);
+        };
+
+        function atualizarStepper(passoAtual) {
+            for (let i = 1; i <= 3; i++) {
+                const bolinha = document.getElementById(`bolinha-${i}`);
+                const texto = document.getElementById(`texto-passo-${i}`);
+                if (!bolinha) continue;
+
+                bolinha.className =
+                    "w-8 h-8 flex items-center justify-center rounded-full border-2 font-bold z-10 text-sm transition-colors";
+                if (i < passoAtual) {
+                    bolinha.classList.add('step-completed');
+                    bolinha.innerHTML = '✓';
+                    if (texto) texto.classList.replace('text-gray-400', 'text-gray-900');
+                } else if (i === passoAtual) {
+                    bolinha.classList.add('step-active');
+                    bolinha.innerHTML = i;
+                    if (texto) texto.classList.replace('text-gray-400', 'text-gray-900');
+                } else {
+                    bolinha.classList.add('step-inactive');
+                    bolinha.innerHTML = i;
+                    if (texto) texto.classList.replace('text-gray-900', 'text-gray-400');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', carregarEstoqueVitrine);
+
+        async function carregarEstoqueVitrine() {
+            const grid = document.getElementById('grid-vitrine-modelos');
+            if (!grid) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/agendamento/motos-disponiveis`);
+                const motosAgrupadas = await response.json();
+
+                if (!motosAgrupadas || motosAgrupadas.length === 0) {
+                    grid.innerHTML = `<p class="text-center text-gray-500 font-bold col-span-full text-sm uppercase">Nenhuma moto disponível no pátio no momento.</p>`;
+                    return;
+                }
+
+                grid.innerHTML = '';
+
+                motosAgrupadas.forEach(item => {
+                    const badgeStatus = `
+                        <span class="bg-green-100 text-green-800 text-[11px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1.5 shadow-sm">
+                            <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                            🟢 ${item.quantidade} ${item.quantidade === 1 ? 'Moto no Pátio' : 'Motos no Pátio'}
+                        </span>
+                    `;
+
+                    const nomeEscapado = encodeURIComponent(item.nomeExibicao);
+
+                    grid.innerHTML += `
+                        <div class="bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 flex flex-col justify-between hover:shadow-xl transition-all">
+                            <div>
+                                <div class="relative h-56 bg-gray-100">
+                                    <img src="${item.imagemUrl}" alt="${item.nomeExibicao}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=LOCAFACILMOTOS'">
+                                    <div class="absolute bottom-3 left-3">${badgeStatus}</div>
+                                </div>
+                                <div class="p-6">
+                                    <span class="text-orange-600 text-xs font-black uppercase tracking-wider block">${item.marca}</span>
+                                    <h3 class="text-xl font-black text-gray-900 uppercase leading-snug mt-0.5">${item.nomeExibicao}</h3>
+                                </div>
+                            </div>
+                            <div class="p-6 pt-0">
+                                <button type="button" onclick="selecionarMotoInteresse(decodeURIComponent('${nomeEscapado}'))" 
+                                    class="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-3.5 rounded-xl uppercase text-xs tracking-wider transition shadow-md flex items-center justify-center gap-2">
+                                    🏍️ Quero Alugar Agora
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } catch (err) {
+                console.error("Erro ao carregar vitrine:", err);
+                grid.innerHTML = `<p class="text-center text-red-500 font-bold col-span-full text-sm uppercase">Erro ao carregar o estoque.</p>`;
+            }
+        }
+
+        window.selecionarMotoInteresse = async function(nomeModeloCompleto) {
+            estadoFunil.moto = nomeModeloCompleto;
+            document.getElementById('badge-moto').innerText = nomeModeloCompleto;
+            mostrarPasso(2);
+
+            const gridPlanos = document.getElementById('grid-planos');
+            gridPlanos.innerHTML = '<p class="text-center w-full col-span-2 font-bold text-gray-400 animate-pulse mt-10">Buscando planos...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE}/agendamento/planos/${encodeURIComponent(nomeModeloCompleto)}`);
+                const planosFiltrados = await response.json();
+
+                gridPlanos.innerHTML = '';
+
+                if (!planosFiltrados || planosFiltrados.length === 0) {
+                    gridPlanos.innerHTML = `<p class="text-center text-gray-600 font-bold col-span-2">Nenhum plano encontrado.</p>`;
+                    return;
+                }
+
+                planosFiltrados.forEach(plano => {
+                    const diariaCalc = (plano.valor_semanal / 7).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const semanalFormatado = parseFloat(plano.valor_semanal).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                    gridPlanos.innerHTML += `
+                        <div class="bg-white rounded-2xl p-6 md:p-8 flex flex-col text-center border border-gray-200 shadow-sm">
+                            <h4 class="font-extrabold text-xl text-gray-900 mb-4 uppercase">${plano.nome_plano}</h4>
+                            <p class="text-xs text-gray-600 font-medium mb-1">Diária à partir de</p>
+                            <div class="text-3xl font-black text-gray-900 mb-1">R$ ${diariaCalc}</div>
+                            <p class="text-xs text-gray-500 mb-5">por dia</p>
+                            <p class="text-sm font-bold text-gray-800 mb-2">R$ ${semanalFormatado} por semana</p>
+                            <button onclick="selecionarPlano('${plano.nome_plano}', ${plano.valor_semanal})" class="mt-auto w-full bg-orange-600 text-white font-black text-sm py-4 rounded-xl hover:bg-orange-700 transition uppercase tracking-wide">Quero Este Plano</button>
+                        </div>`;
+                });
+            } catch (err) {
+                console.error("Erro ao buscar planos:", err);
+            }
+        };
+
+        window.selecionarPlano = function(nomePlano, valor) {
+            estadoFunil.plano = nomePlano;
+            estadoFunil.valor = valor;
+            mostrarPasso(3);
+        };
+
+        window.finalizarCadastro = async function() {
+            const nome = document.getElementById('form-nome').value.trim();
+            const cpf = document.getElementById('form-cpf').value.trim();
+            const dataNasc = document.getElementById('form-nascimento').value;
+            const email = document.getElementById('form-email').value.trim();
+            const telefone = document.getElementById('form-telefone').value.trim();
+            const endereco = document.getElementById('form-endereco').value.trim();
+            const possuiCaucao = document.getElementById('form-caucao').checked;
+
+            const fileCnhInput = document.getElementById('file-cnh');
+            const fileEndInput = document.getElementById('file-endereco');
+            const fileCnh = fileCnhInput.files[0];
+            const fileEnd = fileEndInput.files[0];
+
+            const btn = document.getElementById('btn-enviar');
+            const msgErro = document.getElementById('msg-erro-form');
+
+            if (!nome || !cpf || !dataNasc || !email || !telefone || !endereco || !fileCnh || !fileEnd || !possuiCaucao) {
+                msgErro.classList.remove('hidden');
+                btn.classList.add('animate-bounce');
+                setTimeout(() => btn.classList.remove('animate-bounce'), 1000);
+                return;
+            }
+
+            msgErro.classList.add('hidden');
+            btn.innerText = "ENVIANDO DOCUMENTOS...";
+            btn.disabled = true;
+            btn.classList.add('opacity-75');
+
+            const formData = new FormData();
+            formData.append('nome', nome);
+            formData.append('cpf', cpf);
+            formData.append('data_nascimento', dataNasc);
+            formData.append('email', email);
+            formData.append('telefone', telefone);
+            formData.append('endereco', endereco);
+            formData.append('moto', estadoFunil.moto);
+            formData.append('plano', estadoFunil.plano);
+            formData.append('cnh', fileCnh);
+            formData.append('comprovante', fileEnd);
+
+            try {
+                const response = await fetch(`${API_BASE}/cadastro`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const resultado = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(resultado.error || 'Erro ao processar cadastro.');
+                }
+
+                mostrarPasso(4);
+            } catch (err) {
+                console.error("Erro no envio:", err);
+                alert("Ocorreu um erro ao enviar sua ficha. Tente novamente.");
+                btn.innerText = "Enviar Ficha";
+                btn.disabled = false;
+                btn.classList.remove('opacity-75');
+            }
+        };
+    </script>
+</body>
+
+</html>

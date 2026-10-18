@@ -25,7 +25,7 @@ function carregarMotosLocal() {
             imagem_url: "https://xbjwhjwqwmllbrybpycd.supabase.co/storage/v1/object/public/frota/factor.jpeg",
             planos: [
                 { titulo: "Plano Semestral", valor_diaria: "55,71", valor_semanal: "390,00", valor_caucao: "650,00" },
-                { titulo: "Plano Anual", valor_diaria: "54,29", valor_semanal: "380,00", valor_caucao: "650,00" },
+                { titulo: "Plano Anual", valor_diaria: "54,28", valor_semanal: "380,00", valor_caucao: "650,00" },
                 { titulo: "Plano Minha Locafacil<br>(42 meses)", valor_diaria: "50,00", valor_semanal: "350,00", valor_caucao: "650,00", observacao: "Toda manutenção por conta do locatário" }
             ]
         }

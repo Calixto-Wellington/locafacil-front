@@ -18,7 +18,7 @@
 <body class="bg-gray-100 font-sans antialiased text-gray-800 p-4 md:p-6">
 
     <div class="max-w-7xl mx-auto">
-        <!-- BARRA SUPERIOR UNIFICADA -->
+        <!-- BARRA SUPERIOR UNIFICADA DE NAVEGAÇÃO -->
         <header class="bg-gray-900 text-white rounded-2xl p-4 md:p-6 mb-8 shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <div class="bg-orange-600 text-white font-black text-xl px-3 py-1.5 rounded-lg">LF</div>
@@ -28,7 +28,7 @@
                 </div>
             </div>
 
-            <!-- ABAS DE NAVEGAÇÃO -->
+            <!-- SUBDIVISÕES / ABAS DE NAVEGAÇÃO -->
             <div class="flex bg-gray-800 p-1.5 rounded-xl border border-gray-700 w-full md:w-auto flex-wrap gap-1">
                 <button id="btn-aba-mesa" onclick="alternarAba('mesa')" 
                     class="aba-btn ativa flex-1 md:flex-none font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
@@ -49,105 +49,293 @@
             </div>
         </header>
 
-        <!-- SEÇÃO 1: MESA DE APROVAÇÃO -->
+        <!-- ================================================================= -->
+        <!-- SUBDIVISÃO 1: MESA DE APROVAÇÃO (FICHAS) -->
+        <!-- ================================================================= -->
         <section id="secao-mesa" class="space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
                 <div>
                     <h2 class="text-xl font-black uppercase text-gray-900">Análise de Risco & Fichas</h2>
-                    <p class="text-xs text-gray-500 font-bold uppercase mt-0.5">Exibindo fichas pendentes</p>
+                    <p id="subtitulo-mesa" class="text-xs text-gray-500 font-bold uppercase mt-0.5">Exibindo fichas pendentes</p>
                 </div>
+
                 <div class="flex flex-col md:flex-row w-full md:w-auto gap-2">
                     <select id="filtro-status" onchange="carregarLeads()"
                         class="p-2.5 border border-gray-300 rounded-xl text-xs font-bold outline-none uppercase text-gray-700 bg-white">
                         <option value="PENDENTE" selected>Filtro: Pendentes</option>
-                        <option value="APROVADO">Filtro: Aprovados</option>
-                        <option value="CONTRATADO">Filtro: Contratados</option>
-                        <option value="REJEITADO">Filtro: Rejeitados</option>
+                        <option value="APROVADO">Filtro: Aprovados (Aguardando Retirada)</option>
+                        <option value="CONTRATADO">Filtro: Contratados (Ativos)</option>
+                        <option value="REJEITADO">Filtro: Rejeitados / Arquivados</option>
                         <option value="TODOS">Todas as Fichas</option>
                     </select>
-                    <button onclick="carregarLeads()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-2.5 px-4 rounded-xl transition text-xs uppercase">🔄 Atualizar</button>
+
+                    <input type="text" id="input-busca-leads" placeholder="Digitar CPF ou WhatsApp..."
+                        class="p-2.5 border border-gray-300 rounded-xl text-xs font-bold outline-none w-full md:w-60 uppercase">
+                    <button onclick="realizarBuscaLeads()" class="bg-black hover:bg-gray-900 text-white font-black py-2.5 px-4 rounded-xl transition text-xs uppercase">🔍 Buscar</button>
+                    <button onclick="carregarLeads()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-2.5 px-3 rounded-xl transition text-xs uppercase">🔄 Atualizar</button>
                 </div>
             </div>
+
             <div id="loading-leads" class="text-center py-10 font-bold text-gray-500">Buscando fichas no sistema...</div>
             <div id="grid-leads" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
         </section>
 
-        <!-- SEÇÃO 2: GESTÃO DE FROTA -->
+        <!-- ================================================================= -->
+        <!-- SUBDIVISÃO 2: GESTÃO DE FROTA & CONTRATOS (LOCATÁRIOS) -->
+        <!-- ================================================================= -->
         <section id="secao-frota" class="space-y-6 hidden">
-            <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex justify-between items-center">
-                <h2 class="text-xl font-black uppercase text-gray-900">Pilotos na Frota & Baixa de Pix</h2>
-                <button onclick="carregarLocatarios()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-2.5 px-4 rounded-xl text-xs uppercase">🔄 Atualizar Frota</button>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
+                <div>
+                    <h2 class="text-xl font-black uppercase text-gray-900">Pilotos na Frota & Baixa de Pix</h2>
+                    <p class="text-xs text-gray-500 font-bold uppercase mt-0.5">Gestão de Contratos, Moedas e Telemetria</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row w-full md:w-auto gap-2">
+                    <input type="text" id="input-busca-frota" placeholder="Digitar Placa, Nome ou CPF..."
+                        class="p-2.5 border border-gray-300 rounded-xl text-xs font-bold outline-none w-full md:w-64 uppercase">
+                    <button onclick="buscarLocatario()" class="bg-orange-600 hover:bg-orange-700 text-white font-black py-2.5 px-5 rounded-xl transition text-xs uppercase shadow-md">🔍 Buscar</button>
+                    <button onclick="carregarLocatarios()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-2.5 px-3 rounded-xl transition text-xs uppercase">🔄 Todos</button>
+                </div>
             </div>
-            <div id="loading-frota" class="text-center py-10 font-bold text-gray-500">Buscando pilotos...</div>
+
+            <div id="loading-frota" class="text-center py-10 font-bold text-gray-500">Buscando pilotos no banco de dados...</div>
             <div id="grid-frota" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
 
-        <!-- SEÇÃO 3: PÁTIO & MOTOS -->
+        <!-- ================================================================= -->
+        <!-- SUBDIVISÃO 3: PÁTIO & MOTOS FÍSICAS -->
+        <!-- ================================================================= -->
         <section id="secao-motos" class="space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h2 class="text-xl font-black uppercase text-gray-900 mb-4">Pátio & Inventário de Motos</h2>
-                <form onsubmit="salvarNovaMoto(event)" class="bg-orange-50/50 p-5 rounded-2xl border border-orange-200 mb-8 space-y-4">
-                    <h3 class="text-sm font-black text-gray-900 uppercase">➕ Cadastrar Moto no Pátio</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input type="text" id="novo-moto-marca" placeholder="Marca (Ex: Honda)" required class="p-2.5 border rounded-xl text-xs font-bold bg-white">
-                        <input type="text" id="novo-moto-modelo" placeholder="Modelo (Ex: CG 160)" required class="p-2.5 border rounded-xl text-xs font-bold bg-white">
-                        <input type="text" id="novo-moto-cor" placeholder="Cor (Ex: Preta)" required class="p-2.5 border rounded-xl text-xs font-bold bg-white">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b">
+                    <div>
+                        <h2 class="text-xl font-black uppercase text-gray-900">Pátio & Inventário de Motos</h2>
+                        <p class="text-xs text-gray-500 font-bold uppercase mt-0.5">Controle individual de cada moto com Marca, Modelo, Cor e Placa</p>
                     </div>
+                    <button onclick="carregarMotosFrota()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-2.5 px-4 rounded-xl text-xs uppercase">🔄 Atualizar Pátio</button>
+                </div>
+
+                <form onsubmit="salvarNovaMoto(event)" class="bg-orange-50/50 p-5 rounded-2xl border border-orange-200 mb-8 space-y-4">
+                    <h3 class="text-sm font-black text-gray-900 uppercase flex items-center gap-1.5">
+                        <span>➕</span> Cadastrar Moto no Pátio
+                    </h3>
+
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input type="text" id="novo-moto-placa" placeholder="Placa (Ex: TKA3E77)" required class="p-2.5 border rounded-xl text-xs font-black uppercase bg-white">
-                        <input type="number" id="novo-moto-km" value="0" placeholder="KM Atual" class="p-2.5 border rounded-xl text-xs font-bold bg-white">
-                        <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-black py-2.5 rounded-xl uppercase text-xs shadow-md">💾 Cadastrar Moto</button>
+                        <input type="text" id="novo-moto-marca" placeholder="Ex: Honda ou Yamaha" required class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
+                        <input type="text" id="novo-moto-modelo" placeholder="Ex: CG 160 Start" required class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
+                        <input type="text" id="novo-moto-cor" placeholder="Ex: Preta" required class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <input type="number" id="novo-moto-ano" value="2025" class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
+                        <input type="text" id="novo-moto-placa" placeholder="Ex: TKA3E77" required class="w-full p-2.5 border rounded-xl text-xs font-black uppercase bg-white">
+                        <input type="number" id="novo-moto-km" value="0" class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
+                        <select id="novo-moto-status" class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
+                            <option value="DISPONIVEL" selected>🟢 Disponível no Pátio</option>
+                            <option value="ALUGADA">🔵 Alugada</option>
+                            <option value="MANUTENCAO">🟡 Manutenção</option>
+                        </select>
+                    </div>
+                    <input type="url" id="novo-moto-imagem" placeholder="URL da Imagem da Moto (Opcional)" class="w-full p-2.5 border rounded-xl text-xs bg-white">
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-black py-3 px-6 rounded-xl transition text-xs uppercase shadow-md">💾 Cadastrar Moto</button>
                     </div>
                 </form>
-                <div id="loading-motos" class="text-center py-6 font-bold text-gray-500">Carregando motos...</div>
+
+                <div id="loading-motos" class="text-center py-6 font-bold text-gray-500">Buscando motos...</div>
                 <div id="grid-motos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
         </section>
 
-        <!-- SEÇÃO 4: LOJA & REGRAS -->
+        <!-- ================================================================= -->
+        <!-- SUBDIVISÃO 4: LOJA DE COINS & REGRAS -->
+        <!-- ================================================================= -->
         <section id="secao-loja" class="space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h2 class="text-xl font-black uppercase text-gray-900 mb-4">Configuração de Coins & Brindes</h2>
+                <h2 class="text-xl font-black uppercase text-gray-900 mb-4">Configuração de Brindes & Regras de Coins</h2>
                 <div class="bg-orange-50 p-4 rounded-2xl border border-orange-200 mb-6 flex justify-between items-center">
-                    <p class="text-xs font-black text-orange-950 uppercase">Coins gerados por Pix Baixado:</p>
+                    <p class="text-xs font-black text-orange-950 uppercase">Coins por Pix:</p>
                     <div class="flex gap-2">
-                        <input type="number" id="input-config-coins-pix" class="p-2 border rounded-xl text-xs font-black w-24 text-center">
-                        <button onclick="salvarConfigCoinsPix()" class="bg-orange-600 text-white font-black px-4 py-2 rounded-xl text-xs uppercase">Salvar</button>
+                        <input type="number" id="input-config-coins-pix" class="p-2.5 border rounded-xl text-xs font-black w-28 text-center">
+                        <button onclick="salvarConfigCoinsPix()" class="bg-orange-600 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase">Salvar</button>
                     </div>
                 </div>
+
+                <form onsubmit="adicionarItemLoja(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-amber-50 p-4 rounded-xl border mb-6">
+                    <input type="text" id="novo-brinde-titulo" placeholder="Nome do Brinde" required class="p-2.5 border rounded-lg text-xs font-bold">
+                    <input type="number" id="novo-brinde-custo" placeholder="Custo em Coins" required min="1" class="p-2.5 border rounded-lg text-xs font-bold">
+                    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-black py-2.5 rounded-lg text-xs uppercase shadow-md">➕ Adicionar</button>
+                </form>
+
                 <div id="grid-itens-admin-loja" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
             </div>
         </section>
     </div>
 
-    <!-- SCRIPT DO ADMIN CONSUMINDO A API NO RENDER -->
+    <!-- MODAL DE EDIÇÃO DE MOTO -->
+    <div id="modal-editar-moto" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border relative">
+            <h3 class="text-lg font-black text-gray-900 uppercase mb-4">Editar Dados da Moto</h3>
+            <form id="form-editar-moto" onsubmit="salvarEdicaoMoto(event)" class="space-y-4">
+                <input type="hidden" id="edit-moto-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="edit-moto-marca" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Marca">
+                    <input type="text" id="edit-moto-modelo" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Modelo">
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <input type="text" id="edit-moto-cor" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Cor">
+                    <input type="number" id="edit-moto-ano" class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Ano">
+                    <input type="text" id="edit-moto-placa" required class="p-2.5 border rounded-lg text-xs font-black uppercase" placeholder="Placa">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="number" id="edit-moto-km" class="p-2.5 border rounded-lg text-xs font-bold" placeholder="KM">
+                    <select id="edit-moto-status" class="p-2.5 border rounded-lg text-xs font-bold">
+                        <option value="DISPONIVEL">Disponível</option>
+                        <option value="ALUGADA">Alugada</option>
+                        <option value="MANUTENCAO">Manutenção</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-3 border-t">
+                    <button type="button" onclick="fecharModalMoto()" class="flex-1 bg-gray-200 py-2 rounded-xl text-xs font-bold">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-orange-600 text-white py-2 rounded-xl text-xs font-black">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE PILOTO -->
+    <div id="modal-editar" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border relative">
+            <h3 class="text-xl font-black text-gray-900 uppercase mb-4">Editar Dados do Piloto</h3>
+            <form id="form-editar" onsubmit="salvarEdicaoCard(event)" class="space-y-4">
+                <input type="hidden" id="edit-id">
+                <input type="text" id="edit-nome" required class="w-full p-2.5 border rounded-lg text-sm font-bold uppercase" placeholder="Nome">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="edit-placa" required class="p-2.5 border rounded-lg text-sm font-bold uppercase" placeholder="Placa">
+                    <input type="text" id="edit-modelo" required class="p-2.5 border rounded-lg text-sm font-bold" placeholder="Modelo">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="edit-telefone" required class="p-2.5 border rounded-lg text-sm font-bold" placeholder="WhatsApp">
+                    <input type="text" id="edit-cpf" required class="p-2.5 border rounded-lg text-sm font-bold" placeholder="CPF">
+                </div>
+                <div class="grid grid-cols-3 gap-3 bg-orange-50 p-3 rounded-xl border">
+                    <input type="number" id="edit-semanas" required min="0" max="182" class="p-2 border rounded-lg text-sm font-black text-orange-600" placeholder="Semanas">
+                    <input type="number" id="edit-coins" required min="0" class="p-2 border rounded-lg text-sm font-black text-amber-700" placeholder="Coins">
+                    <input type="number" id="edit-km-atual" required class="p-2 border rounded-lg text-sm font-bold" placeholder="KM">
+                </div>
+                <div class="flex gap-3 pt-4 border-t">
+                    <button type="button" onclick="fecharModal()" class="flex-1 bg-gray-200 py-3 rounded-xl text-xs font-bold">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-orange-600 text-white py-3 rounded-xl text-xs font-black">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT 100% PRESERVADO CONECTADO À API -->
     <script type="module">
         import { API_BASE } from './js/api.js';
 
-        const URL_PAINEL_CLIENTE = "https://cashback.locafacilmotos.com.br";
+        const URL_PAINEL_CLIENTE = "https://cashback.locafacilmotos.com.br"; 
 
         window.onload = () => {
             const senha = prompt("Acesso Restrito: Digite a senha administrativa");
             if (senha !== "locafacil2026") {
                 document.body.innerHTML = "<h1 class='text-center mt-20 font-bold text-red-500 text-2xl uppercase'>ACESSO NEGADO</h1>";
-                return;
+            } else {
+                carregarLeads();
+                carregarLocatarios();
+                carregarMotosFrota();
+                carregarItensLojaAdmin();
+                carregarConfiguracaoCoinsPix();
             }
-            carregarLeads();
-            carregarLocatarios();
-            carregarMotosFrota();
-            carregarItensLojaAdmin();
-            carregarConfiguracaoCoinsPix();
         };
 
         window.alternarAba = function(aba) {
-            ['mesa', 'frota', 'motos', 'loja'].forEach(k => {
-                document.getElementById(`secao-${k}`).classList.add('hidden');
-                document.getElementById(`btn-aba-${k}`).classList.remove('ativa', 'text-white');
-                document.getElementById(`btn-aba-${k}`).classList.add('text-gray-400');
+            const secoes = { mesa: document.getElementById('secao-mesa'), frota: document.getElementById('secao-frota'), motos: document.getElementById('secao-motos'), loja: document.getElementById('secao-loja') };
+            const botoes = { mesa: document.getElementById('btn-aba-mesa'), frota: document.getElementById('btn-aba-frota'), motos: document.getElementById('btn-aba-motos'), loja: document.getElementById('btn-aba-loja') };
+            Object.keys(secoes).forEach(k => { secoes[k].classList.add('hidden'); botoes[k].classList.remove('ativa'); botoes[k].classList.add('text-gray-400'); });
+            if (secoes[aba]) { secoes[aba].classList.remove('hidden'); botoes[aba].classList.add('ativa'); botoes[aba].classList.remove('text-gray-400'); }
+        };
+
+        // --- MOTOS / PÁTIO ---
+        window.carregarMotosFrota = async function() {
+            const grid = document.getElementById('grid-motos');
+            const loading = document.getElementById('loading-motos');
+            if (!grid) return;
+            loading.style.display = 'block'; grid.innerHTML = '';
+            try {
+                const res = await fetch(`${API_BASE}/admin/motos`);
+                const data = await res.json();
+                loading.style.display = 'none';
+                if (!data || data.length === 0) { grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center text-gray-500 font-bold text-sm uppercase">Nenhuma moto cadastrada.</div>`; return; }
+                data.forEach(item => {
+                    const status = (item.status || 'DISPONIVEL').toUpperCase();
+                    let badgeStatus = status === 'DISPONIVEL' ? '<span class="bg-green-100 text-green-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🟢 Disponível</span>' : status === 'ALUGADA' ? '<span class="bg-blue-100 text-blue-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🔵 Alugada</span>' : '<span class="bg-yellow-100 text-yellow-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🟡 Manutenção</span>';
+                    const botoesAcao = status === 'DISPONIVEL' ? `<div class="grid grid-cols-2 gap-2"><button onclick="mudarStatusMoto('${item.id}', 'ALUGADA')" class="bg-blue-600 text-white font-black py-2 rounded-xl text-xs uppercase">Alugar</button><button onclick="mudarStatusMoto('${item.id}', 'MANUTENCAO')" class="bg-yellow-500 text-black font-black py-2 rounded-xl text-xs uppercase">Oficina</button></div>` : status === 'ALUGADA' ? `<div class="grid grid-cols-2 gap-2"><button onclick="mudarStatusMoto('${item.id}', 'DISPONIVEL')" class="bg-green-600 text-white font-black py-2 rounded-xl text-xs uppercase">Pátio</button><button onclick="mudarStatusMoto('${item.id}', 'MANUTENCAO')" class="bg-yellow-500 text-black font-black py-2 rounded-xl text-xs uppercase">Oficina</button></div>` : `<button onclick="mudarStatusMoto('${item.id}', 'DISPONIVEL')" class="w-full bg-green-600 text-white font-black py-2 rounded-xl text-xs uppercase">Liberar p/ Pátio</button>`;
+                    const imgHtml = item.modelos_catalogo?.imagem_url ? `<img src="${item.modelos_catalogo.imagem_url}" class="w-full h-44 object-cover rounded-xl mb-3 border">` : `<div class="w-full h-44 bg-gray-100 rounded-xl mb-3 flex items-center justify-center text-gray-400 text-3xl">🏍️</div>`;
+                    
+                    grid.innerHTML += `
+                        <div class="bg-white rounded-2xl shadow-md border p-4 flex flex-col justify-between">
+                            <div>${imgHtml}<div class="flex justify-between items-start mb-2"><div><span class="text-[10px] font-black uppercase text-orange-600">${item.marca}</span><h4 class="font-black text-gray-900 text-base uppercase">${item.modelo}</h4></div>${badgeStatus}</div>
+                            <div class="grid grid-cols-3 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl border mb-4 font-bold text-center"><div>Placa<br><b>${item.placa}</b></div><div>Cor<br><b>${item.cor || 'Preta'}</b></div><div>KM<br><b>${(item.km_atual || 0).toLocaleString('pt-BR')}</b></div></div></div>
+                            <div class="space-y-2 pt-2 border-t">${botoesAcao}<div class="flex gap-2"><button onclick='abrirModalEditarMoto(${JSON.stringify(item)})' class="flex-1 bg-gray-100 py-2 rounded-lg text-xs uppercase font-bold">✏️ Editar</button><button onclick="excluirMoto('${item.id}', '${item.placa}')" class="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs uppercase font-bold">🗑️</button></div></div>
+                        </div>`;
+                });
+            } catch(e) { console.error(e); }
+        };
+
+        window.salvarNovaMoto = async (e) => {
+            e.preventDefault();
+            await fetch(`${API_BASE}/admin/motos`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    marca: document.getElementById('novo-moto-marca').value, modelo: document.getElementById('novo-moto-modelo').value,
+                    cor: document.getElementById('novo-moto-cor').value, ano: parseInt(document.getElementById('novo-moto-ano').value) || 2025,
+                    placa: document.getElementById('novo-moto-placa').value.toUpperCase(), km_atual: parseInt(document.getElementById('novo-moto-km').value) || 0,
+                    status: document.getElementById('novo-moto-status').value, imagem: document.getElementById('novo-moto-imagem').value
+                })
             });
-            document.getElementById(`secao-${aba}`).classList.remove('hidden');
-            document.getElementById(`btn-aba-${aba}`).classList.add('ativa', 'text-white');
-            document.getElementById(`btn-aba-${aba}`).classList.remove('text-gray-400');
+            alert("Moto cadastrada!"); e.target.reset(); carregarMotosFrota();
+        };
+
+        window.mudarStatusMoto = async (id, status) => {
+            await fetch(`${API_BASE}/admin/motos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+            carregarMotosFrota();
+        };
+
+        window.excluirMoto = async (id, placa) => {
+            if (confirm(`Excluir moto placa ${placa}?`)) {
+                await fetch(`${API_BASE}/admin/motos/${id}`, { method: 'DELETE' });
+                carregarMotosFrota();
+            }
+        };
+
+        window.abrirModalEditarMoto = (item) => {
+            document.getElementById('edit-moto-id').value = item.id;
+            document.getElementById('edit-moto-marca').value = item.marca || '';
+            document.getElementById('edit-moto-modelo').value = item.modelo || '';
+            document.getElementById('edit-moto-cor').value = item.cor || '';
+            document.getElementById('edit-moto-ano').value = item.ano || 2025;
+            document.getElementById('edit-moto-placa').value = item.placa || '';
+            document.getElementById('edit-moto-km').value = item.km_atual || 0;
+            document.getElementById('edit-moto-status').value = item.status || 'DISPONIVEL';
+            document.getElementById('modal-editar-moto').classList.remove('hidden');
+        };
+        window.fecharModalMoto = () => document.getElementById('modal-editar-moto').classList.add('hidden');
+
+        document.getElementById('form-editar-moto').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-moto-id').value;
+            await fetch(`${API_BASE}/admin/motos/${id}`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    marca: document.getElementById('edit-moto-marca').value, modelo: document.getElementById('edit-moto-modelo').value,
+                    cor: document.getElementById('edit-moto-cor').value, ano: parseInt(document.getElementById('edit-moto-ano').value) || 2025,
+                    placa: document.getElementById('edit-moto-placa').value.toUpperCase(), km_atual: parseInt(document.getElementById('edit-moto-km').value) || 0,
+                    status: document.getElementById('edit-moto-status').value
+                })
+            });
+            fecharModalMoto(); carregarMotosFrota();
         };
 
         // --- MESA DE APROVAÇÃO ---
@@ -155,156 +343,162 @@
             const filtro = document.getElementById('filtro-status').value;
             document.getElementById('loading-leads').style.display = 'block';
             document.getElementById('grid-leads').innerHTML = '';
-
             try {
                 const res = await fetch(`${API_BASE}/admin/leads?status=${filtro}`);
                 const fichas = await res.json();
                 document.getElementById('loading-leads').style.display = 'none';
-
-                const grid = document.getElementById('grid-leads');
-                if (!fichas.length) {
-                    grid.innerHTML = `<div class="col-span-full bg-white p-8 text-center text-gray-500 font-bold uppercase">Nenhuma ficha encontrada.</div>`;
-                    return;
-                }
-
-                fichas.forEach(lead => {
-                    grid.innerHTML += `
-                        <div class="bg-white rounded-2xl shadow-lg border p-5">
-                            <h3 class="font-black text-lg uppercase">${lead.nome}</h3>
-                            <p class="text-xs text-gray-500">CPF: ${lead.cpf} | Tel: ${lead.telefone}</p>
-                            <p class="text-xs font-bold text-orange-600 mt-2">Interesse: ${lead.moto_interesse} - ${lead.plano_interesse}</p>
-                            <div class="mt-4 flex gap-2">
-                                <button onclick="aprovarLead('${lead.id}')" class="bg-green-600 text-white font-bold py-2 px-4 rounded text-xs">Aprovar Ficha</button>
-                                <button onclick="efetivarLocacao('${lead.id}', '${lead.telefone}', '${lead.nome}', '${lead.cpf}', '${lead.email}', '${lead.moto_interesse}')" class="bg-orange-600 text-white font-bold py-2 px-4 rounded text-xs">Entregar Moto</button>
-                            </div>
-                        </div>`;
-                });
-            } catch (err) {
-                console.error(err);
-            }
+                renderizarLeads(fichas || []);
+            } catch(e) { console.error(e); }
         };
 
-        window.aprovarLead = async function(id) {
-            await fetch(`${API_BASE}/admin/leads/${id}/status`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: 'APROVADO' })
-            });
+        window.realizarBuscaLeads = async function() {
             carregarLeads();
         };
 
-        window.efetivarLocacao = async function(id, telefone, nome, cpf, email, motoInteresse) {
-            const placa = prompt("Digite a PLACA da moto entregue:");
-            if (!placa) return;
-            const kmInicial = parseInt(prompt("KM inicial:", "0")) || 0;
+        function renderizarLeads(fichas) {
+            const grid = document.getElementById('grid-leads');
+            if (!fichas.length) { grid.innerHTML = `<div class="col-span-full bg-white p-8 text-center text-gray-500 font-bold uppercase">Nenhuma ficha encontrada.</div>`; return; }
+            fichas.forEach(lead => {
+                const dataEnvio = new Date(lead.created_at).toLocaleString('pt-BR');
+                let badgeClass = lead.status === 'APROVADO' ? 'bg-blue-600 text-white' : lead.status === 'CONTRATADO' ? 'bg-green-600 text-white' : lead.status === 'REJEITADO' ? 'bg-red-600 text-white' : 'bg-yellow-500 text-black';
+                let areaAcoes = lead.status === 'PENDENTE' ? `
+                    <div class="space-y-3"><button onclick="validarCaucao('${lead.nome}', '${lead.telefone}')" class="w-full bg-blue-600 text-white font-black py-3 rounded-lg text-xs uppercase">💬 1. Chamar no Whats (Caução)</button>
+                    <div class="flex space-x-2"><button onclick="aprovarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="flex-1 bg-green-600 text-white font-black py-3 rounded-lg text-xs uppercase">✅ 2. Aprovar</button><button onclick="rejeitarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="bg-red-100 text-red-600 font-black px-4 rounded-lg text-xs uppercase">Arquivar</button></div></div>` : lead.status === 'APROVADO' ? `
+                    <div class="space-y-3"><div class="bg-blue-50 border p-2.5 rounded-lg text-center font-bold text-blue-800 text-[11px] uppercase">🔵 Aprovado — Aguardando Retirada</div>
+                    <div class="flex space-x-2"><button onclick="efetivarLocacao('${lead.id}', '${lead.telefone}', '${lead.nome}', '${lead.cpf}', '${lead.email}', '${lead.moto_interesse}')" class="flex-1 bg-orange-600 text-white font-black py-3 rounded-xl text-xs uppercase shadow-md">🏍️ Entregar Moto</button><button onclick="rejeitarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="bg-red-100 text-red-600 font-black px-3 rounded-xl text-xs uppercase">Desistiu</button></div></div>` : `<div class="bg-black text-orange-500 border p-3 rounded-xl text-center font-black text-xs uppercase">🚀 Contrato Ativo</div>`;
 
-            await fetch(`${API_BASE}/admin/leads/${id}/efetivar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nome, cpf, telefone, email, moto_interesse: motoInteresse, placa, km_inicial: kmInicial })
+                grid.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-lg border overflow-hidden">
+                        <div class="bg-black text-white p-4 flex justify-between items-center"><span class="font-bold text-xs text-gray-300">Recebido: ${dataEnvio}</span><span class="${badgeClass} text-[10px] font-black px-2 py-1 rounded uppercase">${lead.status}</span></div>
+                        <div class="p-5">
+                            <div class="grid grid-cols-2 gap-3 mb-4 text-xs"><div><p class="text-gray-400 font-bold uppercase">Nome</p><p class="font-black text-base uppercase text-gray-900">${lead.nome}</p></div><div><p class="text-gray-400 font-bold uppercase">CPF</p><p class="font-bold text-gray-800">${lead.cpf}</p></div><div><p class="text-gray-400 font-bold uppercase">WhatsApp</p><p class="font-bold text-gray-800">${lead.telefone}</p></div><div><p class="text-gray-400 font-bold uppercase">Email</p><p class="font-bold text-gray-800">${lead.email}</p></div></div>
+                            <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 mb-4 text-xs"><p class="text-orange-600 font-black uppercase">Interesse</p><p class="font-bold text-gray-900 text-sm">${lead.moto_interesse} - ${lead.plano_interesse}</p></div>
+                            <div class="grid grid-cols-2 gap-3 border-t pt-3 mb-4 text-xs"><a href="${lead.cnh_url}" target="_blank" class="text-center block bg-gray-100 py-2 rounded-lg font-bold">📄 Ver CNH</a><a href="${lead.comprovante_url}" target="_blank" class="text-center block bg-gray-100 py-2 rounded-lg font-bold">📄 Ver Comprovante</a></div>
+                            ${areaAcoes}
+                        </div>
+                    </div>`;
             });
-            alert("Moto entregue e contrato efetivado com sucesso!");
-            carregarLeads();
-            carregarLocatarios();
+        }
+
+        window.validarCaucao = (n, t) => window.open(`https://wa.me/55${t.replace(/\D/g, '')}?text=${encodeURIComponent(`Fala ${n}, tudo bem? Aqui é da LOCAFACILMOTOS! 🚀 Vamos alinhar a caução?`)}`, '_blank');
+        window.aprovarLead = async (id, t, n) => { window.open(`https://wa.me/55${t.replace(/\D/g, '')}?text=${encodeURIComponent(`Fala ${n}! Aprovado! 🚀 Bora agendar a caução?`)}`, '_blank'); await fetch(`${API_BASE}/admin/leads/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'APROVADO' }) }); carregarLeads(); };
+        window.rejeitarLead = async (id, t, n) => { const m = prompt("Motivo:"); if(m) { await fetch(`${API_BASE}/admin/leads/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'REJEITADO', motivo_recusa: m }) }); carregarLeads(); } };
+        window.efetivarLocacao = async (id, t, n, cpf, email, moto) => {
+            const placa = prompt(`PLACA para ${n}:`); if (!placa) return;
+            const km = parseInt(prompt("KM inicial:", "0")) || 0;
+            await fetch(`${API_BASE}/admin/leads/${id}/efetivar`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: n, cpf, telefone: t, email, moto_interesse: moto, placa, km_inicial: km }) });
+            alert("Contrato efetivado!"); carregarLeads(); carregarLocatarios(); carregarMotosFrota();
         };
 
-        // --- GESTÃO DE FROTA ---
+        // --- GESTÃO DE FROTA & TELEMETRIA ---
         window.carregarLocatarios = async function() {
             document.getElementById('loading-frota').style.display = 'block';
             const res = await fetch(`${API_BASE}/admin/locatarios`);
             const lista = await res.json();
             document.getElementById('loading-frota').style.display = 'none';
-
-            const grid = document.getElementById('grid-frota');
-            grid.innerHTML = '';
-            lista.forEach(item => {
-                grid.innerHTML += `
-                    <div class="bg-white p-5 rounded-2xl shadow border">
-                        <span class="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">${item.placa}</span>
-                        <h3 class="font-black text-lg uppercase mt-1">${item.nome}</h3>
-                        <p class="text-xs font-bold text-gray-600">Semanas Pagas: ${item.semanas_pagas} | Coins: ${item.locafacil_coins}</p>
-                        <button onclick="adicionarUmaSemana('${item.id}', ${item.semanas_pagas}, ${item.locafacil_coins})" class="mt-4 w-full bg-green-600 text-white font-black py-2 rounded-xl text-xs uppercase">+1 Semana (Baixar Pix)</button>
-                    </div>`;
-            });
+            renderizarFrota(lista || []);
         };
 
-        window.adicionarUmaSemana = async function(id, semanasAtuais, coinsAtuais) {
-            const resConfig = await fetch(`${API_BASE}/admin/config/coins_por_pix`);
-            const configData = await resConfig.json();
-            const incrementoCoins = parseInt(configData.valor) || 10;
+        window.buscarLocatario = async function() { carregarLocatarios(); };
 
-            await fetch(`${API_BASE}/admin/locatarios/${id}/pagar-semana`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ semanas_pagas: semanasAtuais + 1, locafacil_coins: coinsAtuais + incrementoCoins })
+        function renderizarFrota(lista) {
+            const grid = document.getElementById('grid-frota'); grid.innerHTML = '';
+            if (!lista.length) { grid.innerHTML = `<div class="col-span-full bg-white p-8 text-center uppercase font-bold text-gray-500">Nenhum piloto.</div>`; return; }
+            lista.forEach(item => {
+                const pct = Math.min(100, Math.round(((item.semanas_pagas || 0) / 182) * 100));
+                grid.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-lg border overflow-hidden flex flex-col justify-between">
+                        <div class="bg-gray-900 text-white p-4 flex justify-between items-center"><div><span class="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">${item.placa}</span><h3 class="font-black text-lg uppercase mt-1">${item.nome}</h3></div><span class="text-2xl font-black text-orange-500">${item.semanas_pagas || 0} sem.</span></div>
+                        <div class="p-5 space-y-4">
+                            <div class="grid grid-cols-2 gap-2 text-xs"><div>Modelo<br><b>${item.modelo}</b></div><div>WhatsApp<br><b>${item.telefone}</b></div></div>
+                            <div class="bg-gray-50 p-3 rounded-xl border"><div class="flex justify-between text-xs font-black mb-1"><span>Semana ${item.semanas_pagas || 0}</span><span>🪙 ${item.locafacil_coins || 0} Coins</span></div><div class="w-full bg-gray-200 rounded-full h-3"><div class="bg-orange-500 h-full rounded-full" style="width: ${pct}%"></div></div></div>
+                            <div class="bg-orange-50 p-3 rounded-xl border text-xs"><p class="text-orange-900 font-bold uppercase">Hodômetro</p><p class="font-black text-gray-900 text-base">${(item.km_atual || 0).toLocaleString('pt-BR')} km</p></div>
+                        </div>
+                        <div class="p-5 pt-0 space-y-2">
+                            <button onclick="adicionarUmaSemana('${item.id}', '${item.cpf}', '${item.telefone}', '${item.nome}', ${item.semanas_pagas || 0}, ${item.locafacil_coins || 0})" class="w-full bg-green-600 text-white font-black py-3 rounded-xl text-xs uppercase shadow-md">💵 +1 Semana (Baixar Pix)</button>
+                            <div class="flex gap-2"><button onclick="lancarKmRastreador('${item.id}', '${item.placa}', ${item.semanas_pagas || 0}, ${item.km_atual || 0})" class="flex-1 bg-indigo-50 text-indigo-800 font-bold py-2 rounded-lg text-xs uppercase border">📡 Rastreador</button><button onclick='abrirModalEditar(${JSON.stringify(item)})' class="bg-gray-900 text-white font-bold px-3 py-2 rounded-lg text-xs uppercase">✏️ Editar</button></div>
+                        </div>
+                    </div>`;
             });
-            alert("Semana baixada e coins creditados!");
+        }
+
+        window.adicionarUmaSemana = async (id, cpf, tel, nome, sem, coins) => {
+            const resC = await fetch(`${API_BASE}/admin/config/coins_por_pix`); const dC = await resC.json();
+            const inc = parseInt(dC.valor) || 10;
+            await fetch(`${API_BASE}/admin/locatarios/${id}/pagar-semana`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ semanas_pagas: sem + 1, locafacil_coins: coins + inc }) });
+            window.open(`https://wa.me/55${tel.replace(/\D/g, '')}?text=${encodeURIComponent(`Fala ${nome.split(' ')[0]}! Pix confirmado, semana ${sem + 1} registrada! +${inc} Coins 🪙`)}`, '_blank');
             carregarLocatarios();
         };
 
-        // --- PÁTIO DE MOTOS ---
-        window.carregarMotosFrota = async function() {
-            document.getElementById('loading-motos').style.display = 'block';
-            const res = await fetch(`${API_BASE}/admin/motos`);
-            const motos = await res.json();
-            document.getElementById('loading-motos').style.display = 'none';
-
-            const grid = document.getElementById('grid-motos');
-            grid.innerHTML = '';
-            motos.forEach(m => {
-                grid.innerHTML += `
-                    <div class="bg-white p-4 rounded-2xl shadow border">
-                        <span class="text-xs font-black text-orange-600 uppercase">${m.placa}</span>
-                        <h4 class="font-black uppercase">${m.modelo}</h4>
-                        <p class="text-xs text-gray-500 uppercase">Status: ${m.status}</p>
-                    </div>`;
-            });
+        window.lancarKmRastreador = async (id, placa, sem, kmAnt) => {
+            const ini = prompt("Data inicial (AAAA-MM-DD):", "2026-09-20"); if (!ini) return;
+            const fim = prompt("Data final (AAAA-MM-DD):", "2026-09-27"); if (!fim) return;
+            const rodados = parseInt(prompt("KM rodados:", "0")) || 0;
+            const novoKm = kmAnt + rodados;
+            await fetch(`${API_BASE}/admin/rastreador`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locatario_id: id, placa, semana: sem, data_inicio: ini, data_fim: fim, km_anterior: kmAnt, km_atual: novoKm, km_rodados: rodados, observacao: 'Rastreador' }) });
+            alert("KM registrado!"); carregarLocatarios();
         };
 
-        window.salvarNovaMoto = async function(e) {
+        window.abrirModalEditar = (item) => {
+            document.getElementById('edit-id').value = item.id;
+            document.getElementById('edit-nome').value = item.nome || '';
+            document.getElementById('edit-placa').value = item.placa || '';
+            document.getElementById('edit-modelo').value = item.modelo || '';
+            document.getElementById('edit-telefone').value = item.telefone || '';
+            document.getElementById('edit-cpf').value = item.cpf || '';
+            document.getElementById('edit-semanas').value = item.semanas_pagas || 0;
+            document.getElementById('edit-coins').value = item.locafacil_coins || 0;
+            document.getElementById('edit-km-atual').value = item.km_atual || 0;
+            document.getElementById('modal-editar').classList.remove('hidden');
+        };
+        window.fecharModal = () => document.getElementById('modal-editar').classList.add('hidden');
+
+        document.getElementById('form-editar').onsubmit = async (e) => {
             e.preventDefault();
-            const payload = {
-                marca: document.getElementById('novo-moto-marca').value,
-                modelo: document.getElementById('novo-moto-modelo').value,
-                cor: document.getElementById('novo-moto-cor').value,
-                placa: document.getElementById('novo-moto-placa').value,
-                km_atual: parseInt(document.getElementById('novo-moto-km').value) || 0,
-                status: 'DISPONIVEL'
-            };
-            await fetch(`${API_BASE}/admin/motos`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            const id = document.getElementById('edit-id').value;
+            await fetch(`${API_BASE}/admin/locatarios/${id}`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nome: document.getElementById('edit-nome').value, placa: document.getElementById('edit-placa').value.toUpperCase(),
+                    modelo: document.getElementById('edit-modelo').value, telefone: document.getElementById('edit-telefone').value,
+                    cpf: document.getElementById('edit-cpf').value, semanas_pagas: parseInt(document.getElementById('edit-semanas').value) || 0,
+                    locafacil_coins: parseInt(document.getElementById('edit-coins').value) || 0, km_atual: parseInt(document.getElementById('edit-km-atual').value) || 0
+                })
             });
-            alert("Moto cadastrada com sucesso!");
-            carregarMotosFrota();
+            fecharModal(); carregarLocatarios();
         };
 
-        // --- LOJA & CONFIG ---
-        window.carregarConfiguracaoCoinsPix = async function() {
+        // --- LOJA & REGRAS ---
+        window.carregarConfiguracaoCoinsPix = async () => {
             const res = await fetch(`${API_BASE}/admin/config/coins_por_pix`);
             const data = await res.json();
             document.getElementById('input-config-coins-pix').value = data.valor;
         };
-
-        window.salvarConfigCoinsPix = async function() {
-            const valor = document.getElementById('input-config-coins-pix').value;
-            await fetch(`${API_BASE}/admin/config`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chave: 'coins_por_pix', valor })
-            });
-            alert("Regra de coins atualizada!");
+        window.salvarConfigCoinsPix = async () => {
+            await fetch(`${API_BASE}/admin/config`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chave: 'coins_por_pix', valor: document.getElementById('input-config-coins-pix').value }) });
+            alert("Salvo com sucesso!");
         };
 
-        window.carregarItensLojaAdmin = async function() {
+        window.carregarItensLojaAdmin = async () => {
             const res = await fetch(`${API_BASE}/admin/loja`);
             const itens = await res.json();
-            const grid = document.getElementById('grid-itens-admin-loja');
-            grid.innerHTML = '';
-            itens.forEach(i => {
-                grid.innerHTML += `<div class="bg-white p-3 rounded-xl border"><p class="font-black">${i.titulo}</p><p class="text-xs text-amber-700">🪙 ${i.custo_coins} Coins</p></div>`;
+            const grid = document.getElementById('grid-itens-admin-loja'); grid.innerHTML = '';
+            (itens || []).forEach(i => {
+                grid.innerHTML += `<div class="bg-white p-4 rounded-xl border flex justify-between items-center"><div><p class="font-black">${i.titulo}</p><p class="text-xs text-amber-700 font-bold">🪙 ${i.custo_coins} Coins</p></div><button onclick="excluirItemLoja('${i.id}')" class="text-red-500 font-bold text-xs uppercase">Excluir</button></div>`;
             });
+        };
+
+        window.adicionarItemLoja = async (e) => {
+            e.preventDefault();
+            await fetch(`${API_BASE}/admin/loja`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo: document.getElementById('novo-brinde-titulo').value, custo_coins: parseInt(document.getElementById('novo-brinde-custo').value) }) });
+            e.target.reset(); carregarItensLojaAdmin();
+        };
+
+        window.excluirItemLoja = async (id) => {
+            if (confirm("Excluir item?")) {
+                await fetch(`${API_BASE}/admin/loja/${id}`, { method: 'DELETE' });
+                carregarItensLojaAdmin();
+            }
         };
     </script>
 </body>

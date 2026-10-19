@@ -358,15 +358,6 @@
 
         const URL_PAINEL_CLIENTE = "https://cashback.locafacilmotos.com.br"; 
 
-        // Função para verificar sessão ao carregar a página
-window.onload = async () => {
-    const token = localStorage.getItem('lf_admin_token');
-    if (!token) {
-        exibirModalLogin();
-        return;
-    }
-
-    // Funções de Autenticação e Sessão
         window.exibirModalLogin = function() {
             const modal = document.getElementById('modal-login');
             if (modal) modal.classList.remove('hidden');
@@ -390,10 +381,7 @@ window.onload = async () => {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erro ao fazer login');
 
-                // Salva o token de acesso no navegador
                 localStorage.setItem('lf_admin_token', data.token);
-                
-                // Esconde o modal e recarrega os dados do painel
                 document.getElementById('modal-login').classList.add('hidden');
                 
                 carregarLeads();
@@ -409,6 +397,34 @@ window.onload = async () => {
             }
         };
 
+        // 2. DEPOIS ENTRA O WINDOW.ONLOAD
+        window.onload = async () => {
+            const token = localStorage.getItem('lf_admin_token');
+            if (!token) {
+                exibirModalLogin();
+                return;
+            }
+
+            try {
+                carregarLeads();
+                carregarLocatarios();
+                carregarMotosFrota();
+                carregarPlanosAdmin();
+                carregarItensLojaAdmin();
+                carregarConfiguracaoCoinsPix();
+            } catch (err) {
+                localStorage.removeItem('lf_admin_token');
+                exibirModalLogin();
+            }
+        };
+
+        // Função para verificar sessão ao carregar a página
+window.onload = async () => {
+    const token = localStorage.getItem('lf_admin_token');
+    if (!token) {
+        exibirModalLogin();
+        return;
+    }
     // Se possui token, faz as requisições enviando o cabeçalho de Autorização
     try {
        carregarLocatarios();

@@ -330,7 +330,7 @@
 
         const URL_PAINEL_CLIENTE = "https://cashback.locafacilmotos.com.br"; 
 
-// Função para verificar sessão ao carregar a página
+        // Função para verificar sessão ao carregar a página
 window.onload = async () => {
     const token = localStorage.getItem('lf_admin_token');
     if (!token) {
@@ -340,10 +340,11 @@ window.onload = async () => {
 
     // Se possui token, faz as requisições enviando o cabeçalho de Autorização
     try {
-        carregarLeads();
-        carregarLocatarios();
-        carregarMotosFrota();
-        carregarPlanosAdmin();
+       carregarLocatarios();
+                carregarMotosFrota();
+                carregarItensLojaAdmin();
+                carregarConfiguracaoCoinsPix();
+                carregarPlanosAdmin();
     } catch (err) {
         exibirModalLogin();
     }

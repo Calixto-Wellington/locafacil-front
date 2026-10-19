@@ -469,6 +469,50 @@
                 btn.classList.remove('opacity-75');
             }
         };
+        window.selecionarMotoInteresse = async function(nomeModeloCompleto) {
+    estadoFunil.moto = nomeModeloCompleto;
+    document.getElementById('badge-moto').innerText = nomeModeloCompleto;
+    mostrarPasso(2);
+
+    const gridPlanos = document.getElementById('grid-planos');
+    gridPlanos.innerHTML = '<p class="text-center w-full col-span-2 font-bold text-gray-400 animate-pulse mt-10">Buscando planos exclusivos...</p>';
+
+    try {
+        // Busca direto da sua tabela 'planos' no Supabase via API do Render
+        const response = await fetch(`${API_BASE}/agendamento/planos/${encodeURIComponent(nomeModeloCompleto)}`);
+        const planosFiltrados = await response.json();
+
+        gridPlanos.innerHTML = '';
+
+        if (!planosFiltrados || planosFiltrados.length === 0) {
+            gridPlanos.innerHTML = `<p class="text-center text-gray-600 font-bold col-span-2 uppercase">Nenhum plano ativo para este modelo no momento.</p>`;
+            return;
+        }
+
+        planosFiltrados.forEach(plano => {
+            const diariaCalc = (plano.valor_semanal / 7).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const semanalFormatado = parseFloat(plano.valor_semanal).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const caucaoFormatado = parseFloat(plano.valor_caucao || 1099).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const destaqueClass = plano.is_recomendado ? 'border-2 border-orange-500 shadow-lg relative' : 'border border-gray-200';
+            const badgeRecomendado = plano.is_recomendado ? '<span class="absolute -top-3 bg-orange-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Mais Popular</span>' : '';
+
+            gridPlanos.innerHTML += `
+                <div class="bg-white rounded-2xl p-6 md:p-8 flex flex-col text-center ${destaqueClass} shadow-sm">
+                    ${badgeRecomendado}
+                    <h4 class="font-extrabold text-xl text-gray-900 mb-2 uppercase mt-2">${plano.nome_plano}</h4>
+                    <p class="text-xs text-gray-600 font-medium mb-1">Diária a partir de</p>
+                    <div class="text-3xl font-black text-gray-900 mb-1">R$ ${diariaCalc}</div>
+                    <p class="text-xs text-gray-500 mb-4">por dia</p>
+                    <p class="text-sm font-bold text-gray-800 mb-2">R$ ${semanalFormatado} por semana</p>
+                    <p class="text-[11px] text-gray-500 font-semibold mb-6">Caução: R$ ${caucaoFormatado}</p>
+                    <button onclick="selecionarPlano('${plano.nome_plano}', ${plano.valor_semanal})" class="mt-auto w-full bg-orange-600 text-white font-black text-sm py-4 rounded-xl hover:bg-orange-700 transition uppercase tracking-wide shadow-md">Quero Este Plano</button>
+                </div>`;
+        });
+    } catch (err) {
+        console.error("Erro ao buscar planos:", err);
+    }
+};
     </script>
 </body>
 

@@ -564,7 +564,7 @@
             if (!grid) return;
             loading.style.display = 'block'; grid.innerHTML = '';
             try {
-                const res = await fetch(`${API_BASE}/adminplanos`);
+                const res = await fetch(`${API_BASE}/admin/planos`);
                 const lista = await res.json();
                 loading.style.display = 'none';
                 if (!lista || lista.length === 0) {

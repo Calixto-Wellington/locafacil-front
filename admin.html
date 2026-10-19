@@ -564,7 +564,7 @@
             if (!grid) return;
             loading.style.display = 'block'; grid.innerHTML = '';
             try {
-                const res = await fetch(`${API_BASE}/admin/planos`);
+                const res = await fetch(`${API_BASE}/planos`);
                 const lista = await res.json();
                 loading.style.display = 'none';
                 if (!lista || lista.length === 0) {
@@ -601,7 +601,7 @@
                 is_recomendado: document.getElementById('plano-recomendado').checked
             };
             try {
-                const res = await fetch(`${API_BASE}/admin/planos`, {
+                const res = await fetch(`${API_BASE}/planos`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
@@ -614,7 +614,7 @@
 
         window.excluirPlano = async function(id) {
             if(confirm('Tem certeza que deseja excluir este plano?')) {
-                await fetch(`${API_BASE}/admin/planos/${id}`, { method: 'DELETE' });
+                await fetch(`${API_BASE}/planos/${id}`, { method: 'DELETE' });
                 carregarPlanosAdmin();
             }
         };

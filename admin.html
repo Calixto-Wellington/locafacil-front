@@ -361,6 +361,26 @@
 
         const URL_PAINEL_CLIENTE = "https://cashback.locafacilmotos.com.br"; 
 
+        function alternarAba(nomeAba) {
+        // Esconde todas as abas
+        document.querySelectorAll('.aba-conteudo').forEach(el => el.classList.add('hidden'));
+        // Remove destaque de todos os botões
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('bg-orange-600', 'text-white'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.add('text-gray-600', 'hover:bg-gray-100'));
+
+        // Mostra a aba selecionada
+        const abaAlvo = document.getElementById(`aba-${nomeAba}`);
+        if (abaAlvo) abaAlvo.classList.remove('hidden');
+
+        // Destaca o botão ativo
+        const btnAtivo = document.getElementById(`btn-aba-${nomeAba}`);
+        if (btnAtivo) {
+            btnAtivo.classList.remove('text-gray-600', 'hover:bg-gray-100');
+            btnAtivo.classList.add('bg-orange-600', 'text-white');
+        }
+    }
+    window.alternarAba = alternarAba;
+
 function exibirModalLogin() {
             const modal = document.getElementById('modal-login');
             if (modal) modal.classList.remove('hidden');

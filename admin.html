@@ -358,12 +358,12 @@
 
         const URL_PAINEL_CLIENTE = "https://cashback.locafacilmotos.com.br"; 
 
-        window.exibirModalLogin = function() {
+function exibirModalLogin() {
             const modal = document.getElementById('modal-login');
             if (modal) modal.classList.remove('hidden');
-        };
+        }
 
-        window.realizarLoginAdmin = async function(e) {
+        async function realizarLoginAdmin(e) {
             e.preventDefault();
             const email = document.getElementById('login-email').value.trim();
             const senha = document.getElementById('login-senha').value.trim();
@@ -394,6 +394,31 @@
             } catch (err) {
                 erroDiv.innerText = `❌ ${err.message}`;
                 erroDiv.classList.remove('hidden');
+            }
+        }
+
+        // 2. EXPOSIÇÃO EXPLICITA AO WINDOW PARA EVENTOS DE BOTÃO (onclick/onsubmit no HTML)
+        window.exibirModalLogin = exibirModalLogin;
+        window.realizarLoginAdmin = realizarLoginAdmin;
+
+        // 3. INICIALIZAÇÃO SEGURA DA SESSÃO
+        window.onload = async () => {
+            const token = localStorage.getItem('lf_admin_token');
+            if (!token) {
+                exibirModalLogin(); // Chama a função declarada no módulo sem erro
+                return;
+            }
+
+            try {
+                carregarLeads();
+                carregarLocatarios();
+                carregarMotosFrota();
+                carregarPlanosAdmin();
+                carregarItensLojaAdmin();
+                carregarConfiguracaoCoinsPix();
+            } catch (err) {
+                localStorage.removeItem('lf_admin_token');
+                exibirModalLogin();
             }
         };
 

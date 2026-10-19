@@ -330,19 +330,41 @@
 
         const URL_PAINEL_CLIENTE = "https://cashback.locafacilmotos.com.br"; 
 
-        window.onload = () => {
-            const senha = prompt("Acesso Restrito: Digite a senha administrativa");
-            if (senha !== "locafacil2026") {
-                document.body.innerHTML = "<h1 class='text-center mt-20 font-bold text-red-500 text-2xl uppercase'>ACESSO NEGADO</h1>";
-            } else {
-                carregarLeads();
-                carregarLocatarios();
-                carregarMotosFrota();
-                carregarItensLojaAdmin();
-                carregarConfiguracaoCoinsPix();
-                carregarPlanosAdmin();
-            }
-        };
+// Função para verificar sessão ao carregar a página
+window.onload = async () => {
+    const token = localStorage.getItem('lf_admin_token');
+    if (!token) {
+        exibirModalLogin();
+        return;
+    }
+
+    // Se possui token, faz as requisições enviando o cabeçalho de Autorização
+    try {
+        carregarLeads();
+        carregarLocatarios();
+        carregarMotosFrota();
+        carregarPlanosAdmin();
+    } catch (err) {
+        exibirModalLogin();
+    }
+};
+
+// Exemplo de como fazer chamadas à API incluindo o Token do usuário logado
+async function fetchComAuth(url, options = {}) {
+    const token = localStorage.getItem('lf_admin_token');
+    options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+    };
+    const res = await fetch(url, options);
+    if (res.status === 401 || res.status === 403) {
+        // Se o token for inválido/expirado, desloga e pede a senha
+        localStorage.removeItem('lf_admin_token');
+        exibirModalLogin();
+    }
+    return res;
+}
 
         window.alternarAba = function(aba) {
             const secoes = { mesa: document.getElementById('secao-mesa'), frota: document.getElementById('secao-frota'), motos: document.getElementById('secao-motos'), loja: document.getElementById('secao-loja'), planos: document.getElementById('secao-planos') };

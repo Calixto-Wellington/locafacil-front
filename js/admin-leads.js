@@ -1,15 +1,21 @@
 import { API_BASE } from './api.js';
 
 export async function carregarLeads() {
-    const filtro = document.getElementById('filtro-status').value;
-    document.getElementById('loading-leads').style.display = 'block';
-    document.getElementById('grid-leads').innerHTML = '';
+    const filtro = document.getElementById('filtro-status')?.value || 'PENDENTE';
+    const loading = document.getElementById('loading-leads');
+    const grid = document.getElementById('grid-leads');
+    if (loading) loading.style.display = 'block';
+    if (grid) grid.innerHTML = '';
+    
     try {
         const res = await fetch(`${API_BASE}/admin/leads?status=${filtro}`);
         const fichas = await res.json();
-        document.getElementById('loading-leads').style.display = 'none';
+        if (loading) loading.style.display = 'none';
         renderizarLeads(fichas || []);
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+        console.error('Erro ao carregar leads:', e);
+        if (loading) loading.style.display = 'none';
+    }
 }
 
 export async function realizarBuscaLeads() {
@@ -18,7 +24,13 @@ export async function realizarBuscaLeads() {
 
 function renderizarLeads(fichas) {
     const grid = document.getElementById('grid-leads');
-    if (!fichas.length) { grid.innerHTML = `<div class="col-span-full bg-white p-8 text-center text-gray-500 font-bold uppercase">Nenhuma ficha encontrada.</div>`; return; }
+    if (!grid) return;
+    
+    if (!fichas.length) { 
+        grid.innerHTML = `<div class="col-span-full bg-white p-8 text-center text-gray-500 font-bold uppercase">Nenhuma ficha encontrada.</div>`; 
+        return; 
+    }
+    
     fichas.forEach(lead => {
         const dataEnvio = new Date(lead.created_at).toLocaleString('pt-BR');
         let badgeClass = lead.status === 'APROVADO' ? 'bg-blue-600 text-white' : lead.status === 'CONTRATADO' ? 'bg-green-600 text-white' : lead.status === 'REJEITADO' ? 'bg-red-600 text-white' : 'bg-yellow-500 text-black';

@@ -76,6 +76,33 @@ export function fecharModalPlano() {
     document.getElementById('modal-editar-plano').classList.add('hidden');
 }
 
+export async function salvarEdicaoPlano(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-plano-id').value;
+    const payload = {
+        modelo_nome: document.getElementById('edit-plano-modelo').value.trim(),
+        nome_plano: document.getElementById('edit-plano-nome').value.trim(),
+        valor_semanal: parseFloat(document.getElementById('edit-plano-valor').value),
+        valor_caucao: parseFloat(document.getElementById('edit-plano-caucao').value) || 1099.00,
+        is_recomendado: document.getElementById('edit-plano-recomendado').checked
+    };
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/planos/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Erro ao atualizar');
+
+        alert('✅ Plano atualizado com sucesso!');
+        fecharModalPlano();
+        carregarPlanosAdmin();
+    } catch (err) {
+        alert('❌ Erro ao atualizar o plano.');
+    }
+}
+
 export async function carregarConfiguracaoCoinsPix() {
     const res = await fetch(`${API_BASE}/admin/config/coins_por_pix`);
     const data = await res.json();

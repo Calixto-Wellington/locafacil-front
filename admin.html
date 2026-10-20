@@ -31,24 +31,27 @@
             <!-- SUBDIVISÕES / ABAS DE NAVEGAÇÃO -->
             <div class="flex bg-gray-800 p-1.5 rounded-xl border border-gray-700 w-full md:w-auto flex-wrap gap-1">
                 <button id="btn-aba-mesa" onclick="alternarAba('mesa')" 
-                    class="aba-btn ativa flex-1 md:flex-none font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    class="aba-btn ativa tab-btn flex-1 md:flex-none font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     📋 Mesa de Aprovação
                 </button>
                 <button id="btn-aba-frota" onclick="alternarAba('frota')" 
-                    class="aba-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    class="aba-btn tab-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     🏍️ Gestão de Frota
                 </button>
                 <button id="btn-aba-motos" onclick="alternarAba('motos')" 
-                    class="aba-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    class="aba-btn tab-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     🛵 Pátio & Frota
                 </button>
                 <button id="btn-aba-loja" onclick="alternarAba('loja')" 
-                    class="aba-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    class="aba-btn tab-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     🎁 Loja Coins & Regras
                 </button>
                 <button id="btn-aba-planos" onclick="alternarAba('planos')" 
-                    class="aba-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    class="aba-btn tab-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     📋 Gestão de Planos
+                </button>
+                <button onclick="alternarAba('usuarios')" id="btn-aba-usuarios" class="aba-btn tab-btn px-4 py-2 rounded-lg font-black text-xs uppercase flex items-center gap-2 text-gray-400 hover:text-white hidden transition-all">
+                    👥 Usuários
                 </button>
             </div>
         </header>
@@ -56,7 +59,7 @@
         <!-- ================================================================= -->
         <!-- SUBDIVISÃO 1: MESA DE APROVAÇÃO (FICHAS) -->
         <!-- ================================================================= -->
-        <section id="secao-mesa" class="space-y-6">
+        <section id="secao-mesa" class="aba-conteudo space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
                 <div>
                     <h2 class="text-xl font-black uppercase text-gray-900">Análise de Risco & Fichas</h2>
@@ -87,7 +90,7 @@
         <!-- ================================================================= -->
         <!-- SUBDIVISÃO 2: GESTÃO DE FROTA & CONTRATOS (LOCATÁRIOS) -->
         <!-- ================================================================= -->
-        <section id="secao-frota" class="space-y-6 hidden">
+        <section id="secao-frota" class="aba-conteudo space-y-6 hidden">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
                 <div>
                     <h2 class="text-xl font-black uppercase text-gray-900">Pilotos na Frota & Baixa de Pix</h2>
@@ -109,7 +112,7 @@
         <!-- ================================================================= -->
         <!-- SUBDIVISÃO 3: PÁTIO & MOTOS FÍSICAS -->
         <!-- ================================================================= -->
-        <section id="secao-motos" class="space-y-6 hidden">
+        <section id="secao-motos" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b">
                     <div>
@@ -154,7 +157,7 @@
         <!-- ================================================================= -->
         <!-- SUBDIVISÃO 4: LOJA DE COINS & REGRAS -->
         <!-- ================================================================= -->
-        <section id="secao-loja" class="space-y-6 hidden">
+        <section id="secao-loja" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <h2 class="text-xl font-black uppercase text-gray-900 mb-4">Configuração de Brindes & Regras de Coins</h2>
                 <div class="bg-orange-50 p-4 rounded-2xl border border-orange-200 mb-6 flex justify-between items-center">
@@ -178,7 +181,7 @@
         <!-- ================================================================= -->
         <!-- SUBDIVISÃO 5: GESTÃO DE PLANOS & VALORES -->
         <!-- ================================================================= -->
-        <section id="secao-planos" class="space-y-6 hidden">
+        <section id="secao-planos" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div class="flex justify-between items-center mb-6 pb-4 border-b">
                     <div>
@@ -223,6 +226,46 @@
 
                 <div id="loading-planos" class="text-center py-6 font-bold text-gray-500">Buscando planos cadastrados...</div>
                 <div id="grid-planos-admin" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- SUBDIVISÃO 6: GESTÃO DE USUÁRIOS (ADMIN) -->
+        <!-- ================================================================= -->
+        <section id="secao-usuarios" class="aba-conteudo space-y-6 hidden">
+            <div class="bg-white rounded-3xl p-6 shadow-md border border-gray-100">
+                <h3 class="text-lg font-black uppercase text-gray-900 mb-4">Cadastrar Novo Usuário</h3>
+                <form onsubmit="cadastrarNovoUsuario(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Nome Completo</label>
+                        <input type="text" id="user-nome" required placeholder="Ex: João Silva" class="w-full p-3 border rounded-xl text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-700 mb-1">E-mail de Acesso</label>
+                        <input type="email" id="user-email" required placeholder="joao@locafacil.com" class="w-full p-3 border rounded-xl text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Senha Inicial</label>
+                        <input type="password" id="user-senha" required placeholder="••••••••" class="w-full p-3 border rounded-xl text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Nível de Permissão</label>
+                        <select id="user-role" class="w-full p-3 border rounded-xl text-xs font-bold bg-white">
+                            <option value="OPERADOR">Operador</option>
+                            <option value="ADMIN">Administrador</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-4 flex justify-end">
+                        <button type="submit" class="bg-orange-600 text-white font-black px-6 py-3 rounded-xl text-xs uppercase hover:bg-orange-700 shadow-md">
+                            ➕ Criar Usuário
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 shadow-md border border-gray-100">
+                <h3 class="text-lg font-black uppercase text-gray-900 mb-4">Usuários do Sistema</h3>
+                <div id="grid-usuarios" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
             </div>
         </section>
     </div>
@@ -287,68 +330,247 @@
     </div>
 
     <!-- MODAL DE EDIÇÃO DE PLANO -->
-<div id="modal-editar-plano" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border relative">
-        <h3 class="text-lg font-black text-gray-900 uppercase mb-4">Editar Plano</h3>
-        <form id="form-editar-plano" onsubmit="salvarEdicaoPlano(event)" class="space-y-4">
-            <input type="hidden" id="edit-plano-id">
-            <div>
-                <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Modelo da Moto</label>
-                <input type="text" id="edit-plano-modelo" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
-            </div>
-            <div>
-                <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Nome do Plano</label>
-                <input type="text" id="edit-plano-nome" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
-            </div>
-            <div class="grid grid-cols-2 gap-3">
+    <div id="modal-editar-plano" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border relative">
+            <h3 class="text-lg font-black text-gray-900 uppercase mb-4">Editar Plano</h3>
+            <form id="form-editar-plano" onsubmit="salvarEdicaoPlano(event)" class="space-y-4">
+                <input type="hidden" id="edit-plano-id">
                 <div>
-                    <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Valor Semanal (R$)</label>
-                    <input type="number" step="0.01" id="edit-plano-valor" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
+                    <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Modelo da Moto</label>
+                    <input type="text" id="edit-plano-modelo" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Caução (R$)</label>
-                    <input type="number" step="0.01" id="edit-plano-caucao" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
+                    <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Nome do Plano</label>
+                    <input type="text" id="edit-plano-nome" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
                 </div>
-            </div>
-            <div class="flex items-center pt-2">
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" id="edit-plano-recomendado" class="w-4 h-4 text-orange-600 accent-orange-600">
-                    <span class="text-xs font-black uppercase text-gray-700">Destacar como Mais Popular</span>
-                </label>
-            </div>
-            <div class="flex gap-3 pt-3 border-t">
-                <button type="button" onclick="fecharModalPlano()" class="flex-1 bg-gray-200 py-2.5 rounded-xl text-xs font-bold">Cancelar</button>
-                <button type="submit" class="flex-1 bg-orange-600 text-white py-2.5 rounded-xl text-xs font-black">Salvar Alterações</button>
-            </div>
-        </form>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Valor Semanal (R$)</label>
+                        <input type="number" step="0.01" id="edit-plano-valor" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Caução (R$)</label>
+                        <input type="number" step="0.01" id="edit-plano-caucao" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
+                    </div>
+                </div>
+                <div class="flex items-center pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="edit-plano-recomendado" class="w-4 h-4 text-orange-600 accent-orange-600">
+                        <span class="text-xs font-black uppercase text-gray-700">Destacar como Mais Popular</span>
+                    </label>
+                </div>
+                <div class="flex gap-3 pt-3 border-t">
+                    <button type="button" onclick="fecharModalPlano()" class="flex-1 bg-gray-200 py-2.5 rounded-xl text-xs font-bold">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-orange-600 text-white py-2.5 rounded-xl text-xs font-black">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
-    <!-- SCRIPT 100% PRESERVADO CONECTADO À API -->
+    <!-- MODAL DE LOGIN ADMINISTRATIVO -->
+    <div id="modal-login" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border border-gray-100">
+            <div class="text-center mb-6">
+                <div class="bg-orange-600 text-white font-black text-xl px-4 py-2 rounded-xl inline-block mb-3">LF</div>
+                <h2 class="text-2xl font-black uppercase text-gray-900 tracking-wide">Acesso Restrito</h2>
+                <p class="text-xs text-gray-500 font-bold uppercase mt-1">Entre com suas credenciais para acessar o painel</p>
+            </div>
+
+            <form onsubmit="realizarLoginAdmin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-700 mb-1">E-mail</label>
+                    <input type="email" id="login-email" required placeholder="seu@email.com" 
+                        class="w-full p-3.5 border border-gray-200 rounded-xl text-xs font-bold bg-gray-50 focus:bg-white transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Senha</label>
+                    <input type="password" id="login-senha" required placeholder="••••••••" 
+                        class="w-full p-3.5 border border-gray-200 rounded-xl text-xs font-bold bg-gray-50 focus:bg-white transition">
+                </div>
+                <div id="login-erro" class="text-red-500 text-xs font-bold text-center hidden"></div>
+                <button type="submit" 
+                    class="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-4 rounded-xl transition text-xs uppercase shadow-lg tracking-wider mt-2">
+                    🔓 Entrar no Sistema
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT 100% INTEGRADO E PRESERVADO -->
     <script type="module">
         import { API_BASE } from './js/api.js';
 
         const URL_PAINEL_CLIENTE = "https://cashback.locafacilmotos.com.br"; 
 
-        window.onload = () => {
-            const senha = prompt("Acesso Restrito: Digite a senha administrativa");
-            if (senha !== "locafacil2026") {
-                document.body.innerHTML = "<h1 class='text-center mt-20 font-bold text-red-500 text-2xl uppercase'>ACESSO NEGADO</h1>";
-            } else {
-                carregarLeads();
-                carregarLocatarios();
-                carregarMotosFrota();
-                carregarItensLojaAdmin();
-                carregarConfiguracaoCoinsPix();
-                carregarPlanosAdmin();
+        // 1. Função de Navegação de Abas
+        window.alternarAba = function(aba) {
+            const secoes = { 
+                mesa: document.getElementById('secao-mesa'), 
+                frota: document.getElementById('secao-frota'), 
+                motos: document.getElementById('secao-motos'), 
+                loja: document.getElementById('secao-loja'), 
+                planos: document.getElementById('secao-planos'),
+                usuarios: document.getElementById('secao-usuarios')
+            };
+            const botoes = { 
+                mesa: document.getElementById('btn-aba-mesa'), 
+                frota: document.getElementById('btn-aba-frota'), 
+                motos: document.getElementById('btn-aba-motos'), 
+                loja: document.getElementById('btn-aba-loja'), 
+                planos: document.getElementById('btn-aba-planos'),
+                usuarios: document.getElementById('btn-aba-usuarios')
+            };
+            
+            Object.keys(secoes).forEach(k => { 
+                if(secoes[k]) secoes[k].classList.add('hidden'); 
+                if(botoes[k]) { 
+                    botoes[k].classList.remove('ativa', 'bg-orange-600', 'text-white'); 
+                    botoes[k].classList.add('text-gray-400', 'hover:text-white'); 
+                } 
+            });
+            
+            if (secoes[aba]) secoes[aba].classList.remove('hidden');
+            if (botoes[aba]) {
+                botoes[aba].classList.remove('text-gray-400', 'hover:text-white');
+                botoes[aba].classList.add('ativa', 'bg-orange-600', 'text-white');
             }
         };
 
-        window.alternarAba = function(aba) {
-            const secoes = { mesa: document.getElementById('secao-mesa'), frota: document.getElementById('secao-frota'), motos: document.getElementById('secao-motos'), loja: document.getElementById('secao-loja'), planos: document.getElementById('secao-planos') };
-            const botoes = { mesa: document.getElementById('btn-aba-mesa'), frota: document.getElementById('btn-aba-frota'), motos: document.getElementById('btn-aba-motos'), loja: document.getElementById('btn-aba-loja'), planos: document.getElementById('btn-aba-planos') };
-            Object.keys(secoes).forEach(k => { if(secoes[k]) { secoes[k].classList.add('hidden'); } if(botoes[k]) { botoes[k].classList.remove('ativa', 'text-white'); botoes[k].classList.add('text-gray-400'); } });
-            if (secoes[aba]) { secoes[aba].classList.remove('hidden'); botoes[aba].classList.add('ativa', 'text-white'); botoes[aba].classList.remove('text-gray-400'); }
+        // 2. Funções de Autenticação Segura (JWT)
+        function exibirModalLogin() {
+            const modal = document.getElementById('modal-login');
+            if (modal) modal.classList.remove('hidden');
+        }
+        window.exibirModalLogin = exibirModalLogin;
+
+        async function realizarLoginAdmin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const senha = document.getElementById('login-senha').value.trim();
+            const erroDiv = document.getElementById('login-erro');
+
+            erroDiv.classList.add('hidden');
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erro ao fazer login');
+
+                localStorage.setItem('lf_admin_token', data.token);
+                document.getElementById('modal-login').classList.add('hidden');
+                
+                carregarDadosPainel();
+            } catch (err) {
+                erroDiv.innerText = `❌ ${err.message}`;
+                erroDiv.classList.remove('hidden');
+            }
+        }
+        window.realizarLoginAdmin = realizarLoginAdmin;
+
+        // Helper de Requisições Autenticadas com Bearer Token
+        async function fetchComAuth(url, options = {}) {
+            const token = localStorage.getItem('lf_admin_token');
+            options.headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+            const res = await fetch(url, options);
+            if (res.status === 401 || res.status === 403) {
+                localStorage.removeItem('lf_admin_token');
+                exibirModalLogin();
+            }
+            return res;
+        }
+
+        // 3. Verificação de Permissões de Administrador
+        function verificarPermissoesAdmin() {
+            const token = localStorage.getItem('lf_admin_token');
+            if (!token) return;
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const payload = JSON.parse(window.atob(base64));
+
+                if (payload && payload.role === 'ADMIN') {
+                    const btnUsuarios = document.getElementById('btn-aba-usuarios');
+                    if (btnUsuarios) btnUsuarios.classList.remove('hidden');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // 4. Gestão de Usuários (Apenas Admin)
+        window.carregarUsuarios = async function() {
+            try {
+                const res = await fetchComAuth(`${API_BASE}/auth/usuarios`);
+                if (!res.ok) return;
+
+                const usuarios = await res.json();
+                const grid = document.getElementById('grid-usuarios');
+                if (!grid) return;
+
+                grid.innerHTML = '';
+                usuarios.forEach(u => {
+                    grid.innerHTML += `
+                        <div class="bg-gray-50 p-4 rounded-2xl border flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${u.role}</span>
+                                    <span class="text-[10px] font-bold ${u.ativo ? 'text-green-600' : 'text-red-600'}">${u.ativo ? '● Ativo' : '○ Inativo'}</span>
+                                </div>
+                                <h4 class="font-black text-gray-900 text-sm uppercase">${u.nome}</h4>
+                                <p class="text-xs text-gray-500 font-bold">${u.email}</p>
+                            </div>
+                            ${u.role !== 'ADMIN' ? `
+                                <div class="pt-3 border-t mt-3">
+                                    <button onclick="excluirUsuario('${u.id}')" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-1.5 rounded-lg text-xs uppercase">🗑️ Remover Acesso</button>
+                                </div>
+                            ` : ''}
+                        </div>`;
+                });
+            } catch (err) { console.error(err); }
+        };
+
+        window.cadastrarNovoUsuario = async function(e) {
+            e.preventDefault();
+            const payload = {
+                nome: document.getElementById('user-nome').value.trim(),
+                email: document.getElementById('user-email').value.trim(),
+                senha: document.getElementById('user-senha').value.trim(),
+                role: document.getElementById('user-role').value
+            };
+
+            try {
+                const res = await fetchComAuth(`${API_BASE}/auth/usuarios`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.error || 'Erro ao criar usuário');
+                }
+
+                alert('✅ Usuário cadastrado com sucesso!');
+                e.target.reset();
+                carregarUsuarios();
+            } catch (err) {
+                alert(`❌ ${err.message}`);
+            }
+        };
+
+        window.excluirUsuario = async function(id) {
+            if (confirm('Deseja realmente remover o acesso deste usuário?')) {
+                await fetchComAuth(`${API_BASE}/auth/usuarios/${id}`, {
+                    method: 'DELETE'
+                });
+                carregarUsuarios();
+            }
         };
 
         // --- MOTOS / PÁTIO ---
@@ -621,8 +843,9 @@
                                     <p>Destaque: ${p.is_recomendado ? '⭐ Sim' : 'Não'}</p>
                                 </div>
                             </div>
-                            <div class="pt-3 border-t mt-4">
-                                <button onclick="excluirPlano('${p.id}')" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-lg text-xs uppercase">🗑️ Excluir Plano</button>
+                            <div class="space-y-2 pt-3 border-t mt-4">
+                                <button onclick='abrirModalEditarPlano(${JSON.stringify(p)})' class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 rounded-lg text-xs uppercase">✏️ Editar Plano</button>
+                                <button onclick="excluirPlano('${p.id}')" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-lg text-xs uppercase">🗑️ Excluir</button>
                             </div>
                         </div>`;
                 });
@@ -655,40 +878,6 @@
                 await fetch(`${API_BASE}/admin/planos/${id}`, { method: 'DELETE' });
                 carregarPlanosAdmin();
             }
-        };
-
-        window.carregarPlanosAdmin = async function() {
-            const grid = document.getElementById('grid-planos-admin');
-            const loading = document.getElementById('loading-planos');
-            if (!grid) return;
-            loading.style.display = 'block'; grid.innerHTML = '';
-            try {
-                const res = await fetch(`${API_BASE}/admin/planos`);
-                const lista = await res.json();
-                loading.style.display = 'none';
-                if (!lista || lista.length === 0) {
-                    grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center text-gray-500 font-bold uppercase">Nenhum plano cadastrado.</div>`;
-                    return;
-                }
-                lista.forEach(p => {
-                    grid.innerHTML += `
-                        <div class="bg-white rounded-2xl shadow-md border p-4 flex flex-col justify-between">
-                            <div>
-                                <span class="text-[10px] font-black uppercase text-orange-600 block">${p.modelo_nome}</span>
-                                <h4 class="font-black text-gray-900 text-base uppercase mb-2">${p.nome_plano}</h4>
-                                <div class="text-xs bg-gray-50 p-3 rounded-xl border space-y-1 font-bold">
-                                    <p>Semanal: <span class="text-green-600 font-black">R$ ${parseFloat(p.valor_semanal).toFixed(2)}</span></p>
-                                    <p>Caução: <span class="text-gray-700">R$ ${parseFloat(p.valor_caucao || 1099).toFixed(2)}</span></p>
-                                    <p>Destaque: ${p.is_recomendado ? '⭐ Sim' : 'Não'}</p>
-                                </div>
-                            </div>
-                            <div class="space-y-2 pt-3 border-t mt-4">
-                                <button onclick='abrirModalEditarPlano(${JSON.stringify(p)})' class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 rounded-lg text-xs uppercase">✏️ Editar Plano</button>
-                                <button onclick="excluirPlano('${p.id}')" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-lg text-xs uppercase">🗑️ Excluir</button>
-                            </div>
-                        </div>`;
-                });
-            } catch(e) { console.error(e); }
         };
 
         window.abrirModalEditarPlano = function(p) {
@@ -729,6 +918,33 @@
                 carregarPlanosAdmin();
             } catch (err) {
                 alert('❌ Erro ao atualizar o plano.');
+            }
+        };
+
+        // 5. Inicialização e Carregamento Geral do Painel
+        function carregarDadosPainel() {
+            verificarPermissoesAdmin();
+            if (typeof carregarLeads === 'function') carregarLeads();
+            if (typeof carregarLocatarios === 'function') carregarLocatarios();
+            if (typeof carregarMotosFrota === 'function') carregarMotosFrota();
+            if (typeof carregarPlanosAdmin === 'function') carregarPlanosAdmin();
+            if (typeof carregarItensLojaAdmin === 'function') carregarItensLojaAdmin();
+            if (typeof carregarConfiguracaoCoinsPix === 'function') carregarConfiguracaoCoinsPix();
+            if (typeof carregarUsuarios === 'function') carregarUsuarios();
+        }
+
+        window.onload = async () => {
+            const token = localStorage.getItem('lf_admin_token');
+            if (!token) {
+                exibirModalLogin();
+                return;
+            }
+
+            try {
+                carregarDadosPainel();
+            } catch (err) {
+                localStorage.removeItem('lf_admin_token');
+                exibirModalLogin();
             }
         };
     </script>

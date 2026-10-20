@@ -33,19 +33,45 @@ function renderizarLeads(fichas) {
     
     fichas.forEach(lead => {
         const dataEnvio = new Date(lead.created_at).toLocaleString('pt-BR');
-        let badgeClass = lead.status === 'APROVADO' ? 'bg-blue-600 text-white' : lead.status === 'CONTRATADO' ? 'bg-green-600 text-white' : lead.status === 'REJEITADO' ? 'bg-red-600 text-white' : 'bg-yellow-500 text-black';
-        let areaAcoes = lead.status === 'PENDENTE' ? `
-            <div class="space-y-3"><button onclick="validarCaucao('${lead.nome}', '${lead.telefone}')" class="w-full bg-blue-600 text-white font-black py-3 rounded-lg text-xs uppercase">💬 1. Chamar no Whats (Caução)</button>
-            <div class="flex space-x-2"><button onclick="aprovarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="flex-1 bg-green-600 text-white font-black py-3 rounded-lg text-xs uppercase">✅ 2. Aprovar</button><button onclick="rejeitarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="bg-red-100 text-red-600 font-black px-4 rounded-lg text-xs uppercase">Arquivar</button></div></div>` : lead.status === 'APROVADO' ? `
-            <div class="space-y-3"><div class="bg-blue-50 border p-2.5 rounded-lg text-center font-bold text-blue-800 text-[11px] uppercase">🔵 Aprovado — Aguardando Retirada</div>
-            <div class="flex space-x-2"><button onclick="efetivarLocacao('${lead.id}', '${lead.telefone}', '${lead.nome}', '${lead.cpf}', '${lead.email}', '${lead.moto_interesse}')" class="flex-1 bg-orange-600 text-white font-black py-3 rounded-xl text-xs uppercase shadow-md">🏍️ Entregar Moto</button><button onclick="rejeitarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="bg-red-100 text-red-600 font-black px-3 rounded-xl text-xs uppercase">Desistiu</button></div></div>` : `<div class="bg-black text-orange-500 border p-3 rounded-xl text-center font-black text-xs uppercase">🚀 Contrato Ativo</div>`;
+        const statusAtual = (lead.status || 'PENDENTE').toUpperCase();
+        
+        let badgeClass = 'bg-yellow-500 text-black';
+        if (statusAtual === 'APROVADO') badgeClass = 'bg-blue-600 text-white';
+        else if (statusAtual === 'CONTRATADO') badgeClass = 'bg-green-600 text-white';
+        else if (statusAtual === 'REJEITADO') badgeClass = 'bg-red-600 text-white';
+
+        let areaAcoes = '';
+        
+        if (statusAtual === 'PENDENTE') {
+            areaAcoes = `
+                <div class="space-y-3">
+                    <button onclick="validarCaucao('${lead.nome}', '${lead.telefone}')" class="w-full bg-blue-600 text-white font-black py-3 rounded-lg text-xs uppercase">💬 1. Chamar no Whats (Caução)</button>
+                    <div class="flex space-x-2">
+                        <button onclick="aprovarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="flex-1 bg-green-600 text-white font-black py-3 rounded-lg text-xs uppercase">✅ 2. Aprovar</button>
+                        <button onclick="rejeitarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="bg-red-100 text-red-600 font-black px-4 rounded-lg text-xs uppercase">Arquivar</button>
+                    </div>
+                </div>`;
+        } else if (statusAtual === 'APROVADO') {
+            areaAcoes = `
+                <div class="space-y-3">
+                    <div class="bg-blue-50 border p-2.5 rounded-lg text-center font-bold text-blue-800 text-[11px] uppercase">🔵 Aprovado — Aguardando Retirada</div>
+                    <div class="flex space-x-2">
+                        <button onclick="efetivarLocacao('${lead.id}', '${lead.telefone}', '${lead.nome}', '${lead.cpf}', '${lead.email}', '${lead.moto_interesse}')" class="flex-1 bg-orange-600 text-white font-black py-3 rounded-xl text-xs uppercase shadow-md">🏍️ Entregar Moto</button>
+                        <button onclick="rejeitarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="bg-red-100 text-red-600 font-black px-3 rounded-xl text-xs uppercase">Desistiu</button>
+                    </div>
+                </div>`;
+        } else if (statusAtual === 'CONTRATADO') {
+            areaAcoes = `<div class="bg-black text-orange-500 border p-3 rounded-xl text-center font-black text-xs uppercase">🚀 Contrato Ativo</div>`;
+        } else {
+            areaAcoes = `<div class="bg-red-50 text-red-600 border p-3 rounded-xl text-center font-black text-xs uppercase">❌ Ficha Rejeitada / Arquivada</div>`;
+        }
 
         grid.innerHTML += `
             <div class="bg-white rounded-2xl shadow-lg border overflow-hidden">
-                <div class="bg-black text-white p-4 flex justify-between items-center"><span class="font-bold text-xs text-gray-300">Recebido: ${dataEnvio}</span><span class="${badgeClass} text-[10px] font-black px-2 py-1 rounded uppercase">${lead.status}</span></div>
+                <div class="bg-black text-white p-4 flex justify-between items-center"><span class="font-bold text-xs text-gray-300">Recebido: ${dataEnvio}</span><span class="${badgeClass} text-[10px] font-black px-2 py-1 rounded uppercase">${statusAtual}</span></div>
                 <div class="p-5">
                     <div class="grid grid-cols-2 gap-3 mb-4 text-xs"><div><p class="text-gray-400 font-bold uppercase">Nome</p><p class="font-black text-base uppercase text-gray-900">${lead.nome}</p></div><div><p class="text-gray-400 font-bold uppercase">CPF</p><p class="font-bold text-gray-800">${lead.cpf}</p></div><div><p class="text-gray-400 font-bold uppercase">WhatsApp</p><p class="font-bold text-gray-800">${lead.telefone}</p></div><div><p class="text-gray-400 font-bold uppercase">Email</p><p class="font-bold text-gray-800">${lead.email}</p></div></div>
-                    <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 mb-4 text-xs"><p class="text-orange-600 font-black uppercase">Interesse</p><p class="font-bold text-gray-900 text-sm">${lead.moto_interesse} - ${lead.plano_interesse}</p></div>
+                    <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 mb-4 text-xs"><p class="text-orange-600 font-black uppercase">Interesse</p><p class="font-bold text-gray-900 text-sm">${lead.moto_interesse || 'N/A'} - ${lead.plano_interesse || 'N/A'}</p></div>
                     <div class="grid grid-cols-2 gap-3 border-t pt-3 mb-4 text-xs"><a href="${lead.cnh_url}" target="_blank" class="text-center block bg-gray-100 py-2 rounded-lg font-bold">📄 Ver CNH</a><a href="${lead.comprovante_url}" target="_blank" class="text-center block bg-gray-100 py-2 rounded-lg font-bold">📄 Ver Comprovante</a></div>
                     ${areaAcoes}
                 </div>

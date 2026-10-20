@@ -29,7 +29,7 @@
             </div>
 
             <!-- SUBDIVISÕES / ABAS DE NAVEGAÇÃO -->
-            <div class="flex bg-gray-800 p-1.5 rounded-xl border border-gray-700 w-full md:w-auto flex-wrap gap-1">
+            <div class="flex bg-gray-800 p-1.5 rounded-xl border border-gray-700 w-full md:w-auto flex-wrap gap-1 items-center">
                 <button id="btn-aba-mesa" onclick="alternarAba('mesa')" 
                     class="aba-btn ativa tab-btn flex-1 md:flex-none font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     📋 Mesa de Aprovação
@@ -53,11 +53,15 @@
                 <button onclick="alternarAba('usuarios')" id="btn-aba-usuarios" class="aba-btn tab-btn px-4 py-2 rounded-lg font-black text-xs uppercase flex items-center gap-2 text-gray-400 hover:text-white hidden transition-all">
                     👥 Usuários
                 </button>
+                <!-- BOTÃO SAIR / LOGOUT -->
+                <button onclick="realizarLogout()" class="bg-red-600/80 hover:bg-red-600 text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2 ml-auto">
+                    🚪 Sair
+                </button>
             </div>
         </header>
 
         <!-- ================================================================= -->
-        <!-- SUBDIVISÃO 1: MESA DE APROVAÇÃO (FICHAS) -->
+        <!-- SEÇÕES DAS ABAS (Mesa, Frota, Motos, Loja, Planos, Usuários)      -->
         <!-- ================================================================= -->
         <section id="secao-mesa" class="aba-conteudo space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
@@ -65,7 +69,6 @@
                     <h2 class="text-xl font-black uppercase text-gray-900">Análise de Risco & Fichas</h2>
                     <p id="subtitulo-mesa" class="text-xs text-gray-500 font-bold uppercase mt-0.5">Exibindo fichas pendentes</p>
                 </div>
-
                 <div class="flex flex-col md:flex-row w-full md:w-auto gap-2">
                     <select id="filtro-status" onchange="carregarLeads()"
                         class="p-2.5 border border-gray-300 rounded-xl text-xs font-bold outline-none uppercase text-gray-700 bg-white">
@@ -75,28 +78,22 @@
                         <option value="REJEITADO">Filtro: Rejeitados / Arquivados</option>
                         <option value="TODOS">Todas as Fichas</option>
                     </select>
-
                     <input type="text" id="input-busca-leads" placeholder="Digitar CPF ou WhatsApp..."
                         class="p-2.5 border border-gray-300 rounded-xl text-xs font-bold outline-none w-full md:w-60 uppercase">
                     <button onclick="realizarBuscaLeads()" class="bg-black hover:bg-gray-900 text-white font-black py-2.5 px-4 rounded-xl transition text-xs uppercase">🔍 Buscar</button>
                     <button onclick="carregarLeads()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-2.5 px-3 rounded-xl transition text-xs uppercase">🔄 Atualizar</button>
                 </div>
             </div>
-
             <div id="loading-leads" class="text-center py-10 font-bold text-gray-500">Buscando fichas no sistema...</div>
             <div id="grid-leads" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
         </section>
 
-        <!-- ================================================================= -->
-        <!-- SUBDIVISÃO 2: GESTÃO DE FROTA & CONTRATOS (LOCATÁRIOS) -->
-        <!-- ================================================================= -->
         <section id="secao-frota" class="aba-conteudo space-y-6 hidden">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
                 <div>
                     <h2 class="text-xl font-black uppercase text-gray-900">Pilotos na Frota & Baixa de Pix</h2>
                     <p class="text-xs text-gray-500 font-bold uppercase mt-0.5">Gestão de Contratos, Moedas e Telemetria</p>
                 </div>
-
                 <div class="flex flex-col md:flex-row w-full md:w-auto gap-2">
                     <input type="text" id="input-busca-frota" placeholder="Digitar Placa, Nome ou CPF..."
                         class="p-2.5 border border-gray-300 rounded-xl text-xs font-bold outline-none w-full md:w-64 uppercase">
@@ -104,14 +101,10 @@
                     <button onclick="carregarLocatarios()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-2.5 px-3 rounded-xl transition text-xs uppercase">🔄 Todos</button>
                 </div>
             </div>
-
             <div id="loading-frota" class="text-center py-10 font-bold text-gray-500">Buscando pilotos no banco de dados...</div>
             <div id="grid-frota" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
 
-        <!-- ================================================================= -->
-        <!-- SUBDIVISÃO 3: PÁTIO & MOTOS FÍSICAS -->
-        <!-- ================================================================= -->
         <section id="secao-motos" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b">
@@ -121,18 +114,13 @@
                     </div>
                     <button onclick="carregarMotosFrota()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-2.5 px-4 rounded-xl text-xs uppercase">🔄 Atualizar Pátio</button>
                 </div>
-
                 <form onsubmit="salvarNovaMoto(event)" class="bg-orange-50/50 p-5 rounded-2xl border border-orange-200 mb-8 space-y-4">
-                    <h3 class="text-sm font-black text-gray-900 uppercase flex items-center gap-1.5">
-                        <span>➕</span> Cadastrar Moto no Pátio
-                    </h3>
-
+                    <h3 class="text-sm font-black text-gray-900 uppercase flex items-center gap-1.5"><span>➕</span> Cadastrar Moto no Pátio</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <input type="text" id="novo-moto-marca" placeholder="Ex: Honda ou Yamaha" required class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
                         <input type="text" id="novo-moto-modelo" placeholder="Ex: CG 160 Start" required class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
                         <input type="text" id="novo-moto-cor" placeholder="Ex: Preta" required class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <input type="number" id="novo-moto-ano" value="2025" class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
                         <input type="text" id="novo-moto-placa" placeholder="Ex: TKA3E77" required class="w-full p-2.5 border rounded-xl text-xs font-black uppercase bg-white">
@@ -148,15 +136,11 @@
                         <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-black py-3 px-6 rounded-xl transition text-xs uppercase shadow-md">💾 Cadastrar Moto</button>
                     </div>
                 </form>
-
                 <div id="loading-motos" class="text-center py-6 font-bold text-gray-500">Buscando motos...</div>
                 <div id="grid-motos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
         </section>
 
-        <!-- ================================================================= -->
-        <!-- SUBDIVISÃO 4: LOJA DE COINS & REGRAS -->
-        <!-- ================================================================= -->
         <section id="secao-loja" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <h2 class="text-xl font-black uppercase text-gray-900 mb-4">Configuração de Brindes & Regras de Coins</h2>
@@ -167,20 +151,15 @@
                         <button onclick="salvarConfigCoinsPix()" class="bg-orange-600 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase">Salvar</button>
                     </div>
                 </div>
-
                 <form onsubmit="adicionarItemLoja(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-amber-50 p-4 rounded-xl border mb-6">
                     <input type="text" id="novo-brinde-titulo" placeholder="Nome do Brinde" required class="p-2.5 border rounded-lg text-xs font-bold">
                     <input type="number" id="novo-brinde-custo" placeholder="Custo em Coins" required min="1" class="p-2.5 border rounded-lg text-xs font-bold">
                     <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-black py-2.5 rounded-lg text-xs uppercase shadow-md">➕ Adicionar</button>
                 </form>
-
                 <div id="grid-itens-admin-loja" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
             </div>
         </section>
 
-        <!-- ================================================================= -->
-        <!-- SUBDIVISÃO 5: GESTÃO DE PLANOS & VALORES -->
-        <!-- ================================================================= -->
         <section id="secao-planos" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -190,7 +169,6 @@
                     </div>
                     <button onclick="carregarPlanosAdmin()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-2.5 px-4 rounded-xl text-xs uppercase">🔄 Atualizar Planos</button>
                 </div>
-
                 <form onsubmit="salvarNovoPlano(event)" class="bg-orange-50/50 p-5 rounded-2xl border border-orange-200 mb-8 space-y-4">
                     <h3 class="text-sm font-black text-gray-900 uppercase">➕ Cadastrar Novo Plano para uma Moto</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -223,15 +201,11 @@
                         <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-black py-3 px-6 rounded-xl transition text-xs uppercase shadow-md">💾 Salvar Novo Plano</button>
                     </div>
                 </form>
-
                 <div id="loading-planos" class="text-center py-6 font-bold text-gray-500">Buscando planos cadastrados...</div>
                 <div id="grid-planos-admin" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
         </section>
 
-        <!-- ================================================================= -->
-        <!-- SUBDIVISÃO 6: GESTÃO DE USUÁRIOS (ADMIN) -->
-        <!-- ================================================================= -->
         <section id="secao-usuarios" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white rounded-3xl p-6 shadow-md border border-gray-100">
                 <h3 class="text-lg font-black uppercase text-gray-900 mb-4">Cadastrar Novo Usuário</h3>
@@ -256,13 +230,10 @@
                         </select>
                     </div>
                     <div class="md:col-span-4 flex justify-end">
-                        <button type="submit" class="bg-orange-600 text-white font-black px-6 py-3 rounded-xl text-xs uppercase hover:bg-orange-700 shadow-md">
-                            ➕ Criar Usuário
-                        </button>
+                        <button type="submit" class="bg-orange-600 text-white font-black px-6 py-3 rounded-xl text-xs uppercase hover:bg-orange-700 shadow-md">➕ Criar Usuário</button>
                     </div>
                 </form>
             </div>
-
             <div class="bg-white rounded-3xl p-6 shadow-md border border-gray-100">
                 <h3 class="text-lg font-black uppercase text-gray-900 mb-4">Usuários do Sistema</h3>
                 <div id="grid-usuarios" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
@@ -270,104 +241,11 @@
         </section>
     </div>
 
-    <!-- MODAL DE EDIÇÃO DE MOTO -->
-    <div id="modal-editar-moto" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border relative">
-            <h3 class="text-lg font-black text-gray-900 uppercase mb-4">Editar Dados da Moto</h3>
-            <form id="form-editar-moto" onsubmit="salvarEdicaoMoto(event)" class="space-y-4">
-                <input type="hidden" id="edit-moto-id">
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="text" id="edit-moto-marca" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Marca">
-                    <input type="text" id="edit-moto-modelo" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Modelo">
-                </div>
-                <div class="grid grid-cols-3 gap-3">
-                    <input type="text" id="edit-moto-cor" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Cor">
-                    <input type="number" id="edit-moto-ano" class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Ano">
-                    <input type="text" id="edit-moto-placa" required class="p-2.5 border rounded-lg text-xs font-black uppercase" placeholder="Placa">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="number" id="edit-moto-km" class="p-2.5 border rounded-lg text-xs font-bold" placeholder="KM">
-                    <select id="edit-moto-status" class="p-2.5 border rounded-lg text-xs font-bold">
-                        <option value="DISPONIVEL">Disponível</option>
-                        <option value="ALUGADA">Alugada</option>
-                        <option value="MANUTENCAO">Manutenção</option>
-                    </select>
-                </div>
-                <div class="flex gap-3 pt-3 border-t">
-                    <button type="button" onclick="fecharModalMoto()" class="flex-1 bg-gray-200 py-2 rounded-xl text-xs font-bold">Cancelar</button>
-                    <button type="submit" class="flex-1 bg-orange-600 text-white py-2 rounded-xl text-xs font-black">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL DE EDIÇÃO DE PILOTO -->
-    <div id="modal-editar" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border relative">
-            <h3 class="text-xl font-black text-gray-900 uppercase mb-4">Editar Dados do Piloto</h3>
-            <form id="form-editar" onsubmit="salvarEdicaoCard(event)" class="space-y-4">
-                <input type="hidden" id="edit-id">
-                <input type="text" id="edit-nome" required class="w-full p-2.5 border rounded-lg text-sm font-bold uppercase" placeholder="Nome">
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="text" id="edit-placa" required class="p-2.5 border rounded-lg text-sm font-bold uppercase" placeholder="Placa">
-                    <input type="text" id="edit-modelo" required class="p-2.5 border rounded-lg text-sm font-bold" placeholder="Modelo">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="text" id="edit-telefone" required class="p-2.5 border rounded-lg text-sm font-bold" placeholder="WhatsApp">
-                    <input type="text" id="edit-cpf" required class="p-2.5 border rounded-lg text-sm font-bold" placeholder="CPF">
-                </div>
-                <div class="grid grid-cols-3 gap-3 bg-orange-50 p-3 rounded-xl border">
-                    <input type="number" id="edit-semanas" required min="0" max="182" class="p-2 border rounded-lg text-sm font-black text-orange-600" placeholder="Semanas">
-                    <input type="number" id="edit-coins" required min="0" class="p-2 border rounded-lg text-sm font-black text-amber-700" placeholder="Coins">
-                    <input type="number" id="edit-km-atual" required class="p-2 border rounded-lg text-sm font-bold" placeholder="KM">
-                </div>
-                <div class="flex gap-3 pt-4 border-t">
-                    <button type="button" onclick="fecharModal()" class="flex-1 bg-gray-200 py-3 rounded-xl text-xs font-bold">Cancelar</button>
-                    <button type="submit" class="flex-1 bg-orange-600 text-white py-3 rounded-xl text-xs font-black">Salvar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL DE EDIÇÃO DE PLANO -->
-    <div id="modal-editar-plano" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border relative">
-            <h3 class="text-lg font-black text-gray-900 uppercase mb-4">Editar Plano</h3>
-            <form id="form-editar-plano" onsubmit="salvarEdicaoPlano(event)" class="space-y-4">
-                <input type="hidden" id="edit-plano-id">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Modelo da Moto</label>
-                    <input type="text" id="edit-plano-modelo" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Nome do Plano</label>
-                    <input type="text" id="edit-plano-nome" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Valor Semanal (R$)</label>
-                        <input type="number" step="0.01" id="edit-plano-valor" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Caução (R$)</label>
-                        <input type="number" step="0.01" id="edit-plano-caucao" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
-                    </div>
-                </div>
-                <div class="flex items-center pt-2">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="edit-plano-recomendado" class="w-4 h-4 text-orange-600 accent-orange-600">
-                        <span class="text-xs font-black uppercase text-gray-700">Destacar como Mais Popular</span>
-                    </label>
-                </div>
-                <div class="flex gap-3 pt-3 border-t">
-                    <button type="button" onclick="fecharModalPlano()" class="flex-1 bg-gray-200 py-2.5 rounded-xl text-xs font-bold">Cancelar</button>
-                    <button type="submit" class="flex-1 bg-orange-600 text-white py-2.5 rounded-xl text-xs font-black">Salvar Alterações</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL DE LOGIN ADMINISTRATIVO -->
+    <!-- MODAIS -->
+    <div id="modal-editar-moto" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">...</div>
+    <div id="modal-editar" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">...</div>
+    <div id="modal-editar-plano" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">...</div>
+    
     <div id="modal-login" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border border-gray-100">
             <div class="text-center mb-6">
@@ -375,579 +253,22 @@
                 <h2 class="text-2xl font-black uppercase text-gray-900 tracking-wide">Acesso Restrito</h2>
                 <p class="text-xs text-gray-500 font-bold uppercase mt-1">Entre com suas credenciais para acessar o painel</p>
             </div>
-
             <form onsubmit="realizarLoginAdmin(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold uppercase text-gray-700 mb-1">E-mail</label>
-                    <input type="email" id="login-email" required placeholder="seu@email.com" 
-                        class="w-full p-3.5 border border-gray-200 rounded-xl text-xs font-bold bg-gray-50 focus:bg-white transition">
+                    <input type="email" id="login-email" required placeholder="seu@email.com" class="w-full p-3.5 border border-gray-200 rounded-xl text-xs font-bold bg-gray-50 focus:bg-white transition">
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Senha</label>
-                    <input type="password" id="login-senha" required placeholder="••••••••" 
-                        class="w-full p-3.5 border border-gray-200 rounded-xl text-xs font-bold bg-gray-50 focus:bg-white transition">
+                    <input type="password" id="login-senha" required placeholder="••••••••" class="w-full p-3.5 border border-gray-200 rounded-xl text-xs font-bold bg-gray-50 focus:bg-white transition">
                 </div>
                 <div id="login-erro" class="text-red-500 text-xs font-bold text-center hidden"></div>
-                <button type="submit" 
-                    class="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-4 rounded-xl transition text-xs uppercase shadow-lg tracking-wider mt-2">
-                    🔓 Entrar no Sistema
-                </button>
+                <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-4 rounded-xl transition text-xs uppercase shadow-lg tracking-wider mt-2">🔓 Entrar no Sistema</button>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPT 100% INTEGRADO E PRESERVADO -->
-    <script type="module">
-        import { API_BASE } from './js/api.js';
-
-        const URL_PAINEL_CLIENTE = "https://cashback.locafacilmotos.com.br"; 
-
-        // 1. Função de Navegação de Abas
-        window.alternarAba = function(aba) {
-            const secoes = { 
-                mesa: document.getElementById('secao-mesa'), 
-                frota: document.getElementById('secao-frota'), 
-                motos: document.getElementById('secao-motos'), 
-                loja: document.getElementById('secao-loja'), 
-                planos: document.getElementById('secao-planos'),
-                usuarios: document.getElementById('secao-usuarios')
-            };
-            const botoes = { 
-                mesa: document.getElementById('btn-aba-mesa'), 
-                frota: document.getElementById('btn-aba-frota'), 
-                motos: document.getElementById('btn-aba-motos'), 
-                loja: document.getElementById('btn-aba-loja'), 
-                planos: document.getElementById('btn-aba-planos'),
-                usuarios: document.getElementById('btn-aba-usuarios')
-            };
-            
-            Object.keys(secoes).forEach(k => { 
-                if(secoes[k]) secoes[k].classList.add('hidden'); 
-                if(botoes[k]) { 
-                    botoes[k].classList.remove('ativa', 'bg-orange-600', 'text-white'); 
-                    botoes[k].classList.add('text-gray-400', 'hover:text-white'); 
-                } 
-            });
-            
-            if (secoes[aba]) secoes[aba].classList.remove('hidden');
-            if (botoes[aba]) {
-                botoes[aba].classList.remove('text-gray-400', 'hover:text-white');
-                botoes[aba].classList.add('ativa', 'bg-orange-600', 'text-white');
-            }
-        };
-
-        // 2. Funções de Autenticação Segura (JWT)
-        function exibirModalLogin() {
-            const modal = document.getElementById('modal-login');
-            if (modal) modal.classList.remove('hidden');
-        }
-        window.exibirModalLogin = exibirModalLogin;
-
-        async function realizarLoginAdmin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value.trim();
-            const senha = document.getElementById('login-senha').value.trim();
-            const erroDiv = document.getElementById('login-erro');
-
-            erroDiv.classList.add('hidden');
-
-            try {
-                const res = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, senha })
-                });
-
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Erro ao fazer login');
-
-                localStorage.setItem('lf_admin_token', data.token);
-                document.getElementById('modal-login').classList.add('hidden');
-                
-                carregarDadosPainel();
-            } catch (err) {
-                erroDiv.innerText = `❌ ${err.message}`;
-                erroDiv.classList.remove('hidden');
-            }
-        }
-        window.realizarLoginAdmin = realizarLoginAdmin;
-
-        // Helper de Requisições Autenticadas com Bearer Token
-        async function fetchComAuth(url, options = {}) {
-            const token = localStorage.getItem('lf_admin_token');
-            options.headers = {
-                ...options.headers,
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            };
-            const res = await fetch(url, options);
-            if (res.status === 401 || res.status === 403) {
-                localStorage.removeItem('lf_admin_token');
-                exibirModalLogin();
-            }
-            return res;
-        }
-
-        // 3. Verificação de Permissões de Administrador
-        function verificarPermissoesAdmin() {
-            const token = localStorage.getItem('lf_admin_token');
-            if (!token) return;
-            try {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const payload = JSON.parse(window.atob(base64));
-
-                if (payload && payload.role === 'ADMIN') {
-                    const btnUsuarios = document.getElementById('btn-aba-usuarios');
-                    if (btnUsuarios) btnUsuarios.classList.remove('hidden');
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        // 4. Gestão de Usuários (Apenas Admin)
-        window.carregarUsuarios = async function() {
-            try {
-                const res = await fetchComAuth(`${API_BASE}/auth/usuarios`);
-                if (!res.ok) return;
-
-                const usuarios = await res.json();
-                const grid = document.getElementById('grid-usuarios');
-                if (!grid) return;
-
-                grid.innerHTML = '';
-                usuarios.forEach(u => {
-                    grid.innerHTML += `
-                        <div class="bg-gray-50 p-4 rounded-2xl border flex flex-col justify-between">
-                            <div>
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}">${u.role}</span>
-                                    <span class="text-[10px] font-bold ${u.ativo ? 'text-green-600' : 'text-red-600'}">${u.ativo ? '● Ativo' : '○ Inativo'}</span>
-                                </div>
-                                <h4 class="font-black text-gray-900 text-sm uppercase">${u.nome}</h4>
-                                <p class="text-xs text-gray-500 font-bold">${u.email}</p>
-                            </div>
-                            ${u.role !== 'ADMIN' ? `
-                                <div class="pt-3 border-t mt-3">
-                                    <button onclick="excluirUsuario('${u.id}')" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-1.5 rounded-lg text-xs uppercase">🗑️ Remover Acesso</button>
-                                </div>
-                            ` : ''}
-                        </div>`;
-                });
-            } catch (err) { console.error(err); }
-        };
-
-        window.cadastrarNovoUsuario = async function(e) {
-            e.preventDefault();
-            const payload = {
-                nome: document.getElementById('user-nome').value.trim(),
-                email: document.getElementById('user-email').value.trim(),
-                senha: document.getElementById('user-senha').value.trim(),
-                role: document.getElementById('user-role').value
-            };
-
-            try {
-                const res = await fetchComAuth(`${API_BASE}/auth/usuarios`, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-
-                if (!res.ok) {
-                    const data = await res.json();
-                    throw new Error(data.error || 'Erro ao criar usuário');
-                }
-
-                alert('✅ Usuário cadastrado com sucesso!');
-                e.target.reset();
-                carregarUsuarios();
-            } catch (err) {
-                alert(`❌ ${err.message}`);
-            }
-        };
-
-        window.excluirUsuario = async function(id) {
-            if (confirm('Deseja realmente remover o acesso deste usuário?')) {
-                await fetchComAuth(`${API_BASE}/auth/usuarios/${id}`, {
-                    method: 'DELETE'
-                });
-                carregarUsuarios();
-            }
-        };
-
-        // --- MOTOS / PÁTIO ---
-        window.carregarMotosFrota = async function() {
-            const grid = document.getElementById('grid-motos');
-            const loading = document.getElementById('loading-motos');
-            if (!grid) return;
-            loading.style.display = 'block'; grid.innerHTML = '';
-            try {
-                const res = await fetch(`${API_BASE}/admin/motos`);
-                const data = await res.json();
-                loading.style.display = 'none';
-                if (!data || data.length === 0) { grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center text-gray-500 font-bold text-sm uppercase">Nenhuma moto cadastrada.</div>`; return; }
-                data.forEach(item => {
-                    const status = (item.status || 'DISPONIVEL').toUpperCase();
-                    let badgeStatus = status === 'DISPONIVEL' ? '<span class="bg-green-100 text-green-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🟢 Disponível</span>' : status === 'ALUGADA' ? '<span class="bg-blue-100 text-blue-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🔵 Alugada</span>' : '<span class="bg-yellow-100 text-yellow-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🟡 Manutenção</span>';
-                    const botoesAcao = status === 'DISPONIVEL' ? `<div class="grid grid-cols-2 gap-2"><button onclick="mudarStatusMoto('${item.id}', 'ALUGADA')" class="bg-blue-600 text-white font-black py-2 rounded-xl text-xs uppercase">Alugar</button><button onclick="mudarStatusMoto('${item.id}', 'MANUTENCAO')" class="bg-yellow-500 text-black font-black py-2 rounded-xl text-xs uppercase">Oficina</button></div>` : status === 'ALUGADA' ? `<div class="grid grid-cols-2 gap-2"><button onclick="mudarStatusMoto('${item.id}', 'DISPONIVEL')" class="bg-green-600 text-white font-black py-2 rounded-xl text-xs uppercase">Pátio</button><button onclick="mudarStatusMoto('${item.id}', 'MANUTENCAO')" class="bg-yellow-500 text-black font-black py-2 rounded-xl text-xs uppercase">Oficina</button></div>` : `<button onclick="mudarStatusMoto('${item.id}', 'DISPONIVEL')" class="w-full bg-green-600 text-white font-black py-2 rounded-xl text-xs uppercase">Liberar p/ Pátio</button>`;
-                    const imgHtml = item.modelos_catalogo?.imagem_url ? `<img src="${item.modelos_catalogo.imagem_url}" class="w-full h-44 object-cover rounded-xl mb-3 border">` : `<div class="w-full h-44 bg-gray-100 rounded-xl mb-3 flex items-center justify-center text-gray-400 text-3xl">🏍️</div>`;
-                    
-                    grid.innerHTML += `
-                        <div class="bg-white rounded-2xl shadow-md border p-4 flex flex-col justify-between">
-                            <div>${imgHtml}<div class="flex justify-between items-start mb-2"><div><span class="text-[10px] font-black uppercase text-orange-600">${item.marca}</span><h4 class="font-black text-gray-900 text-base uppercase">${item.modelo}</h4></div>${badgeStatus}</div>
-                            <div class="grid grid-cols-3 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl border mb-4 font-bold text-center"><div>Placa<br><b>${item.placa}</b></div><div>Cor<br><b>${item.cor || 'Preta'}</b></div><div>KM<br><b>${(item.km_atual || 0).toLocaleString('pt-BR')}</b></div></div></div>
-                            <div class="space-y-2 pt-2 border-t">${botoesAcao}<div class="flex gap-2"><button onclick='abrirModalEditarMoto(${JSON.stringify(item)})' class="flex-1 bg-gray-100 py-2 rounded-lg text-xs uppercase font-bold">✏️ Editar</button><button onclick="excluirMoto('${item.id}', '${item.placa}')" class="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs uppercase font-bold">🗑️</button></div></div>
-                        </div>`;
-                });
-            } catch(e) { console.error(e); }
-        };
-
-        window.salvarNovaMoto = async (e) => {
-            e.preventDefault();
-            await fetch(`${API_BASE}/admin/motos`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    marca: document.getElementById('novo-moto-marca').value, modelo: document.getElementById('novo-moto-modelo').value,
-                    cor: document.getElementById('novo-moto-cor').value, ano: parseInt(document.getElementById('novo-moto-ano').value) || 2025,
-                    placa: document.getElementById('novo-moto-placa').value.toUpperCase(), km_atual: parseInt(document.getElementById('novo-moto-km').value) || 0,
-                    status: document.getElementById('novo-moto-status').value, imagem: document.getElementById('novo-moto-imagem').value
-                })
-            });
-            alert("Moto cadastrada!"); e.target.reset(); carregarMotosFrota();
-        };
-
-        window.mudarStatusMoto = async (id, status) => {
-            await fetch(`${API_BASE}/admin/motos/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
-            carregarMotosFrota();
-        };
-
-        window.excluirMoto = async (id, placa) => {
-            if (confirm(`Excluir moto placa ${placa}?`)) {
-                await fetch(`${API_BASE}/admin/motos/${id}`, { method: 'DELETE' });
-                carregarMotosFrota();
-            }
-        };
-
-        window.abrirModalEditarMoto = (item) => {
-            document.getElementById('edit-moto-id').value = item.id;
-            document.getElementById('edit-moto-marca').value = item.marca || '';
-            document.getElementById('edit-moto-modelo').value = item.modelo || '';
-            document.getElementById('edit-moto-cor').value = item.cor || '';
-            document.getElementById('edit-moto-ano').value = item.ano || 2025;
-            document.getElementById('edit-moto-placa').value = item.placa || '';
-            document.getElementById('edit-moto-km').value = item.km_atual || 0;
-            document.getElementById('edit-moto-status').value = item.status || 'DISPONIVEL';
-            document.getElementById('modal-editar-moto').classList.remove('hidden');
-        };
-        window.fecharModalMoto = () => document.getElementById('modal-editar-moto').classList.add('hidden');
-
-        document.getElementById('form-editar-moto').onsubmit = async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('edit-moto-id').value;
-            await fetch(`${API_BASE}/admin/motos/${id}`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    marca: document.getElementById('edit-moto-marca').value, modelo: document.getElementById('edit-moto-modelo').value,
-                    cor: document.getElementById('edit-moto-cor').value, ano: parseInt(document.getElementById('edit-moto-ano').value) || 2025,
-                    placa: document.getElementById('edit-moto-placa').value.toUpperCase(), km_atual: parseInt(document.getElementById('edit-moto-km').value) || 0,
-                    status: document.getElementById('edit-moto-status').value
-                })
-            });
-            fecharModalMoto(); carregarMotosFrota();
-        };
-
-        // --- MESA DE APROVAÇÃO ---
-        window.carregarLeads = async function() {
-            const filtro = document.getElementById('filtro-status').value;
-            document.getElementById('loading-leads').style.display = 'block';
-            document.getElementById('grid-leads').innerHTML = '';
-            try {
-                const res = await fetch(`${API_BASE}/admin/leads?status=${filtro}`);
-                const fichas = await res.json();
-                document.getElementById('loading-leads').style.display = 'none';
-                renderizarLeads(fichas || []);
-            } catch(e) { console.error(e); }
-        };
-
-        window.realizarBuscaLeads = async function() {
-            carregarLeads();
-        };
-
-        function renderizarLeads(fichas) {
-            const grid = document.getElementById('grid-leads');
-            if (!fichas.length) { grid.innerHTML = `<div class="col-span-full bg-white p-8 text-center text-gray-500 font-bold uppercase">Nenhuma ficha encontrada.</div>`; return; }
-            fichas.forEach(lead => {
-                const dataEnvio = new Date(lead.created_at).toLocaleString('pt-BR');
-                let badgeClass = lead.status === 'APROVADO' ? 'bg-blue-600 text-white' : lead.status === 'CONTRATADO' ? 'bg-green-600 text-white' : lead.status === 'REJEITADO' ? 'bg-red-600 text-white' : 'bg-yellow-500 text-black';
-                let areaAcoes = lead.status === 'PENDENTE' ? `
-                    <div class="space-y-3"><button onclick="validarCaucao('${lead.nome}', '${lead.telefone}')" class="w-full bg-blue-600 text-white font-black py-3 rounded-lg text-xs uppercase">💬 1. Chamar no Whats (Caução)</button>
-                    <div class="flex space-x-2"><button onclick="aprovarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="flex-1 bg-green-600 text-white font-black py-3 rounded-lg text-xs uppercase">✅ 2. Aprovar</button><button onclick="rejeitarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="bg-red-100 text-red-600 font-black px-4 rounded-lg text-xs uppercase">Arquivar</button></div></div>` : lead.status === 'APROVADO' ? `
-                    <div class="space-y-3"><div class="bg-blue-50 border p-2.5 rounded-lg text-center font-bold text-blue-800 text-[11px] uppercase">🔵 Aprovado — Aguardando Retirada</div>
-                    <div class="flex space-x-2"><button onclick="efetivarLocacao('${lead.id}', '${lead.telefone}', '${lead.nome}', '${lead.cpf}', '${lead.email}', '${lead.moto_interesse}')" class="flex-1 bg-orange-600 text-white font-black py-3 rounded-xl text-xs uppercase shadow-md">🏍️ Entregar Moto</button><button onclick="rejeitarLead('${lead.id}', '${lead.telefone}', '${lead.nome}')" class="bg-red-100 text-red-600 font-black px-3 rounded-xl text-xs uppercase">Desistiu</button></div></div>` : `<div class="bg-black text-orange-500 border p-3 rounded-xl text-center font-black text-xs uppercase">🚀 Contrato Ativo</div>`;
-
-                grid.innerHTML += `
-                    <div class="bg-white rounded-2xl shadow-lg border overflow-hidden">
-                        <div class="bg-black text-white p-4 flex justify-between items-center"><span class="font-bold text-xs text-gray-300">Recebido: ${dataEnvio}</span><span class="${badgeClass} text-[10px] font-black px-2 py-1 rounded uppercase">${lead.status}</span></div>
-                        <div class="p-5">
-                            <div class="grid grid-cols-2 gap-3 mb-4 text-xs"><div><p class="text-gray-400 font-bold uppercase">Nome</p><p class="font-black text-base uppercase text-gray-900">${lead.nome}</p></div><div><p class="text-gray-400 font-bold uppercase">CPF</p><p class="font-bold text-gray-800">${lead.cpf}</p></div><div><p class="text-gray-400 font-bold uppercase">WhatsApp</p><p class="font-bold text-gray-800">${lead.telefone}</p></div><div><p class="text-gray-400 font-bold uppercase">Email</p><p class="font-bold text-gray-800">${lead.email}</p></div></div>
-                            <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 mb-4 text-xs"><p class="text-orange-600 font-black uppercase">Interesse</p><p class="font-bold text-gray-900 text-sm">${lead.moto_interesse} - ${lead.plano_interesse}</p></div>
-                            <div class="grid grid-cols-2 gap-3 border-t pt-3 mb-4 text-xs"><a href="${lead.cnh_url}" target="_blank" class="text-center block bg-gray-100 py-2 rounded-lg font-bold">📄 Ver CNH</a><a href="${lead.comprovante_url}" target="_blank" class="text-center block bg-gray-100 py-2 rounded-lg font-bold">📄 Ver Comprovante</a></div>
-                            ${areaAcoes}
-                        </div>
-                    </div>`;
-            });
-        }
-
-        window.validarCaucao = (n, t) => window.open(`https://wa.me/55${t.replace(/\D/g, '')}?text=${encodeURIComponent(`Fala ${n}, tudo bem? Aqui é da LOCAFACILMOTOS! 🚀 Vamos alinhar a caução?`)}`, '_blank');
-        window.aprovarLead = async (id, t, n) => { window.open(`https://wa.me/55${t.replace(/\D/g, '')}?text=${encodeURIComponent(`Fala ${n}! Aprovado! 🚀 Bora agendar a caução?`)}`, '_blank'); await fetch(`${API_BASE}/admin/leads/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'APROVADO' }) }); carregarLeads(); };
-        window.rejeitarLead = async (id, t, n) => { const m = prompt("Motivo:"); if(m) { await fetch(`${API_BASE}/admin/leads/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'REJEITADO', motivo_recusa: m }) }); carregarLeads(); } };
-        window.efetivarLocacao = async (id, t, n, cpf, email, moto) => {
-            const placa = prompt(`PLACA para ${n}:`); if (!placa) return;
-            const km = parseInt(prompt("KM inicial:", "0")) || 0;
-            await fetch(`${API_BASE}/admin/leads/${id}/efetivar`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: n, cpf, telefone: t, email, moto_interesse: moto, placa, km_inicial: km }) });
-            alert("Contrato efetivado!"); carregarLeads(); carregarLocatarios(); carregarMotosFrota();
-        };
-
-        // --- GESTÃO DE FROTA & TELEMETRIA ---
-        window.carregarLocatarios = async function() {
-            document.getElementById('loading-frota').style.display = 'block';
-            const res = await fetch(`${API_BASE}/admin/locatarios`);
-            const lista = await res.json();
-            document.getElementById('loading-frota').style.display = 'none';
-            renderizarFrota(lista || []);
-        };
-
-        window.buscarLocatario = async function() { carregarLocatarios(); };
-
-        function renderizarFrota(lista) {
-            const grid = document.getElementById('grid-frota'); grid.innerHTML = '';
-            if (!lista.length) { grid.innerHTML = `<div class="col-span-full bg-white p-8 text-center uppercase font-bold text-gray-500">Nenhum piloto.</div>`; return; }
-            lista.forEach(item => {
-                const pct = Math.min(100, Math.round(((item.semanas_pagas || 0) / 182) * 100));
-                grid.innerHTML += `
-                    <div class="bg-white rounded-2xl shadow-lg border overflow-hidden flex flex-col justify-between">
-                        <div class="bg-gray-900 text-white p-4 flex justify-between items-center"><div><span class="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">${item.placa}</span><h3 class="font-black text-lg uppercase mt-1">${item.nome}</h3></div><span class="text-2xl font-black text-orange-500">${item.semanas_pagas || 0} sem.</span></div>
-                        <div class="p-5 space-y-4">
-                            <div class="grid grid-cols-2 gap-2 text-xs"><div>Modelo<br><b>${item.modelo}</b></div><div>WhatsApp<br><b>${item.telefone}</b></div></div>
-                            <div class="bg-gray-50 p-3 rounded-xl border"><div class="flex justify-between text-xs font-black mb-1"><span>Semana ${item.semanas_pagas || 0}</span><span>🪙 ${item.locafacil_coins || 0} Coins</span></div><div class="w-full bg-gray-200 rounded-full h-3"><div class="bg-orange-500 h-full rounded-full" style="width: ${pct}%"></div></div></div>
-                            <div class="bg-orange-50 p-3 rounded-xl border text-xs"><p class="text-orange-900 font-bold uppercase">Hodômetro</p><p class="font-black text-gray-900 text-base">${(item.km_atual || 0).toLocaleString('pt-BR')} km</p></div>
-                        </div>
-                        <div class="p-5 pt-0 space-y-2">
-                            <button onclick="adicionarUmaSemana('${item.id}', '${item.cpf}', '${item.telefone}', '${item.nome}', ${item.semanas_pagas || 0}, ${item.locafacil_coins || 0})" class="w-full bg-green-600 text-white font-black py-3 rounded-xl text-xs uppercase shadow-md">💵 +1 Semana (Baixar Pix)</button>
-                            <div class="flex gap-2"><button onclick="lancarKmRastreador('${item.id}', '${item.placa}', ${item.semanas_pagas || 0}, ${item.km_atual || 0})" class="flex-1 bg-indigo-50 text-indigo-800 font-bold py-2 rounded-lg text-xs uppercase border">📡 Rastreador</button><button onclick='abrirModalEditar(${JSON.stringify(item)})' class="bg-gray-900 text-white font-bold px-3 py-2 rounded-lg text-xs uppercase">✏️ Editar</button></div>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        window.adicionarUmaSemana = async (id, cpf, tel, nome, sem, coins) => {
-            const resC = await fetch(`${API_BASE}/admin/config/coins_por_pix`); const dC = await resC.json();
-            const inc = parseInt(dC.valor) || 10;
-            await fetch(`${API_BASE}/admin/locatarios/${id}/pagar-semana`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ semanas_pagas: sem + 1, locafacil_coins: coins + inc }) });
-            window.open(`https://wa.me/55${tel.replace(/\D/g, '')}?text=${encodeURIComponent(`Fala ${nome.split(' ')[0]}! Pix confirmado, semana ${sem + 1} registrada! +${inc} Coins 🪙`)}`, '_blank');
-            carregarLocatarios();
-        };
-
-        window.lancarKmRastreador = async (id, placa, sem, kmAnt) => {
-            const ini = prompt("Data inicial (AAAA-MM-DD):", "2026-09-20"); if (!ini) return;
-            const fim = prompt("Data final (AAAA-MM-DD):", "2026-09-27"); if (!fim) return;
-            const rodados = parseInt(prompt("KM rodados:", "0")) || 0;
-            const novoKm = kmAnt + rodados;
-            await fetch(`${API_BASE}/admin/rastreador`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locatario_id: id, placa, semana: sem, data_inicio: ini, data_fim: fim, km_anterior: kmAnt, km_atual: novoKm, km_rodados: rodados, observacao: 'Rastreador' }) });
-            alert("KM registrado!"); carregarLocatarios();
-        };
-
-        window.abrirModalEditar = (item) => {
-            document.getElementById('edit-id').value = item.id;
-            document.getElementById('edit-nome').value = item.nome || '';
-            document.getElementById('edit-placa').value = item.placa || '';
-            document.getElementById('edit-modelo').value = item.modelo || '';
-            document.getElementById('edit-telefone').value = item.telefone || '';
-            document.getElementById('edit-cpf').value = item.cpf || '';
-            document.getElementById('edit-semanas').value = item.semanas_pagas || 0;
-            document.getElementById('edit-coins').value = item.locafacil_coins || 0;
-            document.getElementById('edit-km-atual').value = item.km_atual || 0;
-            document.getElementById('modal-editar').classList.remove('hidden');
-        };
-        window.fecharModal = () => document.getElementById('modal-editar').classList.add('hidden');
-
-        document.getElementById('form-editar').onsubmit = async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('edit-id').value;
-            await fetch(`${API_BASE}/admin/locatarios/${id}`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    nome: document.getElementById('edit-nome').value, placa: document.getElementById('edit-placa').value.toUpperCase(),
-                    modelo: document.getElementById('edit-modelo').value, telefone: document.getElementById('edit-telefone').value,
-                    cpf: document.getElementById('edit-cpf').value, semanas_pagas: parseInt(document.getElementById('edit-semanas').value) || 0,
-                    locafacil_coins: parseInt(document.getElementById('edit-coins').value) || 0, km_atual: parseInt(document.getElementById('edit-km-atual').value) || 0
-                })
-            });
-            fecharModal(); carregarLocatarios();
-        };
-
-        // --- LOJA & REGRAS ---
-        window.carregarConfiguracaoCoinsPix = async () => {
-            const res = await fetch(`${API_BASE}/admin/config/coins_por_pix`);
-            const data = await res.json();
-            document.getElementById('input-config-coins-pix').value = data.valor;
-        };
-        window.salvarConfigCoinsPix = async () => {
-            await fetch(`${API_BASE}/admin/config`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chave: 'coins_por_pix', valor: document.getElementById('input-config-coins-pix').value }) });
-            alert("Salvo com sucesso!");
-        };
-
-        window.carregarItensLojaAdmin = async () => {
-            const res = await fetch(`${API_BASE}/admin/loja`);
-            const itens = await res.json();
-            const grid = document.getElementById('grid-itens-admin-loja'); grid.innerHTML = '';
-            (itens || []).forEach(i => {
-                grid.innerHTML += `<div class="bg-white p-4 rounded-xl border flex justify-between items-center"><div><p class="font-black">${i.titulo}</p><p class="text-xs text-amber-700 font-bold">🪙 ${i.custo_coins} Coins</p></div><button onclick="excluirItemLoja('${i.id}')" class="text-red-500 font-bold text-xs uppercase">Excluir</button></div>`;
-            });
-        };
-
-        window.adicionarItemLoja = async (e) => {
-            e.preventDefault();
-            await fetch(`${API_BASE}/admin/loja`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titulo: document.getElementById('novo-brinde-titulo').value, custo_coins: parseInt(document.getElementById('novo-brinde-custo').value) }) });
-            e.target.reset(); carregarItensLojaAdmin();
-        };
-
-        window.excluirItemLoja = async (id) => {
-            if (confirm("Excluir item?")) {
-                await fetch(`${API_BASE}/admin/loja/${id}`, { method: 'DELETE' });
-                carregarItensLojaAdmin();
-            }
-        };
-
-        // --- GESTÃO DE PLANOS & PREÇOS ---
-        window.carregarPlanosAdmin = async function() {
-            const grid = document.getElementById('grid-planos-admin');
-            const loading = document.getElementById('loading-planos');
-            if (!grid) return;
-            loading.style.display = 'block'; grid.innerHTML = '';
-            try {
-                const res = await fetch(`${API_BASE}/admin/planos`);
-                const lista = await res.json();
-                loading.style.display = 'none';
-                if (!lista || lista.length === 0) {
-                    grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center text-gray-500 font-bold uppercase">Nenhum plano cadastrado.</div>`;
-                    return;
-                }
-                lista.forEach(p => {
-                    grid.innerHTML += `
-                        <div class="bg-white rounded-2xl shadow-md border p-4 flex flex-col justify-between">
-                            <div>
-                                <span class="text-[10px] font-black uppercase text-orange-600 block">${p.modelo_nome}</span>
-                                <h4 class="font-black text-gray-900 text-base uppercase mb-2">${p.nome_plano}</h4>
-                                <div class="text-xs bg-gray-50 p-3 rounded-xl border space-y-1 font-bold">
-                                    <p>Semanal: <span class="text-green-600 font-black">R$ ${parseFloat(p.valor_semanal).toFixed(2)}</span></p>
-                                    <p>Caução: <span class="text-gray-700">R$ ${parseFloat(p.valor_caucao || 1099).toFixed(2)}</span></p>
-                                    <p>Destaque: ${p.is_recomendado ? '⭐ Sim' : 'Não'}</p>
-                                </div>
-                            </div>
-                            <div class="space-y-2 pt-3 border-t mt-4">
-                                <button onclick='abrirModalEditarPlano(${JSON.stringify(p)})' class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2 rounded-lg text-xs uppercase">✏️ Editar Plano</button>
-                                <button onclick="excluirPlano('${p.id}')" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-lg text-xs uppercase">🗑️ Excluir</button>
-                            </div>
-                        </div>`;
-                });
-            } catch(e) { console.error(e); }
-        };
-
-        window.salvarNovoPlano = async function(e) {
-            e.preventDefault();
-            const payload = {
-                modelo_nome: document.getElementById('plano-modelo').value.trim(),
-                nome_plano: document.getElementById('plano-nome').value.trim(),
-                valor_semanal: parseFloat(document.getElementById('plano-valor').value),
-                valor_caucao: parseFloat(document.getElementById('plano-caucao').value) || 1099.00,
-                is_recomendado: document.getElementById('plano-recomendado').checked
-            };
-            try {
-                const res = await fetch(`${API_BASE}/admin/planos`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if(!res.ok) throw new Error('Erro');
-                alert('✅ Plano cadastrado com sucesso!');
-                e.target.reset();
-                carregarPlanosAdmin();
-            } catch(err) { alert('❌ Erro ao cadastrar plano.'); }
-        };
-
-        window.excluirPlano = async function(id) {
-            if(confirm('Tem certeza que deseja excluir este plano?')) {
-                await fetch(`${API_BASE}/admin/planos/${id}`, { method: 'DELETE' });
-                carregarPlanosAdmin();
-            }
-        };
-
-        window.abrirModalEditarPlano = function(p) {
-            document.getElementById('edit-plano-id').value = p.id;
-            document.getElementById('edit-plano-modelo').value = p.modelo_nome || '';
-            document.getElementById('edit-plano-nome').value = p.nome_plano || '';
-            document.getElementById('edit-plano-valor').value = p.valor_semanal || '';
-            document.getElementById('edit-plano-caucao').value = p.valor_caucao || 1099.00;
-            document.getElementById('edit-plano-recomendado').checked = p.is_recomendado || false;
-            document.getElementById('modal-editar-plano').classList.remove('hidden');
-        };
-
-        window.fecharModalPlano = function() {
-            document.getElementById('modal-editar-plano').classList.add('hidden');
-        };
-
-        window.salvarEdicaoPlano = async function(e) {
-            e.preventDefault();
-            const id = document.getElementById('edit-plano-id').value;
-            const payload = {
-                modelo_nome: document.getElementById('edit-plano-modelo').value.trim(),
-                nome_plano: document.getElementById('edit-plano-nome').value.trim(),
-                valor_semanal: parseFloat(document.getElementById('edit-plano-valor').value),
-                valor_caucao: parseFloat(document.getElementById('edit-plano-caucao').value) || 1099.00,
-                is_recomendado: document.getElementById('edit-plano-recomendado').checked
-            };
-
-            try {
-                const res = await fetch(`${API_BASE}/admin/planos/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (!res.ok) throw new Error('Erro ao atualizar');
-
-                alert('✅ Plano atualizado com sucesso!');
-                fecharModalPlano();
-                carregarPlanosAdmin();
-            } catch (err) {
-                alert('❌ Erro ao atualizar o plano.');
-            }
-        };
-
-        // 5. Inicialização e Carregamento Geral do Painel
-        function carregarDadosPainel() {
-            verificarPermissoesAdmin();
-            if (typeof carregarLeads === 'function') carregarLeads();
-            if (typeof carregarLocatarios === 'function') carregarLocatarios();
-            if (typeof carregarMotosFrota === 'function') carregarMotosFrota();
-            if (typeof carregarPlanosAdmin === 'function') carregarPlanosAdmin();
-            if (typeof carregarItensLojaAdmin === 'function') carregarItensLojaAdmin();
-            if (typeof carregarConfiguracaoCoinsPix === 'function') carregarConfiguracaoCoinsPix();
-            if (typeof carregarUsuarios === 'function') carregarUsuarios();
-        }
-
-        window.onload = async () => {
-            const token = localStorage.getItem('lf_admin_token');
-            if (!token) {
-                exibirModalLogin();
-                return;
-            }
-
-            try {
-                carregarDadosPainel();
-            } catch (err) {
-                localStorage.removeItem('lf_admin_token');
-                exibirModalLogin();
-            }
-        };
-    </script>
+    <!-- SCRIPT CENTRALIZADOR MODULARIZADO -->
+    <script type="module" src="./js/admin-main.js"></script>
 </body>
-
 </html>

@@ -304,51 +304,49 @@
         <span>➕</span> Registrar Entrada ou Saída no Caixa
     </h3>
 
-    <form id="form-nova-transacao" onsubmit="salvarTransacao(event)" class="grid grid-cols-1 md:grid-cols-5 gap-3">
-        <!-- Data -->
-        <div>
-            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Data</label>
-            <input type="date" id="trans-data" required class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
-        </div>
+   <!-- Removemos apenas o onsubmit="..." da tag form -->
+<form id="form-nova-transacao" class="grid grid-cols-1 md:grid-cols-5 gap-3">
+    <!-- Data -->
+    <div>
+        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Data</label>
+        <input type="date" id="trans-data" required class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
+    </div>
 
-        <!-- Tipo -->
-        <div>
-            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Tipo</label>
-            <select id="trans-tipo" required class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
-                <option value="ENTRADA">🟢 Entrada (Receita)</option>
-                <option value="SAIDA">🔴 Saída (Despesa / OPEX)</option>
-            </select>
-        </div>
+    <!-- Tipo -->
+    <div>
+        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Tipo</label>
+        <select id="trans-tipo" required class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
+            <option value="ENTRADA">🟢 Entrada (Receita)</option>
+            <option value="SAIDA">🔴 Saída (Despesa / OPEX)</option>
+        </select>
+    </div>
 
-        <!-- Categoria DRE -->
-        <div>
-            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Categoria DRE</label>
-            <select id="trans-categoria" required class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
-                <option value="Receita - Semanalidade">Receita - Semanalidade</option>
-                <option value="Receita - Caução">Receita - Caução</option>
-                <option value="Seguro - Suhai">Seguro - Suhai</option>
-                <option value="Telemetria - Rastreador">Telemetria - Rastreador J16</option>
-                <option value="Oficina - Peças/Serviços">Oficina - Peças/Serviços</option>
-                <option value="Imposto - DAS">Imposto - DAS Simples</option>
-                <option value="Contabilidade">Contabilidade</option>
-                <option value="Sistema LocaSmartPro">Sistema LocaSmartPro</option>
-                <option value="Pró-Labore Gestor">Pró-Labore Gestor (Conta PF)</option>
-            </select>
-        </div>
+    <!-- Categoria -->
+    <div>
+        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Categoria DRE</label>
+        <select id="trans-categoria" required class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
+            <option value="Receita - Semanalidade">Receita - Semanalidade</option>
+            <option value="Receita - Caução">Receita - Caução</option>
+            <option value="Seguro - Suhai">Seguro - Suhai</option>
+            <option value="Telemetria - Rastreador">Telemetria - Rastreador J16</option>
+            <option value="Oficina - Peças/Serviços">Oficina - Peças/Serviços</option>
+            <option value="Pró-Labore Gestor">Pró-Labore Gestor (Conta PF)</option>
+        </select>
+    </div>
 
-        <!-- Valor -->
-        <div>
-            <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Valor (R$)</label>
-            <input type="number" step="0.01" id="trans-valor" required placeholder="0.00" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-black focus:outline-none focus:border-orange-500">
-        </div>
+    <!-- Valor -->
+    <div>
+        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Valor (R$)</label>
+        <input type="number" step="0.01" id="trans-valor" required placeholder="0.00" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-black focus:outline-none focus:border-orange-500">
+    </div>
 
-        <!-- Botão de Envio -->
-        <div class="flex items-end">
-            <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-2.5 px-4 rounded-xl uppercase text-xs transition-all shadow-lg flex items-center justify-center gap-1">
-                💾 Salvar
-            </button>
-        </div>
-    </form>
+    <!-- Botão de Envio (mantém type="submit") -->
+    <div class="flex items-end">
+        <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-2.5 px-4 rounded-xl uppercase text-xs transition-all shadow-lg flex items-center justify-center gap-1">
+            💾 Salvar
+        </button>
+    </div>
+</form>
 </div>
     <!-- MODAIS -->
     <div id="modal-editar-moto" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">...</div>

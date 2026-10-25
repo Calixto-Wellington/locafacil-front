@@ -4,6 +4,7 @@ import { carregarLocatarios, buscarLocatario } from './admin-locatarios.js';
 import { carregarMotosFrota, salvarNovaMoto, mudarStatusMoto, excluirMoto, abrirModalEditarMoto, fecharModalMoto } from './admin-motos.js';
 import { carregarPlanosAdmin, salvarNovoPlano, excluirPlano, abrirModalEditarPlano, fecharModalPlano, salvarEdicaoPlano, carregarConfiguracaoCoinsPix, salvarConfigCoinsPix, carregarItensLojaAdmin } from './admin-planos.js';
 import { carregarUsuarios, cadastrarNovoUsuario, excluirUsuario } from './admin-usuarios.js';
+import { salvarTransacao, initFinanceiro } from './admin-financeiro.js';
 
 // Expondo funções globalmente para os botões e formulários do HTML
 window.exibirModalLogin = exibirModalLogin;
@@ -31,6 +32,8 @@ window.carregarItensLojaAdmin = carregarItensLojaAdmin;
 window.carregarUsuarios = carregarUsuarios;
 window.cadastrarNovoUsuario = cadastrarNovoUsuario;
 window.excluirUsuario = excluirUsuario;
+window.salvarTransacao = salvarTransacao;
+window.initFinanceiro = initFinanceiro;
 
 // Função de Navegação de Abas
 window.alternarAba = function(aba) {
@@ -90,6 +93,7 @@ window.carregarDadosPainel = function() {
     carregarItensLojaAdmin();
     carregarConfiguracaoCoinsPix();
     carregarUsuarios();
+    initFinanceiro();
 };
 
 window.onload = async () => {

@@ -1,6 +1,12 @@
 import { fetchComAuth } from './auth.js';
 import { API_BASE } from './api.js';
 
+// Função para formatar valores no padrão R$ 0,00
+function formatarMoeda(valor) {
+    return (valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// 1. REGISTRAR NOVA TRANSAÇÃO NO CAIXA
 export async function salvarTransacao(e) {
     if (e) e.preventDefault(); // 🛑 Impede o recarregamento da página!
 
@@ -36,32 +42,16 @@ export async function salvarTransacao(e) {
         alert('✅ Lançamento registrado no caixa com sucesso!');
         inputValor.value = '';
 
+        // Recarrega a DRE atualizada na hora após salvar
+        await carregarResumoDRE();
+
     } catch (err) {
         console.error('❌ Erro no salvamento financeiro:', err);
         alert(`❌ Erro: ${err.message}`);
     }
 }
 
-export function initFinanceiro() {
-    // 1. Preenche a data de hoje por padrão
-    const inputData = document.getElementById('trans-data');
-    if (inputData && !inputData.value) {
-        inputData.value = new Date().toISOString().split('T');
-    }
-
-    // 2. Vincula a função ao evento de envio do formulário
-    const formTransacao = document.getElementById('form-nova-transacao');
-    if (formTransacao) {
-        formTransacao.onsubmit = salvarTransacao;
-    }
-}
-
-// Função para formatar valores no padrão R$ 0,00
-function formatarMoeda(valor) {
-    return (valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
-// BUSCA OS DADOS DA DRE E ATUALIZA A TELA
+// 2. BUSCA OS DADOS DA DRE E ATUALIZA O CARD NA TELA
 export async function carregarResumoDRE() {
     try {
         const response = await fetchComAuth(`${API_BASE}/admin/financeiro/resumo-dre`);
@@ -69,7 +59,6 @@ export async function carregarResumoDRE() {
 
         if (!response.ok) throw new Error(data.error);
 
-        // Atualiza os spans do HTML com os valores calculados
         const elFat = document.getElementById('dre-faturamento');
         const elOpex = document.getElementById('dre-opex');
         const elDividas = document.getElementById('dre-dividas');
@@ -87,18 +76,47 @@ export async function carregarResumoDRE() {
     }
 }
 
-// Atualize sua função initFinanceiro para carregar a DRE na abertura
+// 3. SIMULADOR DE EXPANSÃO DE FROTA (PASSO 4)
+export function calcularSimulacaoExpansao() {
+    const precoMoto = parseFloat(document.getElementById('sim-preco-moto')?.value) || 0;
+    const aporteSocio = parseFloat(document.getElementById('sim-aporte-socio')?.value) || 0;
+    const semanalidade = parseFloat(document.getElementById('sim-semanalidade')?.value) || 0;
+    const opexMoto = parseFloat(document.getElementById('sim-opex-moto')?.value) || 0;
+
+    const receitaMensal = semanalidade * 4.333;
+    const sobraLiquidaMensal = receitaMensal - opexMoto;
+
+    let paybackMeses = 0;
+    if (sobraLiquidaMensal > 0 && aporteSocio > 0) {
+        paybackMeses = aporteSocio / sobraLiquidaMensal;
+    }
+
+    const elReceita = document.getElementById('sim-res-receita');
+    const elSobra = document.getElementById('sim-res-sobra');
+    const elPayback = document.getElementById('sim-res-payback');
+
+    if (elReceita) elReceita.innerText = receitaMensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + ' /mês';
+    if (elSobra) elSobra.innerText = sobraLiquidaMensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + ' /mês';
+    if (elPayback) elPayback.innerText = paybackMeses > 0 ? `${paybackMeses.toFixed(1)} Meses (${Math.ceil(paybackMeses * 4.333)} semanas)` : '0 Meses';
+}
+
+// 4. INICIALIZADOR ÚNICO DO MÓDULO FINANCEIRO
 export function initFinanceiro() {
+    // Data de hoje por padrão
     const inputData = document.getElementById('trans-data');
     if (inputData && !inputData.value) {
         inputData.value = new Date().toISOString().split('T');
     }
 
+    // Vincula a função ao formulário
     const formTransacao = document.getElementById('form-nova-transacao');
     if (formTransacao) {
         formTransacao.onsubmit = salvarTransacao;
     }
 
-    // ➔ Carrega o resumo da DRE em tempo real
+    // Carrega o resumo dinâmico da DRE
     carregarResumoDRE();
+
+    // Roda o cálculo inicial do simulador se ele existir na tela
+    calcularSimulacaoExpansao();
 }

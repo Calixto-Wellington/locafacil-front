@@ -55,3 +55,50 @@ export function initFinanceiro() {
         formTransacao.onsubmit = salvarTransacao;
     }
 }
+
+// Função para formatar valores no padrão R$ 0,00
+function formatarMoeda(valor) {
+    return (valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// BUSCA OS DADOS DA DRE E ATUALIZA A TELA
+export async function carregarResumoDRE() {
+    try {
+        const response = await fetchComAuth(`${API_BASE}/admin/financeiro/resumo-dre`);
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error);
+
+        // Atualiza os spans do HTML com os valores calculados
+        const elFat = document.getElementById('dre-faturamento');
+        const elOpex = document.getElementById('dre-opex');
+        const elDividas = document.getElementById('dre-dividas');
+        const elProlabore = document.getElementById('dre-prolabore');
+        const elReserva = document.getElementById('dre-reserva-pj');
+
+        if (elFat) elFat.innerText = formatarMoeda(data.faturamentoBruto);
+        if (elOpex) elOpex.innerText = formatarMoeda(data.opexTotal);
+        if (elDividas) elDividas.innerText = formatarMoeda(data.dividasCapital);
+        if (elProlabore) elProlabore.innerText = formatarMoeda(data.proLabore);
+        if (elReserva) elReserva.innerText = `${formatarMoeda(data.reservaLiquidaPJ)} /mês`;
+
+    } catch (err) {
+        console.error('Erro ao carregar resumo DRE:', err);
+    }
+}
+
+// Atualize sua função initFinanceiro para carregar a DRE na abertura
+export function initFinanceiro() {
+    const inputData = document.getElementById('trans-data');
+    if (inputData && !inputData.value) {
+        inputData.value = new Date().toISOString().split('T');
+    }
+
+    const formTransacao = document.getElementById('form-nova-transacao');
+    if (formTransacao) {
+        formTransacao.onsubmit = salvarTransacao;
+    }
+
+    // ➔ Carrega o resumo da DRE em tempo real
+    carregarResumoDRE();
+}

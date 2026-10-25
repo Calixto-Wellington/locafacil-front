@@ -305,7 +305,7 @@
     </h3>
 
    <!-- Removemos apenas o onsubmit="..." da tag form -->
-<form id="form-nova-transacao" class="grid grid-cols-1 md:grid-cols-5 gap-3">
+<form id="form-nova-transacao" onsubmit="salvarTransacao(event)" class="grid grid-cols-1 md:grid-cols-5 gap-3">
     <!-- Data -->
     <div>
         <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Data</label>

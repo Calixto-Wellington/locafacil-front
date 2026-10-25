@@ -1,34 +1,29 @@
-// js/admin-financeiro.js
+import { fetchComAuth } from './auth.js';
+import { API_BASE } from './api.js';
 
 export async function salvarTransacao(e) {
-    if (e) e.preventDefault(); // 🛑 Trava o recarregamento da página!
+    if (e) e.preventDefault(); // 🛑 Impede o recarregamento da página!
 
     const inputData = document.getElementById('trans-data');
     const inputTipo = document.getElementById('trans-tipo');
     const inputCat = document.getElementById('trans-categoria');
     const inputValor = document.getElementById('trans-valor');
 
-    if (!inputValor || !inputValor.value) {
-        alert('Por favor, informe um valor.');
+    if (!inputValor || !inputValor.value || parseFloat(inputValor.value) <= 0) {
+        alert('Por favor, informe um valor válido.');
         return;
     }
 
     const payload = {
-        data_transacao: inputData ? inputData.value : new Date().toISOString().split('T')[0],
+        data_transacao: inputData && inputData.value ? inputData.value : new Date().toISOString().split('T'),
         tipo: inputTipo ? inputTipo.value : 'ENTRADA',
         categoria: inputCat ? inputCat.value : 'Receita - Semanalidade',
         valor: parseFloat(inputValor.value)
     };
 
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-
     try {
-        const response = await fetch('/api/admin/financeiro/transacoes', {
+        const response = await fetchComAuth(`${API_BASE}/admin/financeiro/transacoes`, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
             body: JSON.stringify(payload)
         });
 
@@ -48,8 +43,15 @@ export async function salvarTransacao(e) {
 }
 
 export function initFinanceiro() {
+    // 1. Preenche a data de hoje por padrão
     const inputData = document.getElementById('trans-data');
-    if (inputData) {
-        inputData.value = new Date().toISOString().split('T')[0];
+    if (inputData && !inputData.value) {
+        inputData.value = new Date().toISOString().split('T');
+    }
+
+    // 2. Vincula a função ao evento de envio do formulário
+    const formTransacao = document.getElementById('form-nova-transacao');
+    if (formTransacao) {
+        formTransacao.onsubmit = salvarTransacao;
     }
 }

@@ -50,10 +50,11 @@
                     class="aba-btn tab-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     📋 Gestão de Planos
                 </button>
-                <!-- Botão da Aba Financeiro no Sidebar -->
-<button onclick="mudarAba('financeiro')" class="menu-btn flex items-center gap-3 w-full p-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl font-bold text-xs uppercase transition-all">
-    <span class="text-base">📊</span> Financeiro & DRE
-</button>
+                <!-- BOTÃO DA ABA FINANCEIRO & DRE -->
+                <button id="btn-aba-financeiro" onclick="alternarAba('financeiro')" 
+                    class="aba-btn tab-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    📊 Financeiro & DRE
+                </button>
                 <button onclick="alternarAba('usuarios')" id="btn-aba-usuarios" class="aba-btn tab-btn px-4 py-2 rounded-lg font-black text-xs uppercase flex items-center gap-2 text-gray-400 hover:text-white hidden transition-all">
                     👥 Usuários
                 </button>
@@ -65,7 +66,7 @@
         </header>
 
         <!-- ================================================================= -->
-        <!-- SEÇÕES DAS ABAS (Mesa, Frota, Motos, Loja, Planos, Usuários)      -->
+        <!-- SUBDIVISÃO 1: MESA DE APROVAÇÃO (FICHAS)                          -->
         <!-- ================================================================= -->
         <section id="secao-mesa" class="aba-conteudo space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
@@ -92,6 +93,9 @@
             <div id="grid-leads" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
         </section>
 
+        <!-- ================================================================= -->
+        <!-- SUBDIVISÃO 2: GESTÃO DE FROTA & CONTRATOS                         -->
+        <!-- ================================================================= -->
         <section id="secao-frota" class="aba-conteudo space-y-6 hidden">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
                 <div>
@@ -109,6 +113,9 @@
             <div id="grid-frota" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
 
+        <!-- ================================================================= -->
+        <!-- SUBDIVISÃO 3: PÁTIO & MOTOS FÍSICAS                               -->
+        <!-- ================================================================= -->
         <section id="secao-motos" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b">
@@ -145,6 +152,9 @@
             </div>
         </section>
 
+        <!-- ================================================================= -->
+        <!-- SUBDIVISÃO 4: LOJA DE COINS & REGRAS                              -->
+        <!-- ================================================================= -->
         <section id="secao-loja" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <h2 class="text-xl font-black uppercase text-gray-900 mb-4">Configuração de Brindes & Regras de Coins</h2>
@@ -164,6 +174,9 @@
             </div>
         </section>
 
+        <!-- ================================================================= -->
+        <!-- SUBDIVISÃO 5: GESTÃO DE PLANOS & VALORES                          -->
+        <!-- ================================================================= -->
         <section id="secao-planos" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -210,6 +223,166 @@
             </div>
         </section>
 
+        <!-- ================================================================= -->
+        <!-- SUBDIVISÃO 6: FINANCEIRO & DRE (ABA EXCLUSIVA)                    -->
+        <!-- ================================================================= -->
+        <section id="secao-financeiro" class="aba-conteudo space-y-6 hidden">
+
+            <!-- 1. CARD DRE OPERACIONAL EM TEMPO REAL -->
+            <div class="bg-gray-900 text-white p-6 rounded-2xl border border-gray-800 shadow-xl space-y-4">
+                <div class="flex flex-wrap justify-between items-center border-b border-gray-800 pb-3 gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">📊</span>
+                        <div>
+                            <h3 class="font-black text-sm uppercase tracking-wider text-orange-500">Resumo DRE Operacional — Mês Atual</h3>
+                            <p class="text-xs text-gray-400">Calculado em tempo real via lançamentos do caixa (POP 02)</p>
+                        </div>
+                    </div>
+                    <span class="bg-green-950 text-green-400 border border-green-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase">
+                        ● Caixa Conectado
+                    </span>
+                </div>
+
+                <!-- METRICAS CHAVE -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                    <!-- Faturamento Bruto -->
+                    <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/50">
+                        <span class="text-gray-400 block font-bold uppercase text-[10px]">Faturamento Bruto</span>
+                        <span id="dre-faturamento" class="text-base font-black text-green-400">R$ 0,00</span>
+                        <span class="text-[10px] text-gray-500 block mt-0.5">Receitas registradas</span>
+                    </div>
+
+                    <!-- OPEX + Custos -->
+                    <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/50">
+                        <span class="text-gray-400 block font-bold uppercase text-[10px]">OPEX + Custos</span>
+                        <span id="dre-opex" class="text-base font-black text-orange-400">R$ 0,00</span>
+                        <span class="text-[10px] text-gray-500 block mt-0.5">Seguro, Impostos, Oficina</span>
+                    </div>
+
+                    <!-- Dívidas de Capital -->
+                    <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/50">
+                        <span class="text-gray-400 block font-bold uppercase text-[10px]">Dívidas de Capital</span>
+                        <span id="dre-dividas" class="text-base font-black text-red-400">R$ 0,00</span>
+                        <span class="text-[10px] text-gray-500 block mt-0.5">Financiamento / Empréstimo</span>
+                    </div>
+
+                    <!-- Pró-Labore Gestor -->
+                    <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/50">
+                        <span class="text-gray-400 block font-bold uppercase text-[10px]">Pró-Labore Gestor</span>
+                        <span id="dre-prolabore" class="text-base font-black text-purple-400">R$ 0,00</span>
+                        <span class="text-[10px] text-gray-500 block mt-0.5">Retirada Conta PF</span>
+                    </div>
+                </div>
+
+                <!-- DESTAQUE DO SALDO RETIDO PJ -->
+                <div class="bg-gradient-to-r from-orange-950/80 to-gray-900 border border-orange-800/50 p-3.5 rounded-xl flex justify-between items-center">
+                    <div>
+                        <span class="text-xs font-black text-orange-400 uppercase block">Reserva Líquida Retida no Nubank PJ</span>
+                        <span class="text-[10px] text-gray-400">Resultado do mês retido no caixa da empresa</span>
+                    </div>
+                    <div class="text-right">
+                        <span id="dre-reserva-pj" class="text-lg font-black text-white">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. FORMULÁRIO DE LANÇAMENTO RÁPIDO NO CAIXA -->
+            <div class="bg-gray-900 text-white p-6 rounded-2xl border border-gray-800 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+                    <h3 class="font-black text-white text-sm uppercase flex items-center gap-2">
+                        <span>💰</span> Lançamento Rápido no Caixa (POP 02)
+                    </h3>
+                    <span class="text-[10px] bg-gray-800 text-gray-400 border border-gray-700 font-bold px-2.5 py-1 rounded-full uppercase">
+                        Entradas e Saídas
+                    </span>
+                </div>
+
+                <form id="form-nova-transacao" onsubmit="salvarTransacao(event)" class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Data</label>
+                        <input type="date" id="trans-data" required class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Tipo</label>
+                        <select id="trans-tipo" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
+                            <option value="ENTRADA">🟢 ENTRADA (Receita)</option>
+                            <option value="SAIDA">🔴 SAÍDA (Despesa)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Categoria DRE</label>
+                        <select id="trans-categoria" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
+                            <option value="Receita - Semanalidade">Receita - Semanalidade</option>
+                            <option value="OPEX - Custos Operacionais">OPEX - Suhai / J16 / Oficina / DAS</option>
+                            <option value="Dívida - Passivos de Capital">Dívida - Financiamento / Empréstimo</option>
+                            <option value="Pró-Labore Gestor">Pró-Labore Gestor (Conta PF)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Valor (R$)</label>
+                        <input type="number" step="0.01" id="trans-valor" placeholder="0,00" required class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-black focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-2.5 rounded-xl transition text-xs uppercase shadow-md flex items-center justify-center gap-1">
+                            💾 Registrar Lançamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 3. SIMULADOR DE EXPANSÃO DE FROTA (+1 MOTO) -->
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl mb-6 space-y-4">
+                <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+                    <h3 class="font-black text-white text-sm uppercase flex items-center gap-2">
+                        <span>🚀</span> Simulador de Expansão (+1 Moto na Frota)
+                    </h3>
+                    <span class="text-[10px] bg-orange-950 text-orange-400 border border-orange-800 font-bold px-2.5 py-1 rounded-full uppercase">
+                        Projeção de Payback
+                    </span>
+                </div>
+
+                <!-- ENTRADA DE DADOS -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Preço de Compra (R$)</label>
+                        <input type="number" id="sim-preco-moto" value="19800" oninput="calcularSimulacaoExpansao()" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-black focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Aporte do Sócio / Entrada (R$)</label>
+                        <input type="number" id="sim-aporte-socio" value="5000" oninput="calcularSimulacaoExpansao()" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-black focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Semanalidade Prevista (R$)</label>
+                        <input type="number" id="sim-semanalidade" value="350" oninput="calcularSimulacaoExpansao()" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-black focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">OPEX Moto (Suhai+J16/mês)</label>
+                        <input type="number" id="sim-opex-moto" value="150" oninput="calcularSimulacaoExpansao()" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-black focus:outline-none focus:border-orange-500">
+                    </div>
+                </div>
+
+                <!-- RESULTADO DA SIMULAÇÃO -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-gray-800/50 p-4 rounded-xl border border-gray-700/50 text-xs">
+                    <div>
+                        <span class="text-gray-400 block text-[10px] font-bold uppercase">Receita Bruta Adicional</span>
+                        <span id="sim-res-receita" class="text-base font-black text-green-400">R$ 1.515,50 /mês</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px] font-bold uppercase">Sobra Líquida Adicional (PJ)</span>
+                        <span id="sim-res-sobra" class="text-base font-black text-orange-400">R$ 1.365,50 /mês</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px] font-bold uppercase">Payback do Aporte</span>
+                        <span id="sim-res-payback" class="text-base font-black text-purple-400">3,7 Meses</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- SUBDIVISÃO 7: GESTÃO DE USUÁRIOS (ADMIN)                           -->
+        <!-- ================================================================= -->
         <section id="secao-usuarios" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white rounded-3xl p-6 shadow-md border border-gray-100">
                 <h3 class="text-lg font-black uppercase text-gray-900 mb-4">Cadastrar Novo Usuário</h3>
@@ -245,121 +418,102 @@
         </section>
     </div>
 
-<!-- CARD DRE COM IDS PARA ATUALIZAÇÃO DINÂMICA -->
- <div id="tab-financeiro" class="tab-content hidden space-y-6"></div>
-<div class="bg-gray-900 text-white p-6 rounded-2xl border border-gray-800 shadow-xl space-y-4 mb-6">
-    <div class="flex flex-wrap justify-between items-center border-b border-gray-800 pb-3 gap-2">
-        <div class="flex items-center gap-2">
-            <span class="text-xl">📊</span>
-            <div>
-                <h3 class="font-black text-sm uppercase tracking-wider text-orange-500">Resumo DRE Operacional — Mês Atual</h3>
-                <p class="text-xs text-gray-400">Calculado em tempo real via lançamentos do caixa (POP 02)</p>
-            </div>
-        </div>
-        <span class="bg-green-950 text-green-400 border border-green-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase">
-            ● Caixa Conectado
-        </span>
-    </div>
-
-    <!-- METRICAS CHAVE -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-        <!-- Faturamento Bruto -->
-        <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/50">
-            <span class="text-gray-400 block font-bold uppercase text-[10px]">Faturamento Bruto</span>
-            <span id="dre-faturamento" class="text-base font-black text-green-400">R$ 0,00</span>
-            <span class="text-[10px] text-gray-500 block mt-0.5">Receitas registradas</span>
-        </div>
-
-        <!-- OPEX + Provisão Oficina -->
-        <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/50">
-            <span class="text-gray-400 block font-bold uppercase text-[10px]">OPEX + Custos</span>
-            <span id="dre-opex" class="text-base font-black text-orange-400">R$ 0,00</span>
-            <span class="text-[10px] text-gray-500 block mt-0.5">Seguro, Impostos, Oficina</span>
-        </div>
-
-        <!-- Passivos de Capital -->
-        <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/50">
-            <span class="text-gray-400 block font-bold uppercase text-[10px]">Dívidas de Capital</span>
-            <span id="dre-dividas" class="text-base font-black text-red-400">R$ 0,00</span>
-            <span class="text-[10px] text-gray-500 block mt-0.5">Financiamento / Empréstimo</span>
-        </div>
-
-        <!-- Pró-Labore Fixo (PF) -->
-        <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/50">
-            <span class="text-gray-400 block font-bold uppercase text-[10px]">Pró-Labore Gestor</span>
-            <span id="dre-prolabore" class="text-base font-black text-purple-400">R$ 0,00</span>
-            <span class="text-[10px] text-gray-500 block mt-0.5">Retirada Conta PF</span>
+    <!-- MODAIS DE EDIÇÃO -->
+    <div id="modal-editar-moto" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border relative">
+            <h3 class="text-lg font-black text-gray-900 uppercase mb-4">Editar Dados da Moto</h3>
+            <form id="form-editar-moto" onsubmit="salvarEdicaoMoto(event)" class="space-y-4">
+                <input type="hidden" id="edit-moto-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="edit-moto-marca" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Marca">
+                    <input type="text" id="edit-moto-modelo" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Modelo">
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <input type="text" id="edit-moto-cor" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Cor">
+                    <input type="number" id="edit-moto-ano" class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Ano">
+                    <input type="text" id="edit-moto-placa" required class="p-2.5 border rounded-lg text-xs font-black uppercase" placeholder="Placa">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="number" id="edit-moto-km" class="p-2.5 border rounded-lg text-xs font-bold" placeholder="KM">
+                    <select id="edit-moto-status" class="p-2.5 border rounded-lg text-xs font-bold">
+                        <option value="DISPONIVEL">Disponível</option>
+                        <option value="ALUGADA">Alugada</option>
+                        <option value="MANUTENCAO">Manutenção</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-3 border-t">
+                    <button type="button" onclick="fecharModalMoto()" class="flex-1 bg-gray-200 py-2 rounded-xl text-xs font-bold">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-orange-600 text-white py-2 rounded-xl text-xs font-black">Salvar</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- DESTAQUE DO SALDO RETIDO PJ -->
-    <div class="bg-gradient-to-r from-orange-950/80 to-gray-900 border border-orange-800/50 p-3.5 rounded-xl flex justify-between items-center">
-        <div>
-            <span class="text-xs font-black text-orange-400 uppercase block">Reserva Líquida Retida no Nubank PJ</span>
-            <span class="text-[10px] text-gray-400">Resultado do mês retido no caixa da empresa</span>
+    <div id="modal-editar" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border relative">
+            <h3 class="text-xl font-black text-gray-900 uppercase mb-4">Editar Dados do Piloto</h3>
+            <form id="form-editar" onsubmit="salvarEdicaoCard(event)" class="space-y-4">
+                <input type="hidden" id="edit-id">
+                <input type="text" id="edit-nome" required class="w-full p-2.5 border rounded-lg text-sm font-bold uppercase" placeholder="Nome">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="edit-placa" required class="p-2.5 border rounded-lg text-sm font-bold uppercase" placeholder="Placa">
+                    <input type="text" id="edit-modelo" required class="p-2.5 border rounded-lg text-sm font-bold" placeholder="Modelo">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="edit-telefone" required class="p-2.5 border rounded-lg text-sm font-bold" placeholder="WhatsApp">
+                    <input type="text" id="edit-cpf" required class="p-2.5 border rounded-lg text-sm font-bold" placeholder="CPF">
+                </div>
+                <div class="grid grid-cols-3 gap-3 bg-orange-50 p-3 rounded-xl border">
+                    <input type="number" id="edit-semanas" required min="0" max="182" class="p-2 border rounded-lg text-sm font-black text-orange-600" placeholder="Semanas">
+                    <input type="number" id="edit-coins" required min="0" class="p-2 border rounded-lg text-sm font-black text-amber-700" placeholder="Coins">
+                    <input type="number" id="edit-km-atual" required class="p-2 border rounded-lg text-sm font-bold" placeholder="KM">
+                </div>
+                <div class="flex gap-3 pt-4 border-t">
+                    <button type="button" onclick="fecharModal()" class="flex-1 bg-gray-200 py-3 rounded-xl text-xs font-bold">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-orange-600 text-white py-3 rounded-xl text-xs font-black">Salvar</button>
+                </div>
+            </form>
         </div>
-        <div class="text-right">
-            <span id="dre-reserva-pj" class="text-lg font-black text-white">R$ 0,00</span>
+    </div>
+
+    <div id="modal-editar-plano" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border relative">
+            <h3 class="text-lg font-black text-gray-900 uppercase mb-4">Editar Plano</h3>
+            <form id="form-editar-plano" onsubmit="salvarEdicaoPlano(event)" class="space-y-4">
+                <input type="hidden" id="edit-plano-id">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Modelo da Moto</label>
+                    <input type="text" id="edit-plano-modelo" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Nome do Plano</label>
+                    <input type="text" id="edit-plano-nome" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Valor Semanal (R$)</label>
+                        <input type="number" step="0.01" id="edit-plano-valor" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Caução (R$)</label>
+                        <input type="number" step="0.01" id="edit-plano-caucao" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
+                    </div>
+                </div>
+                <div class="flex items-center pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="edit-plano-recomendado" class="w-4 h-4 text-orange-600 accent-orange-600">
+                        <span class="text-xs font-black uppercase text-gray-700">Destacar como Mais Popular</span>
+                    </label>
+                </div>
+                <div class="flex gap-3 pt-3 border-t">
+                    <button type="button" onclick="fecharModalPlano()" class="flex-1 bg-gray-200 py-2.5 rounded-xl text-xs font-bold">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-orange-600 text-white py-2.5 rounded-xl text-xs font-black">Salvar Alterações</button>
+                </div>
+            </form>
         </div>
     </div>
-</div>
-</div>
 
-<!-- FORMULÁRIO DE LANÇAMENTO RÁPIDO - PASSO 2 -->
-<div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl mb-6">
-    <h3 class="font-black text-white text-sm uppercase border-b border-gray-800 pb-2 mb-4 flex items-center gap-2">
-        <span>➕</span> Registrar Entrada ou Saída no Caixa
-    </h3>
-
-   <!-- Removemos apenas o onsubmit="..." da tag form -->
-<form id="form-nova-transacao" onsubmit="salvarTransacao(event)" class="grid grid-cols-1 md:grid-cols-5 gap-3">
-    <!-- Data -->
-    <div>
-        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Data</label>
-        <input type="date" id="trans-data" required class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
-    </div>
-
-    <!-- Tipo -->
-    <div>
-        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Tipo</label>
-        <select id="trans-tipo" required class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
-            <option value="ENTRADA">🟢 Entrada (Receita)</option>
-            <option value="SAIDA">🔴 Saída (Despesa / OPEX)</option>
-        </select>
-    </div>
-
-    <!-- Categoria -->
-    <div>
-        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Categoria DRE</label>
-        <select id="trans-categoria" required class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-bold focus:outline-none focus:border-orange-500">
-            <option value="Receita - Semanalidade">Receita - Semanalidade</option>
-            <option value="Receita - Caução">Receita - Caução</option>
-            <option value="Seguro - Suhai">Seguro - Suhai</option>
-            <option value="Telemetria - Rastreador">Telemetria - Rastreador J16</option>
-            <option value="Oficina - Peças/Serviços">Oficina - Peças/Serviços</option>
-            <option value="Pró-Labore Gestor">Pró-Labore Gestor (Conta PF)</option>
-        </select>
-    </div>
-
-    <!-- Valor -->
-    <div>
-        <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Valor (R$)</label>
-        <input type="number" step="0.01" id="trans-valor" required placeholder="0.00" class="w-full bg-gray-800 border border-gray-700 text-white rounded-xl p-2.5 text-xs font-black focus:outline-none focus:border-orange-500">
-    </div>
-
-    <!-- Botão de Envio (mantém type="submit") -->
-    <div class="flex items-end">
-        <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-2.5 px-4 rounded-xl uppercase text-xs transition-all shadow-lg flex items-center justify-center gap-1">
-            💾 Salvar
-        </button>
-    </div>
-</form>
-</div>
-    <!-- MODAIS -->
-    <div id="modal-editar-moto" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">...</div>
-    <div id="modal-editar" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">...</div>
-    <div id="modal-editar-plano" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">...</div>
-    
+    <!-- MODAL DE LOGIN ADMINISTRATIVO -->
     <div id="modal-login" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border border-gray-100">
             <div class="text-center mb-6">

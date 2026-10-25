@@ -1,5 +1,5 @@
 // ======================================================
-// CENTRALIADOR ADMIN - js/admin-main.js
+// CENTRALIZADOR ADMIN - js/admin-main.js
 // ======================================================
 
 import { exibirModalLogin, realizarLoginAdmin, realizarLogout } from './auth.js';
@@ -11,7 +11,7 @@ import { carregarUsuarios, cadastrarNovoUsuario, excluirUsuario } from './admin-
 import { salvarTransacao, initFinanceiro, carregarResumoDRE, calcularSimulacaoExpansao } from './admin-financeiro.js';
 
 // ------------------------------------------------------
-// 1. Expondo funções globalmente para os botões e eventos do HTML
+// 1. Expondo funções globalmente para os botões e formulários do HTML
 // ------------------------------------------------------
 window.exibirModalLogin = exibirModalLogin;
 window.realizarLoginAdmin = realizarLoginAdmin;
@@ -45,7 +45,7 @@ window.carregarUsuarios = carregarUsuarios;
 window.cadastrarNovoUsuario = cadastrarNovoUsuario;
 window.excluirUsuario = excluirUsuario;
 
-// Funções do Módulo Financeiro
+// Funções do Módulo Financeiro & DRE (Passos 1 a 4)
 window.salvarTransacao = salvarTransacao;
 window.initFinanceiro = initFinanceiro;
 window.carregarResumoDRE = carregarResumoDRE;
@@ -56,13 +56,13 @@ window.calcularSimulacaoExpansao = calcularSimulacaoExpansao;
 // ------------------------------------------------------
 window.alternarAba = function(aba) {
     const secoes = { 
-        mesa: document.getElementById('secao-mesa') || document.getElementById('aba-mesa'), 
-        frota: document.getElementById('secao-frota') || document.getElementById('aba-frota'), 
-        motos: document.getElementById('secao-motos') || document.getElementById('aba-motos'), 
-        loja: document.getElementById('secao-loja') || document.getElementById('aba-loja'), 
-        planos: document.getElementById('secao-planos') || document.getElementById('aba-planos'),
-        usuarios: document.getElementById('secao-usuarios') || document.getElementById('aba-usuarios'),
-        financeiro: document.getElementById('secao-financeiro') || document.getElementById('aba-financeiro') || document.getElementById('tab-financeiro')
+        mesa: document.getElementById('secao-mesa'), 
+        frota: document.getElementById('secao-frota'), 
+        motos: document.getElementById('secao-motos'), 
+        loja: document.getElementById('secao-loja'), 
+        planos: document.getElementById('secao-planos'),
+        usuarios: document.getElementById('secao-usuarios'),
+        financeiro: document.getElementById('secao-financeiro')
     };
 
     const botoes = { 
@@ -84,25 +84,25 @@ window.alternarAba = function(aba) {
         } 
     });
 
-    // Exibe a seção ativa
+    // Exibe a seção ativa e destaca o botão correspondente
     if (secoes[aba]) secoes[aba].classList.remove('hidden');
     if (botoes[aba]) {
         botoes[aba].classList.remove('text-gray-400', 'hover:text-white');
         botoes[aba].classList.add('ativa', 'bg-orange-600', 'text-white');
     }
 
-    // Se a aba for o financeiro, atualiza os dados em tempo real
+    // Ao entrar na aba do financeiro, atualiza os saldos e o simulador imediatamente
     if (aba === 'financeiro') {
         if (typeof carregarResumoDRE === 'function') carregarResumoDRE();
         if (typeof calcularSimulacaoExpansao === 'function') calcularSimulacaoExpansao();
     }
 };
 
-// Alias para garantir compatibilidade se algum HTML usar mudarAba()
+// Garantia de compatibilidade caso algum evento chame mudarAba()
 window.mudarAba = window.alternarAba;
 
 // ------------------------------------------------------
-// 3. Verificação de Permissões JWT
+// 3. Verificação de Permissões JWT do Administrador
 // ------------------------------------------------------
 function verificarPermissoesAdmin() {
     const token = localStorage.getItem('lf_admin_token');
@@ -117,12 +117,12 @@ function verificarPermissoesAdmin() {
             if (btnUsuarios) btnUsuarios.classList.remove('hidden');
         }
     } catch (e) { 
-        console.error(e); 
+        console.error('Erro ao verificar permissões do token:', e); 
     }
 }
 
 // ------------------------------------------------------
-// 4. Carregamento Geral do Painel
+// 4. Carregamento Geral do Painel de Controle
 // ------------------------------------------------------
 window.carregarDadosPainel = function() {
     verificarPermissoesAdmin();
@@ -137,7 +137,7 @@ window.carregarDadosPainel = function() {
 };
 
 // ------------------------------------------------------
-// 5. Inicialização da Sessão
+// 5. Inicialização da Sessão ao Carregar a Página
 // ------------------------------------------------------
 window.onload = async () => {
     const token = localStorage.getItem('lf_admin_token');
@@ -148,6 +148,7 @@ window.onload = async () => {
     try {
         window.carregarDadosPainel();
     } catch (err) {
+        console.error('Erro na inicialização do painel:', err);
         localStorage.removeItem('lf_admin_token');
         exibirModalLogin();
     }

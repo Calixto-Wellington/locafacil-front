@@ -50,6 +50,10 @@
                     class="aba-btn tab-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     📋 Gestão de Planos
                 </button>
+                <!-- Botão da Aba Financeiro no Sidebar -->
+<button onclick="mudarAba('financeiro')" class="menu-btn flex items-center gap-3 w-full p-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl font-bold text-xs uppercase transition-all">
+    <span class="text-base">📊</span> Financeiro & DRE
+</button>
                 <button onclick="alternarAba('usuarios')" id="btn-aba-usuarios" class="aba-btn tab-btn px-4 py-2 rounded-lg font-black text-xs uppercase flex items-center gap-2 text-gray-400 hover:text-white hidden transition-all">
                     👥 Usuários
                 </button>
@@ -242,6 +246,7 @@
     </div>
 
 <!-- CARD DRE COM IDS PARA ATUALIZAÇÃO DINÂMICA -->
+ <div id="tab-financeiro" class="tab-content hidden space-y-6"></div>
 <div class="bg-gray-900 text-white p-6 rounded-2xl border border-gray-800 shadow-xl space-y-4 mb-6">
     <div class="flex flex-wrap justify-between items-center border-b border-gray-800 pb-3 gap-2">
         <div class="flex items-center gap-2">
@@ -297,6 +302,7 @@
             <span id="dre-reserva-pj" class="text-lg font-black text-white">R$ 0,00</span>
         </div>
     </div>
+</div>
 </div>
 
 <!-- FORMULÁRIO DE LANÇAMENTO RÁPIDO - PASSO 2 -->

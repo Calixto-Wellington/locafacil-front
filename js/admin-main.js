@@ -1,74 +1,109 @@
+// ======================================================
+// CENTRALIADOR ADMIN - js/admin-main.js
+// ======================================================
+
 import { exibirModalLogin, realizarLoginAdmin, realizarLogout } from './auth.js';
 import { carregarLeads, realizarBuscaLeads } from './admin-leads.js';
 import { carregarLocatarios, buscarLocatario } from './admin-locatarios.js';
 import { carregarMotosFrota, salvarNovaMoto, mudarStatusMoto, excluirMoto, abrirModalEditarMoto, fecharModalMoto } from './admin-motos.js';
 import { carregarPlanosAdmin, salvarNovoPlano, excluirPlano, abrirModalEditarPlano, fecharModalPlano, salvarEdicaoPlano, carregarConfiguracaoCoinsPix, salvarConfigCoinsPix, carregarItensLojaAdmin } from './admin-planos.js';
 import { carregarUsuarios, cadastrarNovoUsuario, excluirUsuario } from './admin-usuarios.js';
-import { salvarTransacao, initFinanceiro } from './admin-financeiro.js';
+import { salvarTransacao, initFinanceiro, carregarResumoDRE, calcularSimulacaoExpansao } from './admin-financeiro.js';
 
-// Expondo funções globalmente para os botões e formulários do HTML
+// ------------------------------------------------------
+// 1. Expondo funções globalmente para os botões e eventos do HTML
+// ------------------------------------------------------
 window.exibirModalLogin = exibirModalLogin;
 window.realizarLoginAdmin = realizarLoginAdmin;
 window.realizarLogout = realizarLogout;
+
 window.carregarLeads = carregarLeads;
 window.realizarBuscaLeads = realizarBuscaLeads;
+
 window.carregarLocatarios = carregarLocatarios;
 window.buscarLocatario = buscarLocatario;
+
 window.carregarMotosFrota = carregarMotosFrota;
 window.salvarNovaMoto = salvarNovaMoto;
 window.mudarStatusMoto = mudarStatusMoto;
 window.excluirMoto = excluirMoto;
 window.abrirModalEditarMoto = abrirModalEditarMoto;
 window.fecharModalMoto = fecharModalMoto;
+
 window.carregarPlanosAdmin = carregarPlanosAdmin;
 window.salvarNovoPlano = salvarNovoPlano;
 window.excluirPlano = excluirPlano;
 window.abrirModalEditarPlano = abrirModalEditarPlano;
 window.fecharModalPlano = fecharModalPlano;
 window.salvarEdicaoPlano = salvarEdicaoPlano;
+
 window.carregarConfiguracaoCoinsPix = carregarConfiguracaoCoinsPix;
 window.salvarConfigCoinsPix = salvarConfigCoinsPix;
 window.carregarItensLojaAdmin = carregarItensLojaAdmin;
+
 window.carregarUsuarios = carregarUsuarios;
 window.cadastrarNovoUsuario = cadastrarNovoUsuario;
 window.excluirUsuario = excluirUsuario;
+
+// Funções do Módulo Financeiro
 window.salvarTransacao = salvarTransacao;
 window.initFinanceiro = initFinanceiro;
+window.carregarResumoDRE = carregarResumoDRE;
+window.calcularSimulacaoExpansao = calcularSimulacaoExpansao;
 
-// Função de Navegação de Abas
+// ------------------------------------------------------
+// 2. Navegação de Abas Unificada (Atende alternarAba e mudarAba)
+// ------------------------------------------------------
 window.alternarAba = function(aba) {
     const secoes = { 
-        mesa: document.getElementById('secao-mesa'), 
-        frota: document.getElementById('secao-frota'), 
-        motos: document.getElementById('secao-motos'), 
-        loja: document.getElementById('secao-loja'), 
-        planos: document.getElementById('secao-planos'),
-        usuarios: document.getElementById('secao-usuarios')
+        mesa: document.getElementById('secao-mesa') || document.getElementById('aba-mesa'), 
+        frota: document.getElementById('secao-frota') || document.getElementById('aba-frota'), 
+        motos: document.getElementById('secao-motos') || document.getElementById('aba-motos'), 
+        loja: document.getElementById('secao-loja') || document.getElementById('aba-loja'), 
+        planos: document.getElementById('secao-planos') || document.getElementById('aba-planos'),
+        usuarios: document.getElementById('secao-usuarios') || document.getElementById('aba-usuarios'),
+        financeiro: document.getElementById('secao-financeiro') || document.getElementById('aba-financeiro') || document.getElementById('tab-financeiro')
     };
+
     const botoes = { 
         mesa: document.getElementById('btn-aba-mesa'), 
         frota: document.getElementById('btn-aba-frota'), 
         motos: document.getElementById('btn-aba-motos'), 
         loja: document.getElementById('btn-aba-loja'), 
         planos: document.getElementById('btn-aba-planos'),
-        usuarios: document.getElementById('btn-aba-usuarios')
+        usuarios: document.getElementById('btn-aba-usuarios'),
+        financeiro: document.getElementById('btn-aba-financeiro')
     };
-    
+
+    // Esconde todas as seções e reseta os botões
     Object.keys(secoes).forEach(k => { 
-        if(secoes[k]) secoes[k].classList.add('hidden'); 
-        if(botoes[k]) { 
+        if (secoes[k]) secoes[k].classList.add('hidden'); 
+        if (botoes[k]) { 
             botoes[k].classList.remove('ativa', 'bg-orange-600', 'text-white'); 
             botoes[k].classList.add('text-gray-400', 'hover:text-white'); 
         } 
     });
-    
+
+    // Exibe a seção ativa
     if (secoes[aba]) secoes[aba].classList.remove('hidden');
     if (botoes[aba]) {
         botoes[aba].classList.remove('text-gray-400', 'hover:text-white');
         botoes[aba].classList.add('ativa', 'bg-orange-600', 'text-white');
     }
+
+    // Se a aba for o financeiro, atualiza os dados em tempo real
+    if (aba === 'financeiro') {
+        if (typeof carregarResumoDRE === 'function') carregarResumoDRE();
+        if (typeof calcularSimulacaoExpansao === 'function') calcularSimulacaoExpansao();
+    }
 };
 
+// Alias para garantir compatibilidade se algum HTML usar mudarAba()
+window.mudarAba = window.alternarAba;
+
+// ------------------------------------------------------
+// 3. Verificação de Permissões JWT
+// ------------------------------------------------------
 function verificarPermissoesAdmin() {
     const token = localStorage.getItem('lf_admin_token');
     if (!token) return;
@@ -81,9 +116,14 @@ function verificarPermissoesAdmin() {
             const btnUsuarios = document.getElementById('btn-aba-usuarios');
             if (btnUsuarios) btnUsuarios.classList.remove('hidden');
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error(e); 
+    }
 }
 
+// ------------------------------------------------------
+// 4. Carregamento Geral do Painel
+// ------------------------------------------------------
 window.carregarDadosPainel = function() {
     verificarPermissoesAdmin();
     carregarLeads();
@@ -96,6 +136,9 @@ window.carregarDadosPainel = function() {
     initFinanceiro();
 };
 
+// ------------------------------------------------------
+// 5. Inicialização da Sessão
+// ------------------------------------------------------
 window.onload = async () => {
     const token = localStorage.getItem('lf_admin_token');
     if (!token) {

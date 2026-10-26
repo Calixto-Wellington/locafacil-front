@@ -2,13 +2,17 @@
 // CENTRALIZADOR ADMIN - js/admin-main.js
 // ======================================================
 
-import { exibirModalLogin, realizarLoginAdmin, realizarLogout } from './auth.js';
-import { carregarLeads, realizarBuscaLeads } from './admin-leads.js';
-import { carregarLocatarios, buscarLocatario } from './admin-locatarios.js';
-import { carregarMotosFrota, salvarNovaMoto, mudarStatusMoto, excluirMoto, abrirModalEditarMoto, fecharModalMoto } from './admin-motos.js';
-import { carregarPlanosAdmin, salvarNovoPlano, excluirPlano, abrirModalEditarPlano, fecharModalPlano, salvarEdicaoPlano, carregarConfiguracaoCoinsPix, salvarConfigCoinsPix, carregarItensLojaAdmin } from './admin-planos.js';
-import { carregarUsuarios, cadastrarNovoUsuario, excluirUsuario } from './admin-usuarios.js';
-import { salvarTransacao, initFinanceiro, carregarResumoDRE, calcularSimulacaoExpansao } from './admin-financeiro.js';
+import { 
+    exibirModalLogin, 
+    realizarLoginAdmin, 
+    realizarLogout 
+} from './auth.js';
+
+import { 
+    carregarLeads, 
+    realizarBuscaLeads 
+} from './admin-leads.js';
+
 import { 
     carregarLocatarios, 
     buscarLocatario, 
@@ -18,9 +22,42 @@ import {
     confirmarImportacaoCSV 
 } from './admin-locatarios.js';
 
+import { 
+    carregarMotosFrota, 
+    salvarNovaMoto, 
+    mudarStatusMoto, 
+    excluirMoto, 
+    abrirModalEditarMoto, 
+    fecharModalMoto 
+} from './admin-motos.js';
+
+import { 
+    carregarPlanosAdmin, 
+    salvarNovoPlano, 
+    excluirPlano, 
+    abrirModalEditarPlano, 
+    fecharModalPlano, 
+    salvarEdicaoPlano, 
+    carregarConfiguracaoCoinsPix, 
+    salvarConfigCoinsPix, 
+    carregarItensLojaAdmin 
+} from './admin-planos.js';
+
+import { 
+    carregarUsuarios, 
+    cadastrarNovoUsuario, 
+    excluirUsuario 
+} from './admin-usuarios.js';
+
+import { 
+    salvarTransacao, 
+    initFinanceiro, 
+    carregarResumoDRE, 
+    calcularSimulacaoExpansao 
+} from './admin-financeiro.js';
 
 // ------------------------------------------------------
-// 1. Expondo funções globalmente para os botões e formulários do HTML
+// 1. Expondo funções globalmente para o HTML
 // ------------------------------------------------------
 window.exibirModalLogin = exibirModalLogin;
 window.realizarLoginAdmin = realizarLoginAdmin;
@@ -31,6 +68,10 @@ window.realizarBuscaLeads = realizarBuscaLeads;
 
 window.carregarLocatarios = carregarLocatarios;
 window.buscarLocatario = buscarLocatario;
+window.abrirModalImportarCSV = abrirModalImportarCSV;
+window.fecharModalImportarCSV = fecharModalImportarCSV;
+window.processarArquivoCSV = processarArquivoCSV;
+window.confirmarImportacaoCSV = confirmarImportacaoCSV;
 
 window.carregarMotosFrota = carregarMotosFrota;
 window.salvarNovaMoto = salvarNovaMoto;
@@ -54,21 +95,13 @@ window.carregarUsuarios = carregarUsuarios;
 window.cadastrarNovoUsuario = cadastrarNovoUsuario;
 window.excluirUsuario = excluirUsuario;
 
-// Funções do Módulo Financeiro & DRE (Passos 1 a 4)
 window.salvarTransacao = salvarTransacao;
 window.initFinanceiro = initFinanceiro;
 window.carregarResumoDRE = carregarResumoDRE;
 window.calcularSimulacaoExpansao = calcularSimulacaoExpansao;
 
-window.carregarLocatarios = carregarLocatarios;
-window.buscarLocatario = buscarLocatario;
-window.abrirModalImportarCSV = abrirModalImportarCSV;
-window.fecharModalImportarCSV = fecharModalImportarCSV;
-window.processarArquivoCSV = processarArquivoCSV;
-window.confirmarImportacaoCSV = confirmarImportacaoCSV;
-
 // ------------------------------------------------------
-// 2. Navegação de Abas Unificada (Atende alternarAba e mudarAba)
+// 2. Navegação de Abas Unificada (alternarAba e mudarAba)
 // ------------------------------------------------------
 window.alternarAba = function(aba) {
     const secoes = { 
@@ -100,25 +133,24 @@ window.alternarAba = function(aba) {
         } 
     });
 
-    // Exibe a seção ativa e destaca o botão correspondente
+    // Exibe apenas a seção selecionada
     if (secoes[aba]) secoes[aba].classList.remove('hidden');
     if (botoes[aba]) {
         botoes[aba].classList.remove('text-gray-400', 'hover:text-white');
         botoes[aba].classList.add('ativa', 'bg-orange-600', 'text-white');
     }
 
-    // Ao entrar na aba do financeiro, atualiza os saldos e o simulador imediatamente
+    // Se entrar no financeiro, atualiza DRE e simulador
     if (aba === 'financeiro') {
         if (typeof carregarResumoDRE === 'function') carregarResumoDRE();
         if (typeof calcularSimulacaoExpansao === 'function') calcularSimulacaoExpansao();
     }
 };
 
-// Garantia de compatibilidade caso algum evento chame mudarAba()
 window.mudarAba = window.alternarAba;
 
 // ------------------------------------------------------
-// 3. Verificação de Permissões JWT do Administrador
+// 3. Verificação de Permissões JWT
 // ------------------------------------------------------
 function verificarPermissoesAdmin() {
     const token = localStorage.getItem('lf_admin_token');
@@ -138,7 +170,7 @@ function verificarPermissoesAdmin() {
 }
 
 // ------------------------------------------------------
-// 4. Carregamento Geral do Painel de Controle
+// 4. Carregamento Geral do Painel
 // ------------------------------------------------------
 window.carregarDadosPainel = function() {
     verificarPermissoesAdmin();
@@ -153,7 +185,7 @@ window.carregarDadosPainel = function() {
 };
 
 // ------------------------------------------------------
-// 5. Inicialização da Sessão ao Carregar a Página
+// 5. Inicialização da Sessão
 // ------------------------------------------------------
 window.onload = async () => {
     const token = localStorage.getItem('lf_admin_token');

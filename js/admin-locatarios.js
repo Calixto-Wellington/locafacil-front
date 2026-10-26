@@ -107,6 +107,142 @@ export function processarArquivoCSV(event) {
             }
         });
 
+        // ======================================================
+// MÓDULO IMPORTADOR DE CSV MOBILTRACKER
+// ======================================================
+let dadosCSVProcessados = [];
+
+export function abrirModalImportarCSV() {
+    dadosCSVProcessados = [];
+    const container = document.getElementById('container-preview-csv');
+    if (container) container.classList.add('hidden');
+    const input = document.getElementById('input-file-csv');
+    if (input) input.value = '';
+    const modal = document.getElementById('modal-importar-csv');
+    if (modal) modal.classList.remove('hidden');
+}
+
+export function fecharModalImportarCSV() {
+    const modal = document.getElementById('modal-importar-csv');
+    if (modal) modal.classList.add('hidden');
+}
+
+export function processarArquivoCSV(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const conteudo = e.target.result;
+        const linhas = conteudo.split(/\r?\n/);
+        
+        dadosCSVProcessados = [];
+        const tbody = document.getElementById('tbody-preview-csv');
+        if (tbody) tbody.innerHTML = '';
+
+        let listaLocatarios = [];
+        try {
+            const resLoc = await fetch(`${API_BASE}/admin/locatarios`);
+            listaLocatarios = await resLoc.json() || [];
+        } catch (err) {
+            console.error('Erro ao buscar locatários:', err);
+        }
+
+        linhas.forEach((linha, index) => {
+            if (index === 0 || !linha.trim()) return;
+
+            const colunas = linha.split(';').map(c => c.trim().replace(/"/g, ''));
+            if (colunas.length < 3) return;
+
+            const identificadorOriginal = colunas[1] || '';
+            const placaLimpa = identificadorOriginal.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+            const valorTotalStr = colunas[colunas.length - 1] || '0';
+            const kmRodados = Math.round(parseFloat(valorTotalStr.replace('.', '').replace(',', '.')) || 0);
+
+            if (placaLimpa && kmRodados > 0) {
+                const locatarioEncontrado = listaLocatarios.find(l => 
+                    (l.placa || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase() === placaLimpa
+                );
+
+                const item = {
+                    locatario_id: locatarioEncontrado ? locatarioEncontrado.id : null,
+                    placa: placaLimpa,
+                    placa_exibicao: identificadorOriginal,
+                    km_rodados: kmRodados,
+                    km_anterior: locatarioEncontrado ? (locatarioEncontrado.km_atual || 0) : 0,
+                    status: locatarioEncontrado ? 'VALIDO' : 'NAO_ENCONTRADO',
+                    nome: locatarioEncontrado ? locatarioEncontrado.nome : 'Placa não cadastrada'
+                };
+
+                dadosCSVProcessados.push(item);
+
+                if (tbody) {
+                    tbody.innerHTML += `
+                        <tr class="${item.status === 'VALIDO' ? 'text-gray-900 border-b border-gray-100' : 'text-red-500 bg-red-50 border-b border-red-100'}">
+                            <td class="p-2 font-black">${item.placa_exibicao} <span class="text-[10px] text-gray-400 block font-normal">${item.nome}</span></td>
+                            <td class="p-2 text-orange-600 font-black">+${item.km_rodados.toLocaleString('pt-BR')} km</td>
+                            <td class="p-2">
+                                ${item.status === 'VALIDO' 
+                                    ? '<span class="text-green-700 bg-green-100 font-bold px-2 py-0.5 rounded text-[10px]">🟢 Mapeada</span>' 
+                                    : '<span class="text-red-700 bg-red-100 font-bold px-2 py-0.5 rounded text-[10px]">⚠️ Não Encontrada</span>'}
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+        });
+
+        const qtdValidos = dadosCSVProcessados.filter(d => d.status === 'VALIDO').length;
+        const elQtd = document.getElementById('qtd-veiculos-csv');
+        if (elQtd) elQtd.innerText = `${qtdValidos} de ${dadosCSVProcessados.length} veículos identificados`;
+
+        document.getElementById('container-preview-csv')?.classList.remove('hidden');
+    };
+
+    reader.readAsText(file, 'ISO-8859-1');
+}
+
+export async function confirmarImportacaoCSV() {
+    const validos = dadosCSVProcessados.filter(d => d.status === 'VALIDO');
+
+    if (validos.length === 0) {
+        alert('Nenhum veículo válido encontrado para atualizar.');
+        return;
+    }
+
+    try {
+        const hoje = new Date().toISOString().split('T')[0];
+
+        for (const item of validos) {
+            const novoKmTotal = item.km_anterior + item.km_rodados;
+
+            await fetch(`${API_BASE}/admin/rastreador`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    locatario_id: item.locatario_id,
+                    placa: item.placa,
+                    semana: 0,
+                    data_inicio: hoje,
+                    data_fim: hoje,
+                    km_anterior: item.km_anterior,
+                    km_atual: novoKmTotal,
+                    km_rodados: item.km_rodados,
+                    observacao: 'Importação CSV Mobiltracker'
+                })
+            });
+        }
+
+        alert(`✅ Sucesso! Telemetria de ${validos.length} veículos atualizada!`);
+        fecharModalImportarCSV();
+        if (typeof carregarLocatarios === 'function') carregarLocatarios();
+
+    } catch (err) {
+        console.error('Erro ao importar CSV:', err);
+        alert(`❌ Erro ao gravar dados: ${err.message}`);
+    }
+}
+
         const qtdValidos = dadosCSVProcessados.filter(d => d.status === 'VALIDO').length;
         const elQtd = document.getElementById('qtd-veiculos-csv');
         if (elQtd) elQtd.innerText = `${qtdValidos} de ${dadosCSVProcessados.length} veículos identificados`;

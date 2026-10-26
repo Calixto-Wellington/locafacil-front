@@ -9,7 +9,14 @@ import { carregarMotosFrota, salvarNovaMoto, mudarStatusMoto, excluirMoto, abrir
 import { carregarPlanosAdmin, salvarNovoPlano, excluirPlano, abrirModalEditarPlano, fecharModalPlano, salvarEdicaoPlano, carregarConfiguracaoCoinsPix, salvarConfigCoinsPix, carregarItensLojaAdmin } from './admin-planos.js';
 import { carregarUsuarios, cadastrarNovoUsuario, excluirUsuario } from './admin-usuarios.js';
 import { salvarTransacao, initFinanceiro, carregarResumoDRE, calcularSimulacaoExpansao } from './admin-financeiro.js';
-import { abrirModalImportarCSV, fecharModalImportarCSV, processarArquivoCSV, confirmarImportacaoCSV } from './admin-locatarios.js';
+import { 
+    carregarLocatarios, 
+    buscarLocatario, 
+    abrirModalImportarCSV, 
+    fecharModalImportarCSV, 
+    processarArquivoCSV, 
+    confirmarImportacaoCSV 
+} from './admin-locatarios.js';
 
 
 // ------------------------------------------------------
@@ -53,6 +60,8 @@ window.initFinanceiro = initFinanceiro;
 window.carregarResumoDRE = carregarResumoDRE;
 window.calcularSimulacaoExpansao = calcularSimulacaoExpansao;
 
+window.carregarLocatarios = carregarLocatarios;
+window.buscarLocatario = buscarLocatario;
 window.abrirModalImportarCSV = abrirModalImportarCSV;
 window.fecharModalImportarCSV = fecharModalImportarCSV;
 window.processarArquivoCSV = processarArquivoCSV;

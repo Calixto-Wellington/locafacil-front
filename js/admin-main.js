@@ -9,6 +9,8 @@ import { carregarMotosFrota, salvarNovaMoto, mudarStatusMoto, excluirMoto, abrir
 import { carregarPlanosAdmin, salvarNovoPlano, excluirPlano, abrirModalEditarPlano, fecharModalPlano, salvarEdicaoPlano, carregarConfiguracaoCoinsPix, salvarConfigCoinsPix, carregarItensLojaAdmin } from './admin-planos.js';
 import { carregarUsuarios, cadastrarNovoUsuario, excluirUsuario } from './admin-usuarios.js';
 import { salvarTransacao, initFinanceiro, carregarResumoDRE, calcularSimulacaoExpansao } from './admin-financeiro.js';
+import { abrirModalImportarCSV, fecharModalImportarCSV, processarArquivoCSV, confirmarImportacaoCSV } from './admin-locatarios.js';
+
 
 // ------------------------------------------------------
 // 1. Expondo funções globalmente para os botões e formulários do HTML
@@ -50,6 +52,11 @@ window.salvarTransacao = salvarTransacao;
 window.initFinanceiro = initFinanceiro;
 window.carregarResumoDRE = carregarResumoDRE;
 window.calcularSimulacaoExpansao = calcularSimulacaoExpansao;
+
+window.abrirModalImportarCSV = abrirModalImportarCSV;
+window.fecharModalImportarCSV = fecharModalImportarCSV;
+window.processarArquivoCSV = processarArquivoCSV;
+window.confirmarImportacaoCSV = confirmarImportacaoCSV;
 
 // ------------------------------------------------------
 // 2. Navegação de Abas Unificada (Atende alternarAba e mudarAba)

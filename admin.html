@@ -107,10 +107,15 @@
                         class="p-2.5 border border-gray-300 rounded-xl text-xs font-bold outline-none w-full md:w-64 uppercase">
                     <button onclick="buscarLocatario()" class="bg-orange-600 hover:bg-orange-700 text-white font-black py-2.5 px-5 rounded-xl transition text-xs uppercase shadow-md">🔍 Buscar</button>
                     <button onclick="carregarLocatarios()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-black py-2.5 px-3 rounded-xl transition text-xs uppercase">🔄 Todos</button>
+                    <!-- BOTÃO NA BARRA SUPERIOR DA FROTA -->
+<button onclick="abrirModalImportarCSV()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2.5 px-4 rounded-xl transition text-xs uppercase flex items-center gap-1.5 shadow-md">
+    📥 Importar CSV Mobiltracker
+</button>
                 </div>
             </div>
             <div id="loading-frota" class="text-center py-10 font-bold text-gray-500">Buscando pilotos no banco de dados...</div>
             <div id="grid-frota" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            
         </section>
 
         <!-- ================================================================= -->
@@ -535,6 +540,56 @@
             </form>
         </div>
     </div>
+    <!-- MODAL DE IMPORTAÇÃO CSV MOBILTRACKER -->
+<div id="modal-importar-csv" class="fixed inset-0 bg-black/70 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 border relative space-y-4">
+        <div class="flex justify-between items-center border-b pb-3">
+            <div>
+                <h3 class="text-lg font-black text-gray-900 uppercase">📥 Importar Telemetria (Mobiltracker)</h3>
+                <p class="text-xs text-gray-500 font-bold">Selecione o arquivo .csv exportado do portal.mobiltracker.com.br</p>
+            </div>
+            <button onclick="fecharModalImportarCSV()" class="text-gray-400 hover:text-red-500 font-black text-lg">✕</button>
+        </div>
+
+        <!-- SELEÇÃO DE ARQUIVO -->
+        <div class="bg-indigo-50 border-2 border-dashed border-indigo-300 p-6 rounded-2xl text-center cursor-pointer hover:bg-indigo-100/50 transition" onclick="document.getElementById('input-file-csv').click()">
+            <span class="text-3xl block mb-2">📄</span>
+            <p class="text-xs font-black text-indigo-950 uppercase">Clique para selecionar o arquivo .CSV do Mobiltracker</p>
+            <p class="text-[10px] text-gray-500 font-bold mt-1">O sistema mapeia automaticamente por Placa (Ex: TKA3E77)</p>
+            <input type="file" id="input-file-csv" accept=".csv" class="hidden" onchange="processarArquivoCSV(event)">
+        </div>
+
+        <!-- TABELA DE PRÉ-VISUALIZAÇÃO DOS DADOS LIDOS -->
+        <div id="container-preview-csv" class="hidden space-y-3">
+            <h4 class="text-xs font-black text-gray-700 uppercase flex items-center justify-between">
+                <span>🔍 Veículos Identificados no Arquivo</span>
+                <span id="qtd-veiculos-csv" class="text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full text-[10px]">0 encontrados</span>
+            </h4>
+
+            <div class="max-h-56 overflow-y-auto border rounded-xl bg-gray-50 p-2">
+                <table class="w-full text-left text-xs">
+                    <thead class="text-[10px] font-black uppercase text-gray-500 border-b pb-1">
+                        <tr>
+                            <th class="p-1.5">Placa</th>
+                            <th class="p-1.5">KM Lido / Rodado</th>
+                            <th class="p-1.5">Status no Banco</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-preview-csv" class="divide-y divide-gray-200 font-bold">
+                        <!-- Injetado dinamicamente via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-3 border-t">
+                <button type="button" onclick="fecharModalImportarCSV()" class="bg-gray-200 text-gray-800 font-bold px-4 py-2.5 rounded-xl text-xs uppercase">Cancelar</button>
+                <button type="button" onclick="confirmarImportacaoCSV()" class="bg-green-600 hover:bg-green-700 text-white font-black px-6 py-2.5 rounded-xl text-xs uppercase shadow-md flex items-center gap-1">
+                    💾 Confirmar e Atualizar Frota
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- SCRIPT CENTRALIZADOR MODULARIZADO -->
     <script type="module" src="./js/admin-main.js"></script>

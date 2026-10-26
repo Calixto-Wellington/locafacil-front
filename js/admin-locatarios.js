@@ -33,6 +33,90 @@ function renderizarFrota(lista) {
     });
 }
 
+// LÊ E PROCESSA O ARQUIVO CSV REAL DE QUILOMETRAGEM
+export function processarArquivoCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const conteudo = e.target.result;
+        const linhas = conteudo.split(/\r?\n/);
+        
+        dadosCSVProcessados = [];
+        const tbody = document.getElementById('tbody-preview-csv');
+        if (tbody) tbody.innerHTML = '';
+
+        // Busca a lista de locatários ativos para cruzar as placas
+        let listaLocatarios = [];
+        try {
+            const resLoc = await fetch(`${API_BASE}/admin/locatarios`);
+            listaLocatarios = await resLoc.json() || [];
+        } catch (err) {
+            console.error('Erro ao buscar locatários:', err);
+        }
+
+        linhas.forEach((linha, index) => {
+            if (index === 0 || !linha.trim()) return; // Pula o cabeçalho (id;nome;17/10;...) e linhas vazias
+
+            // Separa as colunas pelo ponto e vírgula (;)
+            const colunas = linha.split(';').map(c => c.trim().replace(/"/g, ''));
+
+            if (colunas.length < 3) return;
+
+            // Coluna 1 (nome) contêm a placa (Ex: "TKA3e77", "URX-7J14")
+            const identificadorOriginal = colunas[1] || '';
+            const placaLimpa = identificadorOriginal.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+
+            // Última coluna contém a soma total da rodagem (Ex: "1233,36")
+            const valorTotalStr = colunas[colunas.length - 1] || '0';
+            const kmRodados = Math.round(parseFloat(valorTotalStr.replace('.', '').replace(',', '.')) || 0);
+
+            if (placaLimpa && kmRodados > 0) {
+                // Procura a moto no banco de dados pela placa limpa
+                const locatarioEncontrado = listaLocatarios.find(l => 
+                    (l.placa || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase() === placaLimpa
+                );
+
+                const item = {
+                    locatario_id: locatarioEncontrado ? locatarioEncontrado.id : null,
+                    placa: placaLimpa,
+                    placa_exibicao: identificadorOriginal,
+                    km_rodados: kmRodados,
+                    km_anterior: locatarioEncontrado ? (locatarioEncontrado.km_atual || 0) : 0,
+                    status: locatarioEncontrado ? 'VALIDO' : 'NAO_ENCONTRADO',
+                    nome: locatarioEncontrado ? locatarioEncontrado.nome : 'Placa não cadastrada na frota'
+                };
+
+                dadosCSVProcessados.push(item);
+
+                // Injeta a linha na pré-visualização do modal
+                if (tbody) {
+                    tbody.innerHTML += `
+                        <tr class="${item.status === 'VALIDO' ? 'text-gray-900 border-b border-gray-100' : 'text-red-500 bg-red-50 border-b border-red-100'}">
+                            <td class="p-2 font-black">${item.placa_exibicao} <span class="text-[10px] text-gray-400 block font-normal">${item.nome}</span></td>
+                            <td class="p-2 text-orange-600 font-black">+${item.km_rodados.toLocaleString('pt-BR')} km</td>
+                            <td class="p-2">
+                                ${item.status === 'VALIDO' 
+                                    ? '<span class="text-green-700 bg-green-100 font-bold px-2 py-0.5 rounded text-[10px]">🟢 Mapeada</span>' 
+                                    : '<span class="text-red-700 bg-red-100 font-bold px-2 py-0.5 rounded text-[10px]">⚠️ Não Encontrada</span>'}
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+        });
+
+        const qtdValidos = dadosCSVProcessados.filter(d => d.status === 'VALIDO').length;
+        const elQtd = document.getElementById('qtd-veiculos-csv');
+        if (elQtd) elQtd.innerText = `${qtdValidos} de ${dadosCSVProcessados.length} veículos identificados`;
+
+        document.getElementById('container-preview-csv')?.classList.remove('hidden');
+    };
+
+    reader.readAsText(file, 'ISO-8859-1');
+}
+
 window.adicionarUmaSemana = async (id, cpf, tel, nome, sem, coins) => {
     const resC = await fetch(`${API_BASE}/admin/config/coins_por_pix`); const dC = await resC.json();
     const inc = parseInt(dC.valor) || 10;

@@ -198,7 +198,7 @@ export async function resetarContadorPeca(placa, componenteId, kmAtual) {
     try {
         await fetch(`${API_BASE}/admin/manutencao-componentes`, {
             method: 'POST',
-    ,        headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 placa: placa,
                 componente_id: componenteId,

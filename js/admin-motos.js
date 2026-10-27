@@ -255,8 +255,3 @@ export async function resetarContadorPeca(placa, componenteIdPadrao, kmAtual) {
     }
 }
 
-export function salvarNovaMoto() {}
-export function mudarStatusMoto() {}
-export function excluirMoto() {}
-export function abrirModalEditarMoto() {}
-export function fecharModalMoto() {}

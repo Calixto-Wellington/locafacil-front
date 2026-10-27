@@ -44,6 +44,16 @@ function renderizarFrota(lista) {
 // ======================================================
 let dadosCSVProcessados = [];
 
+// Função auxiliar para converter DD/MM/AAAA para AAAA-MM-DD
+function converterDataParaISO(dataStr) {
+    if (!dataStr) return new Date().toISOString().split('T')[0];
+    const partes = dataStr.trim().split('/');
+    if (partes.length === 3) {
+        return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+    }
+    return dataStr;
+}
+
 export function abrirModalImportarCSV() {
     dadosCSVProcessados = [];
     const container = document.getElementById('container-preview-csv');
@@ -64,14 +74,27 @@ export function processarArquivoCSV(event) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = async function (e) {
+    reader.onload = async function(e) {
         const conteudo = e.target.result;
         const linhas = conteudo.split(/\r?\n/);
-
+        
         dadosCSVProcessados = [];
         const tbody = document.getElementById('tbody-preview-csv');
         if (tbody) tbody.innerHTML = '';
 
+        if (linhas.length < 2) return;
+
+        // 1. Extrai o período real do cabeçalho do CSV (Ex: 17/10/2026 a 24/10/2026)
+        const cabecalho = linhas[0].split(';').map(c => c.trim().replace(/"/g, ''));
+        let dataInicioISO = new Date().toISOString().split('T')[0];
+        let dataFimISO = new Date().toISOString().split('T')[0];
+
+        if (cabecalho.length >= 4) {
+            dataInicioISO = converterDataParaISO(cabecalho[2]);                  // 17/10/2026
+            dataFimISO = converterDataParaISO(cabecalho[cabecalho.length - 2]);  // 24/10/2026
+        }
+
+        // 2. Busca lista de locatários ativos para cruzar as placas e semanas
         let listaLocatarios = [];
         try {
             const resLoc = await fetch(`${API_BASE}/admin/locatarios`);
@@ -92,9 +115,14 @@ export function processarArquivoCSV(event) {
             const kmRodados = Math.round(parseFloat(valorTotalStr.replace('.', '').replace(',', '.')) || 0);
 
             if (placaLimpa && kmRodados > 0) {
-                const locatarioEncontrado = listaLocatarios.find(l =>
+                const locatarioEncontrado = listaLocatarios.find(l => 
                     (l.placa || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase() === placaLimpa
                 );
+
+                // Resgata a semana real do contrato do locatário (ex: Semana 21)
+                const semanaReal = locatarioEncontrado 
+                    ? (locatarioEncontrado.semanas_pagas || locatarioEncontrado.semana_atual || 1) 
+                    : 1;
 
                 const item = {
                     locatario_id: locatarioEncontrado ? locatarioEncontrado.id : null,
@@ -102,6 +130,9 @@ export function processarArquivoCSV(event) {
                     placa_exibicao: identificadorOriginal,
                     km_rodados: kmRodados,
                     km_anterior: locatarioEncontrado ? (locatarioEncontrado.km_atual || 0) : 0,
+                    semana: semanaReal,
+                    data_inicio: dataInicioISO,
+                    data_fim: dataFimISO,
                     status: locatarioEncontrado ? 'VALIDO' : 'NAO_ENCONTRADO',
                     nome: locatarioEncontrado ? locatarioEncontrado.nome : 'Placa não cadastrada'
                 };
@@ -111,11 +142,11 @@ export function processarArquivoCSV(event) {
                 if (tbody) {
                     tbody.innerHTML += `
                         <tr class="${item.status === 'VALIDO' ? 'text-gray-900 border-b border-gray-100' : 'text-red-500 bg-red-50 border-b border-red-100'}">
-                            <td class="p-2 font-black">${item.placa_exibicao} <span class="text-[10px] text-gray-400 block font-normal">${item.nome}</span></td>
+                            <td class="p-2 font-black">${item.placa_exibicao} <span class="text-[10px] text-gray-400 block font-normal">${item.nome} (Semana ${item.semana})</span></td>
                             <td class="p-2 text-orange-600 font-black">+${item.km_rodados.toLocaleString('pt-BR')} km</td>
                             <td class="p-2">
                                 ${item.status === 'VALIDO' 
-                                    ? '<span class="text-green-700 bg-green-100 font-bold px-2 py-0.5 rounded text-[10px]">🟢 Mapeada</span>' 
+                                    ? '<span class="text-green-700 bg-green-100 font-bold px-2 py-0.5 rounded text-[10px]">🟢 Pronta</span>' 
                                     : '<span class="text-red-700 bg-red-100 font-bold px-2 py-0.5 rounded text-[10px]">⚠️ Não Encontrada</span>'}
                             </td>
                         </tr>
@@ -142,23 +173,25 @@ export async function confirmarImportacaoCSV() {
         return;
     }
 
-    try {
-        const hoje = new Date().toISOString().split('T')[0];
+    const btnConfirmar = document.querySelector("#modal-importar-csv button[onclick='confirmarImportacaoCSV()']");
+    if (btnConfirmar) {
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerText = '⏳ Gravando no banco...';
+    }
 
+    try {
         for (const item of validos) {
             const novoKmTotal = item.km_anterior + item.km_rodados;
 
             await fetch(`${API_BASE}/admin/rastreador`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     locatario_id: item.locatario_id,
                     placa: item.placa,
-                    semana: 0,
-                    data_inicio: hoje,
-                    data_fim: hoje,
+                    semana: item.semana,           // Grava a semana real do contrato!
+                    data_inicio: item.data_inicio, // Grava a data inicial real da planilha (2026-10-17)!
+                    data_fim: item.data_fim,       // Grava a data final real da planilha (2026-10-24)!
                     km_anterior: item.km_anterior,
                     km_atual: novoKmTotal,
                     km_rodados: item.km_rodados,
@@ -167,13 +200,18 @@ export async function confirmarImportacaoCSV() {
             });
         }
 
-        alert(`✅ Sucesso! Telemetria de ${validos.length} veículos atualizada!`);
+        alert(`✅ Sucesso! Telemetria gravada com datas e semanas reais do contrato!`);
         fecharModalImportarCSV();
         if (typeof carregarLocatarios === 'function') carregarLocatarios();
 
     } catch (err) {
         console.error('Erro ao importar CSV:', err);
         alert(`❌ Erro ao gravar dados: ${err.message}`);
+    } finally {
+        if (btnConfirmar) {
+            btnConfirmar.disabled = false;
+            btnConfirmar.innerText = '💾 Confirmar e Atualizar Frota';
+        }
     }
 }
 

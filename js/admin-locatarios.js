@@ -89,7 +89,7 @@ function renderizarFrota(lista) {
                         </div>
 
                         <!-- BARRAS VISUAIS DE DESGASTE DE PEÇAS (TELEMETRIA) -->
-                        ${window.renderizarBarrasDesgasteMotos ? window.renderizarBarrasDesgasteMotos(kmAtual, item.componentes) : `
+                        ${window.renderizarBarrasDesgasteMotos ? window.renderizarBarrasDesgasteMotos(kmAtual, item.componentes,item.placa) : `
                             <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 text-xs">
                                 <p class="text-orange-900 font-bold uppercase">KM Atual do Painel</p>
                                 <p class="font-black text-gray-900 text-base mt-0.5">${kmAtual.toLocaleString('pt-BR')} km</p>

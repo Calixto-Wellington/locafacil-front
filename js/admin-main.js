@@ -28,7 +28,9 @@ import {
     mudarStatusMoto, 
     excluirMoto, 
     abrirModalEditarMoto, 
-    fecharModalMoto 
+    fecharModalMoto,
+    renderizarBarrasDesgasteMotos,
+    resetarContadorPeca 
 } from './admin-motos.js';
 
 import { 
@@ -57,7 +59,7 @@ import {
 } from './admin-financeiro.js';
 
 // ------------------------------------------------------
-// 1. Expondo funções globalmente para o HTML
+// 1. Exposição Global no objeto Window
 // ------------------------------------------------------
 window.exibirModalLogin = exibirModalLogin;
 window.realizarLoginAdmin = realizarLoginAdmin;
@@ -72,6 +74,10 @@ window.abrirModalImportarCSV = abrirModalImportarCSV;
 window.fecharModalImportarCSV = fecharModalImportarCSV;
 window.processarArquivoCSV = processarArquivoCSV;
 window.confirmarImportacaoCSV = confirmarImportacaoCSV;
+
+// 🛞 TELEMETRIA E MEDIDORES DE PEÇAS
+window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;
+window.resetarContadorPeca = resetarContadorPeca;
 
 window.carregarMotosFrota = carregarMotosFrota;
 window.salvarNovaMoto = salvarNovaMoto;
@@ -101,7 +107,7 @@ window.carregarResumoDRE = carregarResumoDRE;
 window.calcularSimulacaoExpansao = calcularSimulacaoExpansao;
 
 // ------------------------------------------------------
-// 2. Navegação de Abas Unificada (alternarAba e mudarAba)
+// 2. Navegação de Abas
 // ------------------------------------------------------
 window.alternarAba = function(aba) {
     const secoes = { 
@@ -124,7 +130,6 @@ window.alternarAba = function(aba) {
         financeiro: document.getElementById('btn-aba-financeiro')
     };
 
-    // Esconde todas as seções e reseta os botões
     Object.keys(secoes).forEach(k => { 
         if (secoes[k]) secoes[k].classList.add('hidden'); 
         if (botoes[k]) { 
@@ -133,14 +138,12 @@ window.alternarAba = function(aba) {
         } 
     });
 
-    // Exibe apenas a seção selecionada
     if (secoes[aba]) secoes[aba].classList.remove('hidden');
     if (botoes[aba]) {
         botoes[aba].classList.remove('text-gray-400', 'hover:text-white');
         botoes[aba].classList.add('ativa', 'bg-orange-600', 'text-white');
     }
 
-    // Se entrar no financeiro, atualiza DRE e simulador
     if (aba === 'financeiro') {
         if (typeof carregarResumoDRE === 'function') carregarResumoDRE();
         if (typeof calcularSimulacaoExpansao === 'function') calcularSimulacaoExpansao();
@@ -150,7 +153,7 @@ window.alternarAba = function(aba) {
 window.mudarAba = window.alternarAba;
 
 // ------------------------------------------------------
-// 3. Verificação de Permissões JWT
+// 3. Inicialização e Permissões
 // ------------------------------------------------------
 function verificarPermissoesAdmin() {
     const token = localStorage.getItem('lf_admin_token');
@@ -164,29 +167,21 @@ function verificarPermissoesAdmin() {
             const btnUsuarios = document.getElementById('btn-aba-usuarios');
             if (btnUsuarios) btnUsuarios.classList.remove('hidden');
         }
-    } catch (e) { 
-        console.error('Erro ao verificar permissões do token:', e); 
-    }
+    } catch (e) { console.error(e); }
 }
 
-// ------------------------------------------------------
-// 4. Carregamento Geral do Painel
-// ------------------------------------------------------
 window.carregarDadosPainel = function() {
     verificarPermissoesAdmin();
-    carregarLeads();
-    carregarLocatarios();
-    carregarMotosFrota();
-    carregarPlanosAdmin();
-    carregarItensLojaAdmin();
-    carregarConfiguracaoCoinsPix();
-    carregarUsuarios();
-    initFinanceiro();
+    if (typeof carregarLeads === 'function') carregarLeads();
+    if (typeof carregarLocatarios === 'function') carregarLocatarios();
+    if (typeof carregarMotosFrota === 'function') carregarMotosFrota();
+    if (typeof carregarPlanosAdmin === 'function') carregarPlanosAdmin();
+    if (typeof carregarItensLojaAdmin === 'function') carregarItensLojaAdmin();
+    if (typeof carregarConfiguracaoCoinsPix === 'function') carregarConfiguracaoCoinsPix();
+    if (typeof carregarUsuarios === 'function') carregarUsuarios();
+    if (typeof initFinanceiro === 'function') initFinanceiro();
 };
 
-// ------------------------------------------------------
-// 5. Inicialização da Sessão
-// ------------------------------------------------------
 window.onload = async () => {
     const token = localStorage.getItem('lf_admin_token');
     if (!token) {
@@ -196,7 +191,6 @@ window.onload = async () => {
     try {
         window.carregarDadosPainel();
     } catch (err) {
-        console.error('Erro na inicialização do painel:', err);
         localStorage.removeItem('lf_admin_token');
         exibirModalLogin();
     }

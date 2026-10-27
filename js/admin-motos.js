@@ -129,3 +129,97 @@ export function abrirModalEditarMoto(item) {
 export function fecharModalMoto() {
     document.getElementById('modal-editar-moto').classList.add('hidden');
 }
+
+// ======================================================
+// MÓDULO DE TELEMETRIA E DESGASTE DE PEÇAS - js/admin-motos.js
+// ======================================================
+
+const API_BASE = window.API_BASE || 'https://sua-api.com';
+
+/**
+ * Desenha o bloco visual com as barras de progresso de cada peça.
+ * Utiliza o kmAtual vindo da tabela 'locatarios'.
+ */
+export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentes = []) {
+    if (!componentes || componentes.length === 0) {
+        // Metas padrão do Mobiltracker
+        componentes = [
+            { id: 'oleo', nome: '🛢️ Troca de Óleo', km_troca: Math.max(0, kmAtual - 800), limite_km: 1000 },
+            { id: 'pneu_tras', nome: '🛞 Pneu Traseiro', km_troca: Math.max(0, kmAtual - 6200), limite_km: 8000 },
+            { id: 'pneu_diant', nome: '🛞 Pneu Dianteiro / Freios', km_troca: Math.max(0, kmAtual - 4500), limite_km: 10000 },
+            { id: 'relacao', nome: '⚙️ Kit Relação', km_troca: Math.max(0, kmAtual - 7800), limite_km: 10000 }
+        ];
+    }
+
+    let html = '<div class="mt-3 p-3 bg-white border border-gray-200 rounded-xl space-y-2 shadow-sm">';
+    html += `<h5 class="text-[10px] font-black uppercase text-gray-500 tracking-wider flex justify-between">
+                <span>📊 Desgaste de Peças (Telemetria)</span>
+                <span class="text-indigo-600">KM Atual: ${kmAtual.toLocaleString('pt-BR')} km</span>
+            </h5>`;
+
+    componentes.forEach(peca => {
+        const kmRodadoComPeca = Math.max(0, kmAtual - peca.km_troca);
+        const percentualDesgaste = Math.min(100, Math.round((kmRodadoComPeca / peca.limite_km) * 100));
+        const kmRestantes = peca.limite_km - kmRodadoComPeca;
+
+        let corBarra = 'bg-green-500';
+        let corTexto = 'text-green-700';
+        let badgeStatus = `${percentualDesgaste}% gasto (${kmRestantes.toLocaleString('pt-BR')} km restantes)`;
+
+        if (kmRestantes <= 0) {
+            corBarra = 'bg-red-600 animate-pulse';
+            corTexto = 'text-red-600 font-black';
+            badgeStatus = `🚨 100% GASTO (${Math.abs(kmRestantes).toLocaleString('pt-BR')} km vencidos)`;
+        } else if (percentualDesgaste >= 75) {
+            corBarra = 'bg-amber-500';
+            corTexto = 'text-amber-700 font-bold';
+            badgeStatus = `🟡 ${percentualDesgaste}% gasto (Trocar em breve)`;
+        }
+
+        html += `
+            <div class="space-y-1 pt-1 border-t border-gray-100 first:border-0 first:pt-0">
+                <div class="flex justify-between items-center text-xs font-bold">
+                    <span class="text-gray-800">${peca.nome}</span>
+                    <span class="text-[10px] ${corTexto}">${badgeStatus}</span>
+                </div>
+                <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden flex">
+                    <div class="${corBarra} h-full transition-all duration-500" style="width: ${percentualDesgaste}%"></div>
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    return html;
+}
+
+/**
+ * Reseta o contador da peça selecionada para 0% (considerando o kmAtual do dia).
+ */
+export async function resetarContadorPeca(placa, componenteId, kmAtual) {
+    if (!confirm(`Confirmar a troca de peça da moto ${placa}? O contador será resetado considerando o KM atual (${kmAtual} km).`)) return;
+
+    try {
+        await fetch(`${API_BASE}/admin/manutencao-componentes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                placa: placa,
+                componente_id: componenteId,
+                km_troca: kmAtual
+            })
+        });
+
+        alert(`✅ Peça atualizada com sucesso! A barra de desgaste foi resetada para 0%.`);
+        if (typeof carregarLocatarios === 'function') carregarLocatarios();
+    } catch (err) {
+        console.error('Erro ao resetar peça:', err);
+    }
+}
+
+export async function carregarMotosFrota() {}
+export function salvarNovaMoto() {}
+export function mudarStatusMoto() {}
+export function excluirMoto() {}
+export function abrirModalEditarMoto() {}
+export function fecharModalMoto() {}

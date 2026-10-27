@@ -40,20 +40,93 @@ function renderizarFrota(lista) {
 }
 
 // ======================================================
-// MÓDULO IMPORTADOR DE CSV MOBILTRACKER (js/admin-locatarios.js)
+// MÓDULO LOCATÁRIOS E FROTA - js/admin-locatarios.js
 // ======================================================
+
+const API_BASE = window.API_BASE || 'https://sua-api.com';
 let dadosCSVProcessados = [];
 
-// Função auxiliar para converter DD/MM/AAAA para AAAA-MM-DD
 function converterDataParaISO(dataStr) {
-    if (!dataStr) return new Date().toISOString().split('T')[0];
+    if (!dataStr) return new Date().toISOString().split('T');
     const partes = dataStr.trim().split('/');
     if (partes.length === 3) {
-        return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+        return `${partes}-${partes.padStart(2, '0')}-${partes.padStart(2, '0')}`;
     }
     return dataStr;
 }
 
+export async function carregarLocatarios() {
+    try {
+        const res = await fetch(`${API_BASE}/admin/locatarios`);
+        const lista = await res.json() || [];
+        renderizarFrota(lista);
+    } catch (err) {
+        console.error('Erro ao carregar frota:', err);
+    }
+}
+
+export function buscarLocatario(query) {
+    const termo = (query || '').toLowerCase();
+    const cards = document.querySelectorAll('.card-locatario');
+    cards.forEach(card => {
+        const texto = card.innerText.toLowerCase();
+        card.style.display = texto.includes(termo) ? 'block' : 'none';
+    });
+}
+
+function renderizarFrota(lista) {
+    const container = document.getElementById('container-cards-frota');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (lista.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm">Nenhum veículo cadastrado.</p>';
+        return;
+    }
+
+    lista.forEach(item => {
+        const kmAtual = item.km_atual || 0;
+
+        container.innerHTML += `
+            <div class="card-locatario bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xs font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200 uppercase">
+                            ${item.placa || 'Sem Placa'}
+                        </span>
+                        <h4 class="font-black text-gray-900 text-base mt-1">${item.nome || 'Piloto Sem Nome'}</h4>
+                        <p class="text-xs text-gray-500 font-medium">${item.modelo || 'Moto'}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-black bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-100 block">
+                            📍 ${kmAtual.toLocaleString('pt-BR')} km
+                        </span>
+                        <span class="text-[10px] text-gray-400 font-bold block mt-1">Semana ${item.semanas_pagas || item.semana_atual || 1}</span>
+                    </div>
+                </div>
+
+                <!-- BARRAS VISUAIS DE DESGASTE DE PEÇAS -->
+                ${window.renderizarBarrasDesgasteMotos ? window.renderizarBarrasDesgasteMotos(kmAtual, item.componentes) : ''}
+
+                <!-- BOTÕES DE AÇÃO -->
+                <div class="pt-2 flex gap-2">
+                    <button onclick="adicionarUmaSemana('${item.id}', '${item.cpf}', '${item.telefone}', '${item.nome}', ${item.semanas_pagas || 0}, ${item.locafacil_coins || 0})" 
+                        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-black py-2.5 rounded-xl text-xs uppercase shadow transition-all">
+                        💵 +1 Semana (Baixar Pix)
+                    </button>
+                    <button onclick="resetarContadorPeca('${item.placa}', 'oleo', ${kmAtual})" 
+                        class="bg-gray-900 hover:bg-black text-white font-bold px-3 py-2 rounded-xl text-xs uppercase transition-all">
+                        🔧 Resetar Peça
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// ------------------------------------------------------
+// IMPORTADOR CSV MOBILTRACKER
+// ------------------------------------------------------
 export function abrirModalImportarCSV() {
     dadosCSVProcessados = [];
     const container = document.getElementById('container-preview-csv');
@@ -70,7 +143,7 @@ export function fecharModalImportarCSV() {
 }
 
 export function processarArquivoCSV(event) {
-    const file = event.target.files ? event.target.files[0] : null;
+    const file = event.target.files ? event.target.files : null;
     if (!file) return;
 
     const reader = new FileReader();
@@ -84,17 +157,15 @@ export function processarArquivoCSV(event) {
 
         if (linhas.length < 2) return;
 
-        // 1. Extrai o período real do cabeçalho do CSV (Ex: 17/10/2026 a 24/10/2026)
-        const cabecalho = linhas[0].split(';').map(c => c.trim().replace(/"/g, ''));
-        let dataInicioISO = new Date().toISOString().split('T')[0];
-        let dataFimISO = new Date().toISOString().split('T')[0];
+        const cabecalho = linhas.split(';').map(c => c.trim().replace(/"/g, ''));
+        let dataInicioISO = new Date().toISOString().split('T');
+        let dataFimISO = new Date().toISOString().split('T');
 
         if (cabecalho.length >= 4) {
-            dataInicioISO = converterDataParaISO(cabecalho[2]);                  // 17/10/2026
-            dataFimISO = converterDataParaISO(cabecalho[cabecalho.length - 2]);  // 24/10/2026
+            dataInicioISO = converterDataParaISO(cabecalho);
+            dataFimISO = converterDataParaISO(cabecalho[cabecalho.length - 2]);
         }
 
-        // 2. Busca lista de locatários ativos para cruzar as placas e semanas
         let listaLocatarios = [];
         try {
             const resLoc = await fetch(`${API_BASE}/admin/locatarios`);
@@ -109,7 +180,7 @@ export function processarArquivoCSV(event) {
             const colunas = linha.split(';').map(c => c.trim().replace(/"/g, ''));
             if (colunas.length < 3) return;
 
-            const identificadorOriginal = colunas[1] || '';
+            const identificadorOriginal = colunas || '';
             const placaLimpa = identificadorOriginal.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             const valorTotalStr = colunas[colunas.length - 1] || '0';
             const kmRodados = Math.round(parseFloat(valorTotalStr.replace('.', '').replace(',', '.')) || 0);
@@ -119,7 +190,6 @@ export function processarArquivoCSV(event) {
                     (l.placa || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase() === placaLimpa
                 );
 
-                // Resgata a semana real do contrato do locatário (ex: Semana 21)
                 const semanaReal = locatarioEncontrado 
                     ? (locatarioEncontrado.semanas_pagas || locatarioEncontrado.semana_atual || 1) 
                     : 1;
@@ -189,9 +259,9 @@ export async function confirmarImportacaoCSV() {
                 body: JSON.stringify({
                     locatario_id: item.locatario_id,
                     placa: item.placa,
-                    semana: item.semana,           // Grava a semana real do contrato!
-                    data_inicio: item.data_inicio, // Grava a data inicial real da planilha (2026-10-17)!
-                    data_fim: item.data_fim,       // Grava a data final real da planilha (2026-10-24)!
+                    semana: item.semana,
+                    data_inicio: item.data_inicio,
+                    data_fim: item.data_fim,
                     km_anterior: item.km_anterior,
                     km_atual: novoKmTotal,
                     km_rodados: item.km_rodados,
@@ -200,7 +270,7 @@ export async function confirmarImportacaoCSV() {
             });
         }
 
-        alert(`✅ Sucesso! Telemetria gravada com datas e semanas reais do contrato!`);
+        alert(`✅ Sucesso! Telemetria gravada com datas e semanas reais!`);
         fecharModalImportarCSV();
         if (typeof carregarLocatarios === 'function') carregarLocatarios();
 

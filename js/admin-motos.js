@@ -134,7 +134,6 @@ export function fecharModalMoto() {
 // MÓDULO MOTOS E TELEMETRIA DE PEÇAS - js/admin-motos.js
 // ======================================================
 
-// ------------------------------------------------------
 // 1. RENDERIZADOR VISUAL DE DESGASTE DE PEÇAS
 // ------------------------------------------------------
 export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = [], placa = '') {
@@ -350,7 +349,7 @@ export async function resetarContadorPeca(placa, componenteIdPadrao, kmAtual) {
 }
 
 // ------------------------------------------------------
-// 3. MOTOS DA FROTA (EXPORTAÇÕES REQUERIDAS PELO MAIN)
+// 3. GESTÃO DE MOTOS DA FROTA (UMA ÚNICA DECLARAÇÃO POR FUNÇÃO)
 // ------------------------------------------------------
 export async function carregarMotosFrota() {
     try {
@@ -374,7 +373,9 @@ export function fecharModalMoto() {
     if (modal) modal.classList.add('hidden');
 }
 
-// EXPOSIÇÃO GLOBAL NO WINDOW
+// ------------------------------------------------------
+// 4. VINCULAÇÃO GLOBAL NO WINDOW
+// ------------------------------------------------------
 window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;
 window.abrirModalNovaPeca = abrirModalNovaPeca;
 window.abrirModalEditarPeca = abrirModalEditarPeca;
@@ -387,4 +388,4 @@ window.salvarNovaMoto = salvarNovaMoto;
 window.mudarStatusMoto = mudarStatusMoto;
 window.excluirMoto = excluirMoto;
 window.abrirModalEditarMoto = abrirModalEditarMoto;
-window.fecharModalMoto = fecharModalMoto;   
+window.fecharModalMoto = fecharModalMoto;

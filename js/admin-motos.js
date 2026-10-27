@@ -134,8 +134,6 @@
 // MÓDULO MOTOS E TELEMETRIA DE PEÇAS - js/admin-motos.js
 // ======================================================
 
-const API_BASE = window.API_BASE || 'https://sua-api.com';
-
 // ------------------------------------------------------
 // 1. MEDIDOR DE DESGASTE VISUAL (PORCENTAGEM + BARRA)
 // ------------------------------------------------------

@@ -19,7 +19,9 @@ import {
     abrirModalImportarCSV, 
     fecharModalImportarCSV, 
     processarArquivoCSV, 
-    confirmarImportacaoCSV 
+    confirmarImportacaoCSV,
+    abrirModalEditar,
+    fecharModal
 } from './admin-locatarios.js';
 
 import { 

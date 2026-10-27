@@ -7,10 +7,10 @@ import { API_BASE } from './api.js';
 let dadosCSVProcessados = [];
 
 function converterDataParaISO(dataStr) {
-    if (!dataStr) return new Date().toISOString().split('T');
+    if (!dataStr) return new Date().toISOString().split('T')[0];
     const partes = dataStr.trim().split('/');
     if (partes.length === 3) {
-        return `${partes[1]}-${partes[2].padStart(2, '0')}-${partes.padStart(2, '0')}`;
+        return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
     }
     return dataStr;
 }
@@ -127,7 +127,7 @@ function renderizarFrota(lista) {
 window.adicionarUmaSemana = async (id, cpf, tel, nome, sem, coins) => {
     const novasSemanas = sem + 1;
     const novosCoins = coins + 10;
-    const primeiroNome = (nome || 'PILOTO').split(' ').toUpperCase();
+    const primeiroNome = (nome || 'PILOTO').split(' ')[0].toUpperCase();
     const numLimpo = (tel || '').replace(/\D/g, '');
     const cpfLimpo = (cpf || '').replace(/\D/g, '');
     const pct = Math.min(100, Math.round((novasSemanas / 182) * 100));
@@ -199,7 +199,7 @@ export function fecharModalImportarCSV() {
 }
 
 export function processarArquivoCSV(event) {
-    const file = event.target.files ? event.target.files : null;
+    const file = event.target.files ? event.target.files[0] : null;
     if (!file) return;
 
     const reader = new FileReader();
@@ -213,9 +213,9 @@ export function processarArquivoCSV(event) {
 
         if (linhas.length < 2) return;
 
-        const cabecalho = linhas.split(';').map(c => c.trim().replace(/"/g, ''));
-        let dataInicioISO = new Date().toISOString().split('T');
-        let dataFimISO = new Date().toISOString().split('T');
+        const cabecalho = linhas[0].split(';').map(c => c.trim().replace(/"/g, ''));
+        let dataInicioISO = new Date().toISOString().split('T')[0];
+        let dataFimISO = new Date().toISOString().split('T')[0];
 
         if (cabecalho.length >= 4) {
             dataInicioISO = converterDataParaISO(cabecalho[2]);
@@ -236,7 +236,7 @@ export function processarArquivoCSV(event) {
             const colunas = linha.split(';').map(c => c.trim().replace(/"/g, ''));
             if (colunas.length < 3) return;
 
-            const identificadorOriginal = colunas || '';
+            const identificadorOriginal = colunas[0] || '';
             const placaLimpa = identificadorOriginal.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             const valorTotalStr = colunas[colunas.length - 1] || '0';
             const kmRodados = Math.round(parseFloat(valorTotalStr.replace('.', '').replace(',', '.')) || 0);

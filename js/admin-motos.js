@@ -348,18 +348,6 @@ export async function resetarContadorPeca(placa, componenteIdPadrao, kmAtual) {
     }
 }
 
-// ------------------------------------------------------
-// 3. GESTÃO DE MOTOS DA FROTA (UMA ÚNICA DECLARAÇÃO POR FUNÇÃO)
-// ------------------------------------------------------
-export async function carregarMotosFrota() {
-    try {
-        const res = await fetch(`${API_BASE}/admin/motos`);
-        const lista = await res.json() || [];
-        console.log('Motos carregadas:', lista.length);
-    } catch (err) {
-        console.error('Erro ao carregar motos:', err);
-    }
-}
 
 export function salvarNovaMoto() {}
 export function mudarStatusMoto() {}

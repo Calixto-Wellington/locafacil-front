@@ -347,15 +347,6 @@ export async function resetarContadorPeca(placa, componenteIdPadrao, kmAtual) {
         console.error('Erro ao resetar peça:', err);
     }
 }
-export function abrirModalEditarMoto() {
-    const modal = document.getElementById('modal-moto');
-    if (modal) modal.classList.remove('hidden');
-}
-export function fecharModalMoto() {
-    const modal = document.getElementById('modal-moto');
-    if (modal) modal.classList.add('hidden');
-}
-
 // ------------------------------------------------------
 // 4. VINCULAÇÃO GLOBAL NO WINDOW
 // ------------------------------------------------------

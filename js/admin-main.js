@@ -1,164 +1,136 @@
 // ======================================================
-// CENTRALIZADOR ADMIN - js/admin-main.js
+// ORQUESTRADOR CENTRAL DO PAINEL ADMIN - js/admin-main.js
 // ======================================================
 
-import { 
-    exibirModalLogin, 
-    realizarLoginAdmin, 
-    realizarLogout 
-} from './auth.js';
+import { API_BASE } from './api.js';
 
-import { 
-    carregarLeads, 
-    realizarBuscaLeads 
-} from './admin-leads.js';
+// ------------------------------------------------------
+// 1. IMPORTAÇÕES DOS MÓDULOS DE NAVEGAÇÃO E REGRAS
+// ------------------------------------------------------
 
-import { 
-    carregarLocatarios, 
-    buscarLocatario, 
-    abrirModalImportarCSV, 
-    fecharModalImportarCSV, 
-    processarArquivoCSV, 
-    confirmarImportacaoCSV,
+// Módulo de Locatários, Frota Ativa e Modais de Edição
+import {
+    carregarLocatarios,
+    buscarLocatario,
     abrirModalEditar,
     fecharModal
 } from './admin-locatarios.js';
 
-import { 
-    carregarMotosFrota, 
-    salvarNovaMoto, 
-    mudarStatusMoto, 
-    excluirMoto, 
-    abrirModalEditarMoto, 
+// Módulo de Motos do Pátio e Telemetria de Peças
+import {
+    carregarMotosFrota,
+    salvarNovaMoto,
+    mudarStatusMoto,
+    excluirMoto,
+    abrirModalEditarMoto,
     fecharModalMoto,
     renderizarBarrasDesgasteMotos,
-    resetarContadorPeca 
+    abrirModalNovaPeca,
+    abrirModalEditarPeca,
+    fecharModalPeca,
+    salvarModalPeca,
+    excluirPeca,
+    resetarContadorPeca
 } from './admin-motos.js';
 
-import { 
-    carregarPlanosAdmin, 
-    salvarNovoPlano, 
-    excluirPlano, 
-    abrirModalEditarPlano, 
-    fecharModalPlano, 
-    salvarEdicaoPlano, 
-    carregarConfiguracaoCoinsPix, 
-    salvarConfigCoinsPix, 
-    carregarItensLojaAdmin 
-} from './admin-planos.js';
-
-import { 
-    carregarUsuarios, 
-    cadastrarNovoUsuario, 
-    excluirUsuario 
-} from './admin-usuarios.js';
-
-import { 
-    salvarTransacao, 
-    initFinanceiro, 
-    carregarResumoDRE, 
-    calcularSimulacaoExpansao 
-} from './admin-financeiro.js';
-
 // ------------------------------------------------------
-// 1. Exposição Global no objeto Window
+// 2. FUNÇÃO DE ALTERNÂNCIA DE ABAS (NAVEGAÇÃO FLUIDA)
 // ------------------------------------------------------
-window.exibirModalLogin = exibirModalLogin;
-window.realizarLoginAdmin = realizarLoginAdmin;
-window.realizarLogout = realizarLogout;
+export function alternarAba(abaId) {
+    // Esconde todas as seções
+    const secoes = document.querySelectorAll('.aba-conteudo, section[id^="secao-"], section[id^="aba-"]');
+    secoes.forEach(el => el.classList.add('hidden'));
 
-window.carregarLeads = carregarLeads;
-window.realizarBuscaLeads = realizarBuscaLeads;
-
-window.carregarLocatarios = carregarLocatarios;
-window.buscarLocatario = buscarLocatario;
-window.abrirModalImportarCSV = abrirModalImportarCSV;
-window.fecharModalImportarCSV = fecharModalImportarCSV;
-window.processarArquivoCSV = processarArquivoCSV;
-window.confirmarImportacaoCSV = confirmarImportacaoCSV;
-window.abrirModalEditar = abrirModalEditar; // <--- ADICIONADO AQUI
-window.fecharModal = fecharModal;           // <--- ADICIONADO AQUI
-
-// 🛞 TELEMETRIA E MEDIDORES DE PEÇAS
-window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;
-window.resetarContadorPeca = resetarContadorPeca;
-
-window.carregarMotosFrota = carregarMotosFrota;
-window.salvarNovaMoto = salvarNovaMoto;
-window.mudarStatusMoto = mudarStatusMoto;
-window.excluirMoto = excluirMoto;
-window.abrirModalEditarMoto = abrirModalEditarMoto;
-window.fecharModalMoto = fecharModalMoto;
-
-window.carregarPlanosAdmin = carregarPlanosAdmin;
-window.salvarNovoPlano = salvarNovoPlano;
-window.excluirPlano = excluirPlano;
-window.abrirModalEditarPlano = abrirModalEditarPlano;
-window.fecharModalPlano = fecharModalPlano;
-window.salvarEdicaoPlano = salvarEdicaoPlano;
-
-window.carregarConfiguracaoCoinsPix = carregarConfiguracaoCoinsPix;
-window.salvarConfigCoinsPix = salvarConfigCoinsPix;
-window.carregarItensLojaAdmin = carregarItensLojaAdmin;
-
-window.carregarUsuarios = carregarUsuarios;
-window.cadastrarNovoUsuario = cadastrarNovoUsuario;
-window.excluirUsuario = excluirUsuario;
-
-window.salvarTransacao = salvarTransacao;
-window.initFinanceiro = initFinanceiro;
-window.carregarResumoDRE = carregarResumoDRE;
-window.calcularSimulacaoExpansao = calcularSimulacaoExpansao;
-
-// ------------------------------------------------------
-// 2. Navegação de Abas
-// ------------------------------------------------------
-window.alternarAba = function(aba) {
-    const secoes = { 
-        mesa: document.getElementById('secao-mesa'), 
-        frota: document.getElementById('secao-frota'), 
-        motos: document.getElementById('secao-motos'), 
-        loja: document.getElementById('secao-loja'), 
-        planos: document.getElementById('secao-planos'),
-        usuarios: document.getElementById('secao-usuarios'),
-        financeiro: document.getElementById('secao-financeiro')
-    };
-
-    const botoes = { 
-        mesa: document.getElementById('btn-aba-mesa'), 
-        frota: document.getElementById('btn-aba-frota'), 
-        motos: document.getElementById('btn-aba-motos'), 
-        loja: document.getElementById('btn-aba-loja'), 
-        planos: document.getElementById('btn-aba-planos'),
-        usuarios: document.getElementById('btn-aba-usuarios'),
-        financeiro: document.getElementById('btn-aba-financeiro')
-    };
-
-    Object.keys(secoes).forEach(k => { 
-        if (secoes[k]) secoes[k].classList.add('hidden'); 
-        if (botoes[k]) { 
-            botoes[k].classList.remove('ativa', 'bg-orange-600', 'text-white'); 
-            botoes[k].classList.add('text-gray-400', 'hover:text-white'); 
-        } 
+    // Reseta o estilo de todos os botões de aba
+    const botoes = document.querySelectorAll('.btn-aba, .tab-btn, .aba-btn');
+    botoes.forEach(btn => {
+        btn.classList.remove('ativa', 'bg-indigo-600', 'bg-orange-600', 'text-white');
+        btn.classList.add('text-gray-400');
     });
 
-    if (secoes[aba]) secoes[aba].classList.remove('hidden');
-    if (botoes[aba]) {
-        botoes[aba].classList.remove('text-gray-400', 'hover:text-white');
-        botoes[aba].classList.add('ativa', 'bg-orange-600', 'text-white');
+    // Exibe a seção alvo
+    const abaAlvo = document.getElementById(`secao-${abaId}`) || document.getElementById(`aba-${abaId}`);
+    if (abaAlvo) {
+        abaAlvo.classList.remove('hidden');
     }
 
-    if (aba === 'financeiro') {
-        if (typeof carregarResumoDRE === 'function') carregarResumoDRE();
-        if (typeof calcularSimulacaoExpansao === 'function') calcularSimulacaoExpansao();
+    // Destaca o botão correspondente
+    const btnAtivo = document.getElementById(`btn-aba-${abaId}`);
+    if (btnAtivo) {
+        btnAtivo.classList.remove('text-gray-400');
+        btnAtivo.classList.add('ativa', 'bg-indigo-600', 'text-white');
     }
-};
+}
 
-window.mudarAba = window.alternarAba;
+// Exposição explícita no window para uso com onclick no HTML
+window.alternarAba = alternarAba;
 
 // ------------------------------------------------------
-// 3. Inicialização e Permissões
+// 3. SESSÃO, AUTENTICAÇÃO E REQUISIÇÕES SEGURAS (JWT)
 // ------------------------------------------------------
+export function exibirModalLogin() {
+    const modal = document.getElementById('modal-login');
+    if (modal) modal.classList.remove('hidden');
+}
+
+export async function realizarLoginAdmin(e) {
+    if (e) e.preventDefault();
+    const emailInput = document.getElementById('login-email');
+    const senhaInput = document.getElementById('login-senha');
+    const erroDiv = document.getElementById('login-erro');
+
+    if (!emailInput || !senhaInput) return;
+
+    const email = emailInput.value.trim();
+    const senha = senhaInput.value.trim();
+    if (erroDiv) erroDiv.classList.add('hidden');
+
+    try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, senha })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao realizar login.');
+
+        localStorage.setItem('lf_admin_token', data.token);
+        const modalLogin = document.getElementById('modal-login');
+        if (modalLogin) modalLogin.classList.add('hidden');
+
+        carregarDadosPainel();
+    } catch (err) {
+        if (erroDiv) {
+            erroDiv.innerText = `❌ ${err.message}`;
+            erroDiv.classList.remove('hidden');
+        }
+    }
+}
+
+export function realizarLogout() {
+    if (confirm('Deseja realmente sair do sistema?')) {
+        localStorage.removeItem('lf_admin_token');
+        location.reload();
+    }
+}
+
+export async function fetchComAuth(url, options = {}) {
+    const token = localStorage.getItem('lf_admin_token');
+    options.headers = {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+    };
+
+    const res = await fetch(url, options);
+    if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('lf_admin_token');
+        exibirModalLogin();
+    }
+    return res;
+}
+
 function verificarPermissoesAdmin() {
     const token = localStorage.getItem('lf_admin_token');
     if (!token) return;
@@ -171,30 +143,69 @@ function verificarPermissoesAdmin() {
             const btnUsuarios = document.getElementById('btn-aba-usuarios');
             if (btnUsuarios) btnUsuarios.classList.remove('hidden');
         }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error('Erro ao verificar permissões:', e);
+    }
 }
 
-window.carregarDadosPainel = function() {
+// ------------------------------------------------------
+// 4. CARREGAMENTO INICIAL E VINCULAÇÃO GLOBAL (WINDOW)
+// ------------------------------------------------------
+
+// Vincula todas as funções importadas ao objeto window para uso no HTML
+window.exibirModalLogin = exibirModalLogin;
+window.realizarLoginAdmin = realizarLoginAdmin;
+window.realizarLogout = realizarLogout;
+
+// Locatários e Frota
+window.carregarLocatarios = carregarLocatarios;
+window.buscarLocatario = buscarLocatario;
+window.abrirModalEditar = abrirModalEditar;
+window.fecharModal = fecharModal;
+
+// Motos e Peças
+window.carregarMotosFrota = carregarMotosFrota;
+window.salvarNovaMoto = salvarNovaMoto;
+window.mudarStatusMoto = mudarStatusMoto;
+window.excluirMoto = excluirMoto;
+window.abrirModalEditarMoto = abrirModalEditarMoto;
+window.fecharModalMoto = fecharModalMoto;
+window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;
+window.abrirModalNovaPeca = abrirModalNovaPeca;
+window.abrirModalEditarPeca = abrirModalEditarPeca;
+window.fecharModalPeca = fecharModalPeca;
+window.salvarModalPeca = salvarModalPeca;
+window.excluirPeca = excluirPeca;
+window.resetarContadorPeca = resetarContadorPeca;
+
+// Função centralizadora de carga de dados
+export function carregarDadosPainel() {
     verificarPermissoesAdmin();
-    if (typeof carregarLeads === 'function') carregarLeads();
+
+    if (typeof window.carregarLeads === 'function') window.carregarLeads();
     if (typeof carregarLocatarios === 'function') carregarLocatarios();
     if (typeof carregarMotosFrota === 'function') carregarMotosFrota();
-    if (typeof carregarPlanosAdmin === 'function') carregarPlanosAdmin();
-    if (typeof carregarItensLojaAdmin === 'function') carregarItensLojaAdmin();
-    if (typeof carregarConfiguracaoCoinsPix === 'function') carregarConfiguracaoCoinsPix();
-    if (typeof carregarUsuarios === 'function') carregarUsuarios();
-    if (typeof initFinanceiro === 'function') initFinanceiro();
-};
+    if (typeof window.carregarPlanosAdmin === 'function') window.carregarPlanosAdmin();
+    if (typeof window.carregarItensLojaAdmin === 'function') window.carregarItensLojaAdmin();
+    if (typeof window.carregarUsuarios === 'function') window.carregarUsuarios();
+}
 
+window.carregarDadosPainel = carregarDadosPainel;
+
+// Inicialização automática ao carregar a página
 window.onload = async () => {
     const token = localStorage.getItem('lf_admin_token');
+    
+    // Se não houver token salvo, abre o modal de login
     if (!token) {
         exibirModalLogin();
         return;
     }
+
     try {
-        window.carregarDadosPainel();
+        carregarDadosPainel();
     } catch (err) {
+        console.error('Erro ao inicializar o painel:', err);
         localStorage.removeItem('lf_admin_token');
         exibirModalLogin();
     }

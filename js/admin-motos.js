@@ -1,6 +1,142 @@
+import { API_BASE } from './api.js';
+import { fetchComAuth } from './auth.js';
+
+export async function carregarMotosFrota() {
+    const grid = document.getElementById('grid-motos');
+    const loading = document.getElementById('loading-motos');
+    if (!grid) return;
+    
+    if (loading) loading.style.display = 'block'; 
+    grid.innerHTML = '';
+    
+    try {
+        // Tenta buscar no endpoint administrativo com autenticação
+        const res = await fetchComAuth(`${API_BASE}/admin/motos`);
+        const data = await res.json();
+        
+        if (loading) loading.style.display = 'none';
+        
+        if (!data || data.length === 0) { 
+            grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center text-gray-500 font-bold text-sm uppercase">Nenhuma moto cadastrada.</div>`; 
+            return; 
+        }
+        
+        data.forEach(item => {
+            // Tratamento contra campos indefinidos (fallback para nomes alternativos se existirem)
+            const marca = item.marca || item.marca_nome || 'N/A';
+            const modelo = item.modelo || item.modelo_nome || 'SEM MODELO';
+            const placa = item.placa || item.placa_veiculo || 'S/ PLACA';
+            const cor = item.cor || 'Preta';
+            const km = item.km_atual ?? item.km ?? 0;
+            const status = (item.status || 'DISPONIVEL').toUpperCase();
+            
+            let badgeStatus = status === 'DISPONIVEL' 
+                ? '<span class="bg-green-100 text-green-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🟢 Disponível</span>' 
+                : status === 'ALUGADA' 
+                ? '<span class="bg-blue-100 text-blue-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🔵 Alugada</span>' 
+                : '<span class="bg-yellow-100 text-yellow-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🟡 Manutenção</span>';
+                
+            const botoesAcao = status === 'DISPONIVEL' 
+                ? `<div class="grid grid-cols-2 gap-2"><button onclick="mudarStatusMoto('${item.id}', 'ALUGADA')" class="bg-blue-600 text-white font-black py-2 rounded-xl text-xs uppercase">Alugar</button><button onclick="mudarStatusMoto('${item.id}', 'MANUTENCAO')" class="bg-yellow-500 text-black font-black py-2 rounded-xl text-xs uppercase">Oficina</button></div>` 
+                : status === 'ALUGADA' 
+                ? `<div class="grid grid-cols-2 gap-2"><button onclick="mudarStatusMoto('${item.id}', 'DISPONIVEL')" class="bg-green-600 text-white font-black py-2 rounded-xl text-xs uppercase">Pátio</button><button onclick="mudarStatusMoto('${item.id}', 'MANUTENCAO')" class="bg-yellow-500 text-black font-black py-2 rounded-xl text-xs uppercase">Oficina</button></div>` 
+                : `<button onclick="mudarStatusMoto('${item.id}', 'DISPONIVEL')" class="w-full bg-green-600 text-white font-black py-2 rounded-xl text-xs uppercase">Liberar p/ Pátio</button>`;
+                
+            const imgUrl = item.imagem_url || item.imagem || item.modelos_catalogo?.imagem_url;
+            const imgHtml = imgUrl 
+                ? `<img src="${imgUrl}" class="w-full h-44 object-cover rounded-xl mb-3 border">` 
+                : `<div class="w-full h-44 bg-gray-100 rounded-xl mb-3 flex items-center justify-center text-gray-400 text-3xl">🏍️</div>`;
+            
+            grid.innerHTML += `
+                <div class="bg-white rounded-2xl shadow-md border p-4 flex flex-col justify-between">
+                    <div>
+                        ${imgHtml}
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="text-[10px] font-black uppercase text-orange-600">${marca}</span>
+                                <h4 class="font-black text-gray-900 text-base uppercase">${modelo}</h4>
+                            </div>
+                            ${badgeStatus}
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl border mb-4 font-bold text-center">
+                            <div>Placa<br><b>${placa}</b></div>
+                            <div>Cor<br><b>${cor}</b></div>
+                            <div>KM<br><b>${Number(km).toLocaleString('pt-BR')}</b></div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 pt-2 border-t">
+                        ${botoesAcao}
+                        <div class="flex gap-2">
+                            <button onclick='abrirModalEditarMoto(${JSON.stringify(item)})' class="flex-1 bg-gray-100 py-2 rounded-lg text-xs uppercase font-bold">✏️ Editar</button>
+                            <button onclick="excluirMoto('${item.id}', '${placa}')" class="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs uppercase font-bold">🗑️</button>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    } catch(e) { 
+        console.error('Erro ao carregar motos:', e);
+        if (loading) loading.style.display = 'none';
+    }
+}
+
+export async function salvarNovaMoto(e) {
+    e.preventDefault();
+    await fetchComAuth(`${API_BASE}/admin/motos`, {
+        method: 'POST',
+        body: JSON.stringify({
+            marca: document.getElementById('novo-moto-marca').value, 
+            modelo: document.getElementById('novo-moto-modelo').value,
+            cor: document.getElementById('novo-moto-cor').value, 
+            ano: parseInt(document.getElementById('novo-moto-ano').value) || 2025,
+            placa: document.getElementById('novo-moto-placa').value.toUpperCase(), 
+            km_atual: parseInt(document.getElementById('novo-moto-km').value) || 0,
+            status: document.getElementById('novo-moto-status').value, 
+            imagem: document.getElementById('novo-moto-imagem').value
+        })
+    });
+    alert("Moto cadastrada!"); 
+    e.target.reset(); 
+    carregarMotosFrota();
+}
+
+export async function mudarStatusMoto(id, status) {
+    await fetchComAuth(`${API_BASE}/admin/motos/${id}/status`, { 
+        method: 'PATCH', 
+        body: JSON.stringify({ status }) 
+    });
+    carregarMotosFrota();
+}
+
+export async function excluirMoto(id, placa) {
+    if (confirm(`Excluir moto placa ${placa}?`)) {
+        await fetchComAuth(`${API_BASE}/admin/motos/${id}`, { method: 'DELETE' });
+        carregarMotosFrota();
+    }
+}
+
+export function abrirModalEditarMoto(item) {
+    document.getElementById('edit-moto-id').value = item.id;
+    document.getElementById('edit-moto-marca').value = item.marca || item.marca_nome || '';
+    document.getElementById('edit-moto-modelo').value = item.modelo || item.modelo_nome || '';
+    document.getElementById('edit-moto-cor').value = item.cor || '';
+    document.getElementById('edit-moto-ano').value = item.ano || 2025;
+    document.getElementById('edit-moto-placa').value = item.placa || item.placa_veiculo || '';
+    document.getElementById('edit-moto-km').value = item.km_atual ?? item.km ?? 0;
+    document.getElementById('edit-moto-status').value = item.status || 'DISPONIVEL';
+    document.getElementById('modal-editar-moto').classList.remove('hidden');
+}
+
+export function fecharModalMoto() {
+    document.getElementById('modal-editar-moto').classList.add('hidden');
+}
+
 // ======================================================
 // MÓDULO MOTOS E TELEMETRIA DE PEÇAS - js/admin-motos.js
 // ======================================================
+
+window.API_BASE = window.API_BASE || 'https://sua-api.com';
+const API_BASE = window.API_BASE;
+
 // ------------------------------------------------------
 // 1. RENDERIZADOR VISUAL DE DESGASTE DE PEÇAS
 // ------------------------------------------------------
@@ -33,7 +169,7 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
     let html = '<div class="mt-3 p-3 bg-white border border-gray-200 rounded-xl space-y-2 shadow-sm">';
     html += `<div class="flex justify-between items-center mb-1">
                 <h5 class="text-[10px] font-black uppercase text-gray-500 tracking-wider">📊 Desgaste de Peças (${kmAtual.toLocaleString('pt-BR')} km)</h5>
-                <button onclick="abrirModalNovaPeca('${placa}', ${kmAtual})" class="text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded transition flex items-center gap-1">➕ Add Peça</button>
+                <button type="button" onclick="abrirModalNovaPeca('${placa}', ${kmAtual})" class="text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded transition flex items-center gap-1">➕ Add Peça</button>
             </div>`;
 
     componentesFinal.forEach(peca => {
@@ -62,8 +198,8 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
                 <div class="flex justify-between items-center text-xs font-bold">
                     <span class="text-gray-800 flex items-center gap-1">
                         ${peca.nome}
-                        <button onclick="abrirModalEditarPeca('${placa}', '${peca.id}', '${nomeSanitizado}', ${peca.limite_km}, ${peca.km_troca})" class="text-[10px] text-gray-400 hover:text-indigo-600 transition" title="Editar peça">✏️</button>
-                        <button onclick="excluirPeca('${placa}', '${peca.id}', '${nomeSanitizado}')" class="text-[10px] text-gray-400 hover:text-red-600 transition" title="Excluir peça">🗑️</button>
+                        <button type="button" onclick="abrirModalEditarPeca('${placa}', '${peca.id}', '${nomeSanitizado}', ${peca.limite_km}, ${peca.km_troca})" class="text-[10px] text-gray-400 hover:text-indigo-600 transition" title="Editar peça">✏️</button>
+                        <button type="button" onclick="excluirPeca('${placa}', '${peca.id}', '${nomeSanitizado}')" class="text-[10px] text-gray-400 hover:text-red-600 transition" title="Excluir peça">🗑️</button>
                     </span>
                     <span class="text-[10px] ${corTexto}">${badgeStatus}</span>
                 </div>
@@ -82,7 +218,6 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
 // 2. CONTROLE DO MODAL VISUAL (NOVA PEÇA & EDIÇÃO)
 // ------------------------------------------------------
 
-// ➕ ABRIR MODAL PARA CRIAR NOVA PEÇA
 export function abrirModalNovaPeca(placa, kmAtual) {
     const modal = document.getElementById('modal-peca');
     if (!modal) return;
@@ -99,7 +234,6 @@ export function abrirModalNovaPeca(placa, kmAtual) {
     modal.classList.remove('hidden');
 }
 
-// ✏️ ABRIR MODAL PARA EDITAR PEÇA EXISTENTE
 export function abrirModalEditarPeca(placa, componenteId, nomeAtual, limiteAtual, kmTrocaAtual) {
     const modal = document.getElementById('modal-peca');
     if (!modal) return;
@@ -116,15 +250,13 @@ export function abrirModalEditarPeca(placa, componenteId, nomeAtual, limiteAtual
     modal.classList.remove('hidden');
 }
 
-// ❌ FECHAR MODAL
 export function fecharModalPeca() {
     const modal = document.getElementById('modal-peca');
     if (modal) modal.classList.add('hidden');
 }
 
-// 💾 ENVIAR FORMULÁRIO DO MODAL PARA A API
 export async function salvarModalPeca(event) {
-    event.preventDefault();
+    if (event) event.preventDefault();
 
     const placa = document.getElementById('peca-placa').value;
     let componenteId = document.getElementById('peca-id').value;
@@ -137,7 +269,6 @@ export async function salvarModalPeca(event) {
         return;
     }
 
-    // Se for peça nova sem ID, gera um identificador seguro
     if (!componenteId) {
         componenteId = nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_");
     }
@@ -173,7 +304,6 @@ export async function salvarModalPeca(event) {
     }
 }
 
-// 🗑️ EXCLUIR PEÇA DA MOTO
 export async function excluirPeca(placa, componenteId, nomePeca) {
     if (!confirm(`Tem certeza que deseja remover a peça "${nomePeca}" da moto ${placa}?`)) return;
 
@@ -196,12 +326,68 @@ export async function excluirPeca(placa, componenteId, nomePeca) {
     }
 }
 
+export async function resetarContadorPeca(placa, componenteIdPadrao, kmAtual) {
+    const kmDigitado = prompt(`Digite o KM exato em que a manutenção foi realizada:`, kmAtual);
+    if (!kmDigitado) return;
+
+    const kmTrocaReal = parseInt(kmDigitado, 10);
+    if (isNaN(kmTrocaReal)) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/manutencao-componentes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                placa,
+                componente_id: componenteIdPadrao || 'oleo',
+                km_troca: kmTrocaReal
+            })
+        });
+
+        if (res.ok) {
+            if (typeof carregarLocatarios === 'function') carregarLocatarios();
+        }
+    } catch (err) {
+        console.error('Erro ao resetar peça:', err);
+    }
+}
+
 // ------------------------------------------------------
-// 3. EXPOSIÇÃO GLOBAL NO WINDOW
+// 3. MOTOS DA FROTA (EXPORTAÇÕES REQUERIDAS PELO MAIN)
 // ------------------------------------------------------
+export async function carregarMotosFrota() {
+    try {
+        const res = await fetch(`${API_BASE}/admin/motos`);
+        const lista = await res.json() || [];
+        console.log('Motos carregadas:', lista.length);
+    } catch (err) {
+        console.error('Erro ao carregar motos:', err);
+    }
+}
+
+export function salvarNovaMoto() {}
+export function mudarStatusMoto() {}
+export function excluirMoto() {}
+export function abrirModalEditarMoto() {
+    const modal = document.getElementById('modal-moto');
+    if (modal) modal.classList.remove('hidden');
+}
+export function fecharModalMoto() {
+    const modal = document.getElementById('modal-moto');
+    if (modal) modal.classList.add('hidden');
+}
+
+// EXPOSIÇÃO GLOBAL NO WINDOW
 window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;
 window.abrirModalNovaPeca = abrirModalNovaPeca;
 window.abrirModalEditarPeca = abrirModalEditarPeca;
 window.fecharModalPeca = fecharModalPeca;
 window.salvarModalPeca = salvarModalPeca;
 window.excluirPeca = excluirPeca;
+window.resetarContadorPeca = resetarContadorPeca;
+window.carregarMotosFrota = carregarMotosFrota;
+window.salvarNovaMoto = salvarNovaMoto;
+window.mudarStatusMoto = mudarStatusMoto;
+window.excluirMoto = excluirMoto;
+window.abrirModalEditarMoto = abrirModalEditarMoto;
+window.fecharModalMoto = fecharModalMoto;   

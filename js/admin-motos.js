@@ -391,7 +391,10 @@ export async function excluirPeca(placa, componenteId, nomePeca) {
         });
 
         if (res.ok) {
-            if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
+            // Recarrega os locatários e a frota para atualizar os cards imediatamente
+            if (typeof window.carregarLocatarios === 'function') {
+                window.carregarLocatarios();
+            }
         } else {
             const errData = await res.json();
             alert(`❌ Erro ao remover: ${errData.error || 'Erro interno'}`);

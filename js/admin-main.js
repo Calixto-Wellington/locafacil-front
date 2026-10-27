@@ -76,6 +76,8 @@ window.abrirModalImportarCSV = abrirModalImportarCSV;
 window.fecharModalImportarCSV = fecharModalImportarCSV;
 window.processarArquivoCSV = processarArquivoCSV;
 window.confirmarImportacaoCSV = confirmarImportacaoCSV;
+window.abrirModalEditar = abrirModalEditar; // <--- ADICIONADO AQUI
+window.fecharModal = fecharModal;           // <--- ADICIONADO AQUI
 
 // 🛞 TELEMETRIA E MEDIDORES DE PEÇAS
 window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;

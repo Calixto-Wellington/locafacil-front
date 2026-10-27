@@ -134,11 +134,15 @@ export function fecharModalMoto() {
 // MÓDULO MOTOS E TELEMETRIA DE PEÇAS - js/admin-motos.js
 // ======================================================
 
+window.API_BASE = window.API_BASE || 'https://sua-api.com';
+const API_BASE = window.API_BASE;
+
 // ------------------------------------------------------
-// 1. MEDIDOR DE DESGASTE VISUAL (PORCENTAGEM + BARRA)
+// 1. MEDIDOR VISUAL DE DESGASTE DE PEÇAS (PORCENTAGEM + BARRA)
 // ------------------------------------------------------
 export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentes = []) {
     if (!componentes || componentes.length === 0) {
+        // Metas padrão do Mobiltracker se não houver registros prévios
         componentes = [
             { id: 'oleo', nome: '🛢️ Troca de Óleo', km_troca: Math.max(0, kmAtual - 800), limite_km: 1000 },
             { id: 'pneu_tras', nome: '🛞 Pneu Traseiro', km_troca: Math.max(0, kmAtual - 6200), limite_km: 8000 },
@@ -190,25 +194,83 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentes = []) {
 }
 
 // ------------------------------------------------------
-// 2. RESET DE PEÇA (RESETA CONTADOR PARA O KM ATUAL)
+// 2. RESET DE PEÇA INTERATIVO (ESCOLHA DA PEÇA + DIGITAÇÃO DO KM)
 // ------------------------------------------------------
-export async function resetarContadorPeca(placa, componenteId, kmAtual) {
-    if (!confirm(`Confirmar a troca de peça da moto ${placa}? O contador será resetado considerando o KM atual (${kmAtual} km).`)) return;
+export async function resetarContadorPeca(placa, componenteIdPadrao, kmAtual) {
+    // 1. Popup para selecionar qual peça foi trocada
+    const opcao = prompt(
+        `🔧 REGISTRO DE MANUTENÇÃO - MOTO ${placa}\n\n` +
+        `Digite o número correspondente à peça trocada:\n` +
+        `1 - 🛢️ Troca de Óleo (Limite: 1.000 km)\n` +
+        `2 - 🛞 Pneu Traseiro (Limite: 8.000 km)\n` +
+        `3 - 🛞 Pneu Dianteiro / Freios (Limite: 10.000 km)\n` +
+        `4 - ⚙️ Kit Relação (Limite: 10.000 km)`
+    );
+
+    if (!opcao) return;
+
+    let pecaId = 'oleo';
+    let limite = 1000;
+    
+    if (opcao === '2') { pecaId = 'pneu_tras'; limite = 8000; }
+    else if (opcao === '3') { pecaId = 'pneu_diant'; limite = 10000; }
+    else if (opcao === '4') { pecaId = 'relacao'; limite = 10000; }
+    else if (opcao !== '1') {
+        alert('Opção inválida.');
+        return;
+    }
+
+    // 2. Popup para informar o KM em que a peça foi trocada
+    const kmDigitado = prompt(`Digite o KM exato do odômetro em que a peça foi trocada:`, kmAtual);
+    if (kmDigitado === null) return;
+
+    const kmTrocaReal = parseInt(kmDigitado, 10);
+    if (isNaN(kmTrocaReal)) {
+        alert('Por favor, digite um número de KM válido.');
+        return;
+    }
 
     try {
-        await fetch(`${API_BASE}/admin/manutencao-componentes`, {
+        const res = await fetch(`${API_BASE}/admin/manutencao-componentes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 placa: placa,
-                componente_id: componenteId,
-                km_troca: kmAtual
+                componente_id: pecaId,
+                km_troca: kmTrocaReal,
+                limite_km: limite
             })
         });
 
-        alert(`✅ Peça atualizada com sucesso! A barra de desgaste foi resetada para 0%.`);
-        if (typeof carregarLocatarios === 'function') carregarLocatarios();
+        const data = await res.json();
+
+        if (res.ok) {
+            alert(`✅ Troca de peça registrada com sucesso no KM ${kmTrocaReal.toLocaleString('pt-BR')}!`);
+            if (typeof carregarLocatarios === 'function') carregarLocatarios();
+        } else {
+            alert(`❌ Erro ao salvar: ${data.error || 'Erro interno'}`);
+        }
     } catch (err) {
-        console.error('Erro ao resetar peça:', err);
+        console.error('Erro ao registrar troca:', err);
+        alert('❌ Erro de conexão ao salvar troca.');
     }
 }
+
+// ------------------------------------------------------
+// 3. GESTÃO DE MOTOS DA FROTA
+// ------------------------------------------------------
+export async function carregarMotosFrota() {
+    try {
+        const res = await fetch(`${API_BASE}/admin/motos`);
+        const lista = await res.json() || [];
+        console.log('Motos carregadas:', lista.length);
+    } catch (err) {
+        console.error('Erro ao carregar motos:', err);
+    }
+}
+
+export function salvarNovaMoto() {}
+export function mudarStatusMoto() {}
+export function excluirMoto() {}
+export function abrirModalEditarMoto() {}
+export function fecharModalMoto() {}

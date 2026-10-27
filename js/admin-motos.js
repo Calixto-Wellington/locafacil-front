@@ -171,35 +171,20 @@ export function obterDataParaInput(dataIso) {
 }
 
 // ------------------------------------------------------
-// 1. RENDERIZADOR VISUAL DE DESGASTE DE PEÇAS
+// 1. RENDERIZADOR VISUAL DE DESGASTE DE PEÇAS (SOMENTE BANCO DE DADOS)
 // ------------------------------------------------------
 export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = [], placa = '') {
-    const listaPadrao = [
-        { id: 'oleo', nome: '🛢️ Troca de Óleo', limite_km: 1000, recuo_padrao: 800 },
-        { id: 'pneu_tras', nome: '🛞 Pneu Traseiro', limite_km: 8000, recuo_padrao: 6200 },
-        { id: 'pneu_diant', nome: '🛞 Pneu Dianteiro / Freios', limite_km: 10000, recuo_padrao: 4500 },
-        { id: 'relacao', nome: '⚙️ Kit Relação', limite_km: 10000, recuo_padrao: 7800 }
-    ];
-
     let componentesFinal = [];
 
+    // Carrega EXCLUSIVAMENTE os componentes que existem no banco de dados
     if (componentesDoBanco && componentesDoBanco.length > 0) {
         componentesFinal = componentesDoBanco.map(c => ({
             id: c.componente_id || c.id,
-            nome: c.nome || (listaPadrao.find(p => p.id === (c.componente_id || c.id))?.nome) || (c.componente_id || c.id),
+            nome: c.nome || (c.componente_id || c.id),
             km_troca: parseInt(c.km_troca || 0, 10),
             limite_km: parseInt(c.limite_km || 8000, 10),
             data_troca_raw: c.updated_at || c.created_at || c.data_troca,
             data_troca: formatarDataTroca(c.updated_at || c.created_at || c.data_troca)
-        }));
-    } else {
-        componentesFinal = listaPadrao.map(p => ({
-            id: p.id,
-            nome: p.nome,
-            km_troca: Math.max(0, kmAtual - p.recuo_padrao),
-            limite_km: p.limite_km,
-            data_troca_raw: null,
-            data_troca: 'Estimado'
         }));
     }
 
@@ -209,53 +194,58 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
                 <button type="button" onclick="abrirModalNovaPeca('${placa}', ${kmAtual})" class="text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded transition flex items-center gap-1">➕ Add Peça</button>
             </div>`;
 
-    componentesFinal.forEach(peca => {
-        const kmRodadoComPeca = Math.max(0, kmAtual - peca.km_troca);
-        const percentualDesgaste = Math.min(100, Math.round((kmRodadoComPeca / peca.limite_km) * 100));
-        const kmRestantes = peca.limite_km - kmRodadoComPeca;
+    // Se não houver peças no banco, exibe mensagem informativa
+    if (componentesFinal.length === 0) {
+        html += `<p class="text-[11px] text-gray-400 font-semibold italic text-center py-2 border-t border-gray-100 mt-2">Nenhuma peça cadastrada. Clique em "+ Add Peça" para registrar.</p>`;
+    } else {
+        componentesFinal.forEach(peca => {
+            const kmRodadoComPeca = Math.max(0, kmAtual - peca.km_troca);
+            const percentualDesgaste = Math.min(100, Math.round((kmRodadoComPeca / peca.limite_km) * 100));
+            const kmRestantes = peca.limite_km - kmRodadoComPeca;
 
-        let corBarra = 'bg-green-500';
-        let corTexto = 'text-green-700';
-        let badgeStatus = `${percentualDesgaste}% gasto (${kmRestantes.toLocaleString('pt-BR')} km restantes)`;
+            let corBarra = 'bg-green-500';
+            let corTexto = 'text-green-700';
+            let badgeStatus = `${percentualDesgaste}% gasto (${kmRestantes.toLocaleString('pt-BR')} km restantes)`;
 
-        if (kmRestantes <= 0) {
-            corBarra = 'bg-red-600 animate-pulse';
-            corTexto = 'text-red-600 font-black';
-            badgeStatus = `🚨 100% GASTO (${Math.abs(kmRestantes).toLocaleString('pt-BR')} km vencidos)`;
-        } else if (percentualDesgaste >= 75) {
-            corBarra = 'bg-amber-500';
-            corTexto = 'text-amber-700 font-bold';
-            badgeStatus = `🟡 ${percentualDesgaste}% gasto`;
-        }
+            if (kmRestantes <= 0) {
+                corBarra = 'bg-red-600 animate-pulse';
+                corTexto = 'text-red-600 font-black';
+                badgeStatus = `🚨 100% GASTO (${Math.abs(kmRestantes).toLocaleString('pt-BR')} km vencidos)`;
+            } else if (percentualDesgaste >= 75) {
+                corBarra = 'bg-amber-500';
+                corTexto = 'text-amber-700 font-bold';
+                badgeStatus = `🟡 ${percentualDesgaste}% gasto`;
+            }
 
-        const nomeSanitizado = (peca.nome || '').replace(/'/g, "\\'");
-        const dataRawStr = peca.data_troca_raw ? `'${peca.data_troca_raw}'` : 'null';
+            const nomeSanitizado = (peca.nome || '').replace(/'/g, "\\'");
+            const dataRawStr = peca.data_troca_raw ? `'${peca.data_troca_raw}'` : 'null';
 
-        html += `
-            <div class="space-y-1 pt-1.5 border-t border-gray-100 first:border-0 first:pt-0">
-                <!-- LINHA 1: NOME DA PEÇA E STATUS -->
-                <div class="flex justify-between items-center text-xs font-bold">
-                    <span class="text-gray-800 flex items-center gap-1">
-                        ${peca.nome}
-                        <button type="button" onclick="abrirModalEditarPeca('${placa}', '${peca.id}', '${nomeSanitizado}', ${peca.limite_km}, ${peca.km_troca}, ${dataRawStr})" class="text-[10px] text-gray-400 hover:text-indigo-600 transition" title="Editar peça">✏️</button>
-                        <button type="button" onclick="excluirPeca('${placa}', '${peca.id}', '${nomeSanitizado}')" class="text-[10px] text-gray-400 hover:text-red-600 transition" title="Excluir peça">🗑️</button>
-                    </span>
-                    <span class="text-[10px] ${corTexto}">${badgeStatus}</span>
+            html += `
+                <div class="space-y-1 pt-1.5 border-t border-gray-100 first:border-0 first:pt-0">
+                    <!-- LINHA 1: NOME DA PEÇA E STATUS -->
+                    <div class="flex justify-between items-center text-xs font-bold">
+                        <span class="text-gray-800 flex items-center gap-1">
+                            ${peca.nome}
+                            <button type="button" onclick="abrirModalEditarPeca('${placa}', '${peca.id}', '${nomeSanitizado}', ${peca.limite_km}, ${peca.km_troca}, ${dataRawStr})" class="text-[10px] text-gray-400 hover:text-indigo-600 transition" title="Editar peça">✏️</button>
+                            <button type="button" onclick="excluirPeca('${placa}', '${peca.id}', '${nomeSanitizado}')" class="text-[10px] text-gray-400 hover:text-red-600 transition" title="Excluir peça">🗑️</button>
+                        </span>
+                        <span class="text-[10px] ${corTexto}">${badgeStatus}</span>
+                    </div>
+
+                    <!-- LINHA 2: DETALHES DE TROCA, DATA E DURABILIDADE -->
+                    <div class="flex justify-between items-center text-[10px] text-gray-500 font-semibold px-0.5">
+                        <span>📍 Troca: <b class="text-gray-700">${peca.km_troca.toLocaleString('pt-BR')} km</b> <span class="text-gray-400">(${peca.data_troca})</span></span>
+                        <span>⏱️ Dura: <b class="text-gray-700">${peca.limite_km.toLocaleString('pt-BR')} km</b></span>
+                    </div>
+
+                    <!-- LINHA 3: BARRA PROGRESSIVA -->
+                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden flex">
+                        <div class="${corBarra} h-full transition-all duration-500" style="width: ${percentualDesgaste}%"></div>
+                    </div>
                 </div>
-
-                <!-- LINHA 2: DETALHES DE TROCA, DATA E DURABILIDADE -->
-                <div class="flex justify-between items-center text-[10px] text-gray-500 font-semibold px-0.5">
-                    <span>📍 Troca: <b class="text-gray-700">${peca.km_troca.toLocaleString('pt-BR')} km</b> <span class="text-gray-400">(${peca.data_troca})</span></span>
-                    <span>⏱️ Dura: <b class="text-gray-700">${peca.limite_km.toLocaleString('pt-BR')} km</b></span>
-                </div>
-
-                <!-- LINHA 3: BARRA PROGRESSIVA -->
-                <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden flex">
-                    <div class="${corBarra} h-full transition-all duration-500" style="width: ${percentualDesgaste}%"></div>
-                </div>
-            </div>
-        `;
-    });
+            `;
+        });
+    }
 
     html += '</div>';
     return html;

@@ -134,15 +134,15 @@ export function fecharModalMoto() {
 // MÓDULO MOTOS E TELEMETRIA DE PEÇAS - js/admin-motos.js
 // ======================================================
 
-// Formatador de data (DD/MM/AAAA)
-function formatarDataTroca(dataIso) {
-    if (!dataIso) return 'Sem data';
+// Helper para converter qualquer data para o formato exigido pelo <input type="date"> (AAAA-MM-DD)
+function obterDataParaInput(dataIso) {
+    if (!dataIso) return new Date().toISOString().split('T')[0];
     try {
         const d = new Date(dataIso);
-        if (isNaN(d.getTime())) return 'Sem data';
-        return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
+        return d.toISOString().split('T')[0];
     } catch {
-        return 'Sem data';
+        return new Date().toISOString().split('T')[0];
     }
 }
 
@@ -263,6 +263,30 @@ export function abrirModalNovaPeca(placa, kmAtual) {
     modal.style.display = 'flex';
 }
 
+// ➕ ABRIR MODAL PARA NOVA PEÇA (Preenche com a data de hoje)
+export function abrirModalNovaPeca(placa, kmAtual) {
+    const modal = document.getElementById('modal-peca');
+    if (!modal) {
+        alert('⚠️ O elemento #modal-peca não foi encontrado no HTML.');
+        return;
+    }
+
+    const hoje = obterDataParaInput();
+
+    if (document.getElementById('modal-peca-titulo')) document.getElementById('modal-peca-titulo').innerText = '➕ Cadastrar Nova Peça';
+    if (document.getElementById('modal-peca-subtitulo')) document.getElementById('modal-peca-subtitulo').innerText = `Moto Placa: ${placa || 'Sem placa'}`;
+    if (document.getElementById('peca-placa')) document.getElementById('peca-placa').value = placa || '';
+    if (document.getElementById('peca-id')) document.getElementById('peca-id').value = '';
+    if (document.getElementById('peca-nome')) document.getElementById('peca-nome').value = '';
+    if (document.getElementById('peca-limite')) document.getElementById('peca-limite').value = '10000';
+    if (document.getElementById('peca-km-troca')) document.getElementById('peca-km-troca').value = kmAtual || 0;
+    if (document.getElementById('peca-data-troca')) document.getElementById('peca-data-troca').value = hoje;
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
+// ✏️ ABRIR MODAL PARA EDITAR PEÇA (Carrega e permite alterar a data)
 export function abrirModalEditarPeca(placa, componenteId, nomeAtual, limiteAtual, kmTrocaAtual, dataAtual) {
     const modal = document.getElementById('modal-peca');
     if (!modal) {
@@ -270,10 +294,7 @@ export function abrirModalEditarPeca(placa, componenteId, nomeAtual, limiteAtual
         return;
     }
 
-    let dataFormatada = new Date().toISOString().split('T')[0];
-    if (dataAtual) {
-        try { dataFormatada = new Date(dataAtual).toISOString().split('T')[0]; } catch {}
-    }
+    const dataFormatada = obterDataParaInput(dataAtual);
 
     if (document.getElementById('modal-peca-titulo')) document.getElementById('modal-peca-titulo').innerText = '✏️ Editar Componente';
     if (document.getElementById('modal-peca-subtitulo')) document.getElementById('modal-peca-subtitulo').innerText = `Moto Placa: ${placa || 'Sem placa'}`;

@@ -347,11 +347,6 @@ export async function resetarContadorPeca(placa, componenteIdPadrao, kmAtual) {
         console.error('Erro ao resetar peça:', err);
     }
 }
-
-
-export function salvarNovaMoto() {}
-export function mudarStatusMoto() {}
-export function excluirMoto() {}
 export function abrirModalEditarMoto() {
     const modal = document.getElementById('modal-moto');
     if (modal) modal.classList.remove('hidden');

@@ -1,47 +1,8 @@
-import {
-    API_BASE
-} from './api.js';
-
-export async function carregarLocatarios() {
-    document.getElementById('loading-frota').style.display = 'block';
-    const res = await fetch(`${API_BASE}/admin/locatarios`);
-    const lista = await res.json();
-    document.getElementById('loading-frota').style.display = 'none';
-    renderizarFrota(lista || []);
-}
-
-export async function buscarLocatario() {
-    carregarLocatarios();
-}
-
-function renderizarFrota(lista) {
-    const grid = document.getElementById('grid-frota');
-    grid.innerHTML = '';
-    if (!lista.length) {
-        grid.innerHTML = `<div class="col-span-full bg-white p-8 text-center uppercase font-bold text-gray-500">Nenhum piloto.</div>`;
-        return;
-    }
-    lista.forEach(item => {
-        const pct = Math.min(100, Math.round(((item.semanas_pagas || 0) / 182) * 100));
-        grid.innerHTML += `
-            <div class="bg-white rounded-2xl shadow-lg border overflow-hidden flex flex-col justify-between">
-                <div class="bg-gray-900 text-white p-4 flex justify-between items-center"><div><span class="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">${item.placa}</span><h3 class="font-black text-lg uppercase mt-1">${item.nome}</h3></div><span class="text-2xl font-black text-orange-500">${item.semanas_pagas || 0} sem.</span></div>
-                <div class="p-5 space-y-4">
-                    <div class="grid grid-cols-2 gap-2 text-xs"><div>Modelo<br><b>${item.modelo}</b></div><div>WhatsApp<br><b>${item.telefone}</b></div></div>
-                    <div class="bg-gray-50 p-3 rounded-xl border"><div class="flex justify-between text-xs font-black mb-1"><span>Semana ${item.semanas_pagas || 0}</span><span>🪙 ${item.locafacil_coins || 0} Coins</span></div><div class="w-full bg-gray-200 rounded-full h-3"><div class="bg-orange-500 h-full rounded-full" style="width: ${pct}%"></div></div></div>
-                    <div class="bg-orange-50 p-3 rounded-xl border text-xs"><p class="text-orange-900 font-bold uppercase">Hodômetro</p><p class="font-black text-gray-900 text-base">${(item.km_atual || 0).toLocaleString('pt-BR')} km</p></div>
-                </div>
-                <div class="p-5 pt-0 space-y-2">
-                    <button onclick="adicionarUmaSemana('${item.id}', '${item.cpf}', '${item.telefone}', '${item.nome}', ${item.semanas_pagas || 0}, ${item.locafacil_coins || 0})" class="w-full bg-green-600 text-white font-black py-3 rounded-xl text-xs uppercase shadow-md">💵 +1 Semana (Baixar Pix)</button>
-                    <div class="flex gap-2"><button onclick="lancarKmRastreador('${item.id}', '${item.placa}', ${item.semanas_pagas || 0}, ${item.km_atual || 0})" class="flex-1 bg-indigo-50 text-indigo-800 font-bold py-2 rounded-lg text-xs uppercase border">📡 Rastreador</button><button onclick='abrirModalEditar(${JSON.stringify(item)})' class="bg-gray-900 text-white font-bold px-3 py-2 rounded-lg text-xs uppercase">✏️ Editar</button></div>
-                </div>
-            </div>`;
-    });
-}
-
 // ======================================================
 // MÓDULO LOCATÁRIOS E FROTA - js/admin-locatarios.js
 // ======================================================
+
+import { API_BASE } from './api.js';
 
 let dadosCSVProcessados = [];
 
@@ -49,23 +10,30 @@ function converterDataParaISO(dataStr) {
     if (!dataStr) return new Date().toISOString().split('T');
     const partes = dataStr.trim().split('/');
     if (partes.length === 3) {
-        return `${partes}-${partes.padStart(2, '0')}-${partes.padStart(2, '0')}`;
+        return `${partes[1]}-${partes[2].padStart(2, '0')}-${partes.padStart(2, '0')}`;
     }
     return dataStr;
 }
 
+// ------------------------------------------------------
+// 1. CARREGAMENTO E BUSCA DA FROTA
+// ------------------------------------------------------
 export async function carregarLocatarios() {
+    const loading = document.getElementById('loading-frota');
+    if (loading) loading.style.display = 'block';
     try {
         const res = await fetch(`${API_BASE}/admin/locatarios`);
         const lista = await res.json() || [];
+        if (loading) loading.style.display = 'none';
         renderizarFrota(lista);
     } catch (err) {
         console.error('Erro ao carregar frota:', err);
+        if (loading) loading.style.display = 'none';
     }
 }
 
 export function buscarLocatario(query) {
-    const termo = (query || '').toLowerCase();
+    const termo = (query || document.getElementById('input-busca-frota')?.value || '').toLowerCase().trim();
     const cards = document.querySelectorAll('.card-locatario');
     cards.forEach(card => {
         const texto = card.innerText.toLowerCase();
@@ -74,49 +42,79 @@ export function buscarLocatario(query) {
 }
 
 function renderizarFrota(lista) {
-    const container = document.getElementById('container-cards-frota');
+    const container = document.getElementById('grid-frota') || document.getElementById('container-cards-frota');
     if (!container) return;
     container.innerHTML = '';
 
-    if (lista.length === 0) {
-        container.innerHTML = '<p class="text-gray-500 text-sm">Nenhum veículo cadastrado.</p>';
+    if (!lista || lista.length === 0) {
+        container.innerHTML = '<div class="col-span-full bg-white p-8 rounded-2xl text-center text-gray-500 font-bold uppercase">Nenhum piloto/moto cadastrado.</div>';
         return;
     }
 
     lista.forEach(item => {
         const kmAtual = item.km_atual || 0;
+        const semanasPagas = item.semanas_pagas || item.semana_atual || 0;
+        const pct = Math.min(100, Math.round((semanasPagas / 182) * 100));
+        const coins = item.locafacil_coins || 0;
+        const jsonFormatado = JSON.stringify(item).replace(/'/g, "&apos;");
 
         container.innerHTML += `
-            <div class="card-locatario bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-3">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <span class="text-xs font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200 uppercase">
-                            ${item.placa || 'Sem Placa'}
-                        </span>
-                        <h4 class="font-black text-gray-900 text-base mt-1">${item.nome || 'Piloto Sem Nome'}</h4>
-                        <p class="text-xs text-gray-500 font-medium">${item.modelo || 'Moto'}</p>
+            <div class="card-locatario bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col justify-between">
+                <div>
+                    <!-- TOPO DO CARD -->
+                    <div class="bg-gray-900 text-white p-4 flex justify-between items-center">
+                        <div>
+                            <span class="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">${item.placa || 'Sem Placa'}</span>
+                            <h3 class="font-black text-lg uppercase mt-1 leading-tight">${item.nome || 'Piloto Sem Nome'}</h3>
+                        </div>
+                        <span class="text-2xl font-black text-orange-500">${semanasPagas} sem.</span>
                     </div>
-                    <div class="text-right">
-                        <span class="text-xs font-black bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-100 block">
-                            📍 ${kmAtual.toLocaleString('pt-BR')} km
-                        </span>
-                        <span class="text-[10px] text-gray-400 font-bold block mt-1">Semana ${item.semanas_pagas || item.semana_atual || 1}</span>
+
+                    <!-- CORPO DO CARD -->
+                    <div class="p-5 space-y-4">
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div><p class="text-gray-400 font-bold uppercase">Modelo</p><p class="font-bold text-gray-800">${item.modelo || 'Moto'}</p></div>
+                            <div><p class="text-gray-400 font-bold uppercase">WhatsApp</p><p class="font-bold text-gray-800">${item.telefone || '-'}</p></div>
+                        </div>
+
+                        <!-- PROGRESSO -->
+                        <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                            <div class="flex justify-between items-center text-xs font-black text-gray-700 mb-1">
+                                <span>Semana ${semanasPagas} Concluída</span>
+                                <span>🪙 ${coins} Coins</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                <div class="bg-gradient-to-r from-orange-500 to-yellow-400 h-full rounded-full" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- BARRAS VISUAIS DE DESGASTE DE PEÇAS (TELEMETRIA) -->
+                        ${window.renderizarBarrasDesgasteMotos ? window.renderizarBarrasDesgasteMotos(kmAtual, item.componentes) : `
+                            <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 text-xs">
+                                <p class="text-orange-900 font-bold uppercase">KM Atual do Painel</p>
+                                <p class="font-black text-gray-900 text-base mt-0.5">${kmAtual.toLocaleString('pt-BR')} km</p>
+                            </div>
+                        `}
                     </div>
                 </div>
 
-                <!-- BARRAS VISUAIS DE DESGASTE DE PEÇAS -->
-                ${window.renderizarBarrasDesgasteMotos ? window.renderizarBarrasDesgasteMotos(kmAtual, item.componentes) : ''}
-
                 <!-- BOTÕES DE AÇÃO -->
-                <div class="pt-2 flex gap-2">
-                    <button onclick="adicionarUmaSemana('${item.id}', '${item.cpf}', '${item.telefone}', '${item.nome}', ${item.semanas_pagas || 0}, ${item.locafacil_coins || 0})" 
-                        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-black py-2.5 rounded-xl text-xs uppercase shadow transition-all">
-                        💵 +1 Semana (Baixar Pix)
+                <div class="p-5 pt-0 space-y-2">
+                    <button onclick="adicionarUmaSemana('${item.id}', '${item.cpf || ''}', '${item.telefone || ''}', '${item.nome || ''}', ${semanasPagas}, ${coins})"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md flex items-center justify-center gap-2">
+                        💵 +1 Semana & +10 Coins (Baixar Pix)
                     </button>
-                    <button onclick="resetarContadorPeca('${item.placa}', 'oleo', ${kmAtual})" 
-                        class="bg-gray-900 hover:bg-black text-white font-bold px-3 py-2 rounded-xl text-xs uppercase transition-all">
-                        🔧 Resetar Peça
-                    </button>
+
+                    <div class="flex gap-2">
+                        <button onclick="resetarContadorPeca('${item.placa}', 'oleo', ${kmAtual})" 
+                            class="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-2 rounded-xl text-xs uppercase transition">
+                            🔧 Resetar Peça
+                        </button>
+                        <button onclick='abrirModalEditar(${jsonFormatado})' 
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-3 py-2 rounded-xl text-xs uppercase">
+                            ✏️ Editar
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -124,7 +122,66 @@ function renderizarFrota(lista) {
 }
 
 // ------------------------------------------------------
-// IMPORTADOR CSV MOBILTRACKER
+// 2. AÇÕES RÁPIDAS
+// ------------------------------------------------------
+window.adicionarUmaSemana = async (id, cpf, tel, nome, sem, coins) => {
+    const novasSemanas = sem + 1;
+    const novosCoins = coins + 10;
+    const primeiroNome = (nome || 'PILOTO').split(' ').toUpperCase();
+    const numLimpo = (tel || '').replace(/\D/g, '');
+    const cpfLimpo = (cpf || '').replace(/\D/g, '');
+    const pct = Math.min(100, Math.round((novasSemanas / 182) * 100));
+
+    try {
+        await fetch(`${API_BASE}/admin/locatarios/${id}/pagar-semana`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ semanas_pagas: novasSemanas, locafacil_coins: novosCoins })
+        });
+
+        const URL_PAINEL_CLIENTE = "https://cashback.locafacilmotos.com.br";
+        const linkCliente = `${URL_PAINEL_CLIENTE}?cpf=${cpfLimpo}`;
+
+        let textoProgresso = `🎉 *PARABÉNS! VOCÊ COMPLETOU ${novasSemanas} SEMANAS COM SUCESSO!* 🟢`;
+        if (pct > 50) {
+            textoProgresso = `🚀 *MAIS DA METADE DA MOTO JÁ É SUA! (${pct}% QUITADO — SEMANA ${novasSemanas} DE 182)* 🟢`;
+        }
+
+        const msg = `🚀 *PIX CONFIRMADO! MAIS UM PASSO RUMO À SUA MOTO!*\n\n` +
+            `Fala ${primeiroNome}! Seu pagamento foi confirmado!\n` +
+            `${textoProgresso}\n` +
+            `🪙 *Bônus:* +10 Locafacil Coins creditados! (Saldo: ${novosCoins} Coins)\n\n` +
+            `Acompanhe seu progresso e resgate prêmios em:\n👉 ${linkCliente}\n\n*LOCAFACILMOTOS — Parceria de verdade.* 👊`;
+
+        window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
+        carregarLocatarios();
+    } catch (err) {
+        console.error('Erro ao baixar semana:', err);
+    }
+};
+
+export function abrirModalEditar(item) {
+    if (!document.getElementById('modal-editar')) return;
+    document.getElementById('edit-id').value = item.id || '';
+    document.getElementById('edit-nome').value = item.nome || '';
+    document.getElementById('edit-placa').value = item.placa || '';
+    document.getElementById('edit-modelo').value = item.modelo || 'Honda CG 160 Start';
+    document.getElementById('edit-telefone').value = item.telefone || '';
+    document.getElementById('edit-cpf').value = item.cpf || '';
+    document.getElementById('edit-semanas').value = item.semanas_pagas || 0;
+    document.getElementById('edit-coins').value = item.locafacil_coins || 0;
+    document.getElementById('edit-km-atual').value = item.km_atual || 0;
+    document.getElementById('modal-editar').classList.remove('hidden');
+}
+
+export function fecharModal() {
+    if (document.getElementById('modal-editar')) {
+        document.getElementById('modal-editar').classList.add('hidden');
+    }
+}
+
+// ------------------------------------------------------
+// 3. IMPORTADOR CSV MOBILTRACKER
 // ------------------------------------------------------
 export function abrirModalImportarCSV() {
     dadosCSVProcessados = [];
@@ -161,7 +218,7 @@ export function processarArquivoCSV(event) {
         let dataFimISO = new Date().toISOString().split('T');
 
         if (cabecalho.length >= 4) {
-            dataInicioISO = converterDataParaISO(cabecalho);
+            dataInicioISO = converterDataParaISO(cabecalho[2]);
             dataFimISO = converterDataParaISO(cabecalho[cabecalho.length - 2]);
         }
 
@@ -282,67 +339,4 @@ export async function confirmarImportacaoCSV() {
             btnConfirmar.innerText = '💾 Confirmar e Atualizar Frota';
         }
     }
-}
-
-window.adicionarUmaSemana = async (id, cpf, tel, nome, sem, coins) => {
-    const resC = await fetch(`${API_BASE}/admin/config/coins_por_pix`);
-    const dC = await resC.json();
-    const inc = parseInt(dC.valor) || 10;
-    await fetch(`${API_BASE}/admin/locatarios/${id}/pagar-semana`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            semanas_pagas: sem + 1,
-            locafacil_coins: coins + inc
-        })
-    });
-    window.open(`https://wa.me/55${tel.replace(/\D/g, '')}?text=${encodeURIComponent(`Fala ${nome.split(' ')[0]}! Pix confirmado, semana ${sem + 1} registrada! +${inc} Coins 🪙`)}`, '_blank');
-    carregarLocatarios();
-};
-
-window.lancarKmRastreador = async (id, placa, sem, kmAnt) => {
-    const ini = prompt("Data inicial (AAAA-MM-DD):", "2026-09-20");
-    if (!ini) return;
-    const fim = prompt("Data final (AAAA-MM-DD):", "2026-09-27");
-    if (!fim) return;
-    const rodados = parseInt(prompt("KM rodados:", "0")) || 0;
-    const novoKm = kmAnt + rodados;
-    await fetch(`${API_BASE}/admin/rastreador`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            locatario_id: id,
-            placa,
-            semana: sem,
-            data_inicio: ini,
-            data_fim: fim,
-            km_anterior: kmAnt,
-            km_atual: novoKm,
-            km_rodados: rodados,
-            observacao: 'Rastreador'
-        })
-    });
-    alert("KM registrado!");
-    carregarLocatarios();
-};
-
-export function abrirModalEditar(item) {
-    document.getElementById('edit-id').value = item.id;
-    document.getElementById('edit-nome').value = item.nome || '';
-    document.getElementById('edit-placa').value = item.placa || '';
-    document.getElementById('edit-modelo').value = item.modelo || '';
-    document.getElementById('edit-telefone').value = item.telefone || '';
-    document.getElementById('edit-cpf').value = item.cpf || '';
-    document.getElementById('edit-semanas').value = item.semanas_pagas || 0;
-    document.getElementById('edit-coins').value = item.locafacil_coins || 0;
-    document.getElementById('edit-km-atual').value = item.km_atual || 0;
-    document.getElementById('modal-editar').classList.remove('hidden');
-}
-
-export function fecharModal() {
-    document.getElementById('modal-editar').classList.add('hidden');
 }

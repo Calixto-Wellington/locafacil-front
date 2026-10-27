@@ -43,7 +43,6 @@ function renderizarFrota(lista) {
 // MÓDULO LOCATÁRIOS E FROTA - js/admin-locatarios.js
 // ======================================================
 
-const API_BASE = window.API_BASE || 'https://sua-api.com';
 let dadosCSVProcessados = [];
 
 function converterDataParaISO(dataStr) {

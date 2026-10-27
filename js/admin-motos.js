@@ -135,20 +135,40 @@ export function fecharModalMoto() {
 // ======================================================
 
 
-
 // ------------------------------------------------------
 // 1. MEDIDOR VISUAL DE DESGASTE DE PEÇAS (PORCENTAGEM + BARRA)
 // ------------------------------------------------------
-export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentes = []) {
-    if (!componentes || componentes.length === 0) {
-        // Metas padrão do Mobiltracker se não houver registros prévios
-        componentes = [
-            { id: 'oleo', nome: '🛢️ Troca de Óleo', km_troca: Math.max(0, kmAtual - 800), limite_km: 1000 },
-            { id: 'pneu_tras', nome: '🛞 Pneu Traseiro', km_troca: Math.max(0, kmAtual - 6200), limite_km: 8000 },
-            { id: 'pneu_diant', nome: '🛞 Pneu Dianteiro / Freios', km_troca: Math.max(0, kmAtual - 4500), limite_km: 10000 },
-            { id: 'relacao', nome: '⚙️ Kit Relação', km_troca: Math.max(0, kmAtual - 7800), limite_km: 10000 }
-        ];
-    }
+export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = []) {
+    const listaPadrao = [
+        { id: 'oleo', nome: '🛢️ Troca de Óleo', limite_km: 1000, recuo_padrao: 800 },
+        { id: 'pneu_tras', nome: '🛞 Pneu Traseiro', limite_km: 8000, recuo_padrao: 6200 },
+        { id: 'pneu_diant', nome: '🛞 Pneu Dianteiro / Freios', limite_km: 10000, recuo_padrao: 4500 },
+        { id: 'relacao', nome: '⚙️ Kit Relação', limite_km: 10000, recuo_padrao: 7800 }
+    ];
+
+    // Cruza a lista padrão com o que já foi gravado no Supabase
+    const componentesFinal = listaPadrao.map(pecaPadrao => {
+        const gravado = (componentesDoBanco || []).find(c => 
+            (c.componente_id === pecaPadrao.id || c.id === pecaPadrao.id)
+        );
+
+        if (gravado && gravado.km_troca !== undefined && gravado.km_troca !== null) {
+            return {
+                id: pecaPadrao.id,
+                nome: pecaPadrao.nome,
+                km_troca: parseInt(gravado.km_troca, 10),
+                limite_km: parseInt(gravado.limite_km || pecaPadrao.limite_km, 10)
+            };
+        }
+
+        // Se ainda não tiver registro gravado, usa a estimativa inicial
+        return {
+            id: pecaPadrao.id,
+            nome: pecaPadrao.nome,
+            km_troca: Math.max(0, kmAtual - pecaPadrao.recuo_padrao),
+            limite_km: pecaPadrao.limite_km
+        };
+    });
 
     let html = '<div class="mt-3 p-3 bg-white border border-gray-200 rounded-xl space-y-2 shadow-sm">';
     html += `<h5 class="text-[10px] font-black uppercase text-gray-500 tracking-wider flex justify-between">
@@ -156,7 +176,7 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentes = []) {
                 <span class="text-indigo-600">KM Atual: ${kmAtual.toLocaleString('pt-BR')} km</span>
             </h5>`;
 
-    componentes.forEach(peca => {
+    componentesFinal.forEach(peca => {
         const kmRodadoComPeca = Math.max(0, kmAtual - peca.km_troca);
         const percentualDesgaste = Math.min(100, Math.round((kmRodadoComPeca / peca.limite_km) * 100));
         const kmRestantes = peca.limite_km - kmRodadoComPeca;

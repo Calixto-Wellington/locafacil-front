@@ -133,12 +133,10 @@ export function fecharModalMoto() {
 // ======================================================
 // MÓDULO MOTOS E TELEMETRIA DE PEÇAS - js/admin-motos.js
 // ======================================================
-
-
 // ------------------------------------------------------
-// 1. MEDIDOR VISUAL DE DESGASTE DE PEÇAS (PORCENTAGEM + BARRA)
+// 1. RENDERIZADOR VISUAL DE DESGASTE DE PEÇAS
 // ------------------------------------------------------
-export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = []) {
+export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = [], placa = '') {
     const listaPadrao = [
         { id: 'oleo', nome: '🛢️ Troca de Óleo', limite_km: 1000, recuo_padrao: 800 },
         { id: 'pneu_tras', nome: '🛞 Pneu Traseiro', limite_km: 8000, recuo_padrao: 6200 },
@@ -146,35 +144,29 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
         { id: 'relacao', nome: '⚙️ Kit Relação', limite_km: 10000, recuo_padrao: 7800 }
     ];
 
-    // Cruza a lista padrão com o que já foi gravado no Supabase
-    const componentesFinal = listaPadrao.map(pecaPadrao => {
-        const gravado = (componentesDoBanco || []).find(c => 
-            (c.componente_id === pecaPadrao.id || c.id === pecaPadrao.id)
-        );
+    let componentesFinal = [];
 
-        if (gravado && gravado.km_troca !== undefined && gravado.km_troca !== null) {
-            return {
-                id: pecaPadrao.id,
-                nome: pecaPadrao.nome,
-                km_troca: parseInt(gravado.km_troca, 10),
-                limite_km: parseInt(gravado.limite_km || pecaPadrao.limite_km, 10)
-            };
-        }
-
-        // Se ainda não tiver registro gravado, usa a estimativa inicial
-        return {
-            id: pecaPadrao.id,
-            nome: pecaPadrao.nome,
-            km_troca: Math.max(0, kmAtual - pecaPadrao.recuo_padrao),
-            limite_km: pecaPadrao.limite_km
-        };
-    });
+    if (componentesDoBanco && componentesDoBanco.length > 0) {
+        componentesFinal = componentesDoBanco.map(c => ({
+            id: c.componente_id || c.id,
+            nome: c.nome || (listaPadrao.find(p => p.id === (c.componente_id || c.id))?.nome) || (c.componente_id || c.id),
+            km_troca: parseInt(c.km_troca || 0, 10),
+            limite_km: parseInt(c.limite_km || 8000, 10)
+        }));
+    } else {
+        componentesFinal = listaPadrao.map(p => ({
+            id: p.id,
+            nome: p.nome,
+            km_troca: Math.max(0, kmAtual - p.recuo_padrao),
+            limite_km: p.limite_km
+        }));
+    }
 
     let html = '<div class="mt-3 p-3 bg-white border border-gray-200 rounded-xl space-y-2 shadow-sm">';
-    html += `<h5 class="text-[10px] font-black uppercase text-gray-500 tracking-wider flex justify-between">
-                <span>📊 Desgaste de Peças (Telemetria)</span>
-                <span class="text-indigo-600">KM Atual: ${kmAtual.toLocaleString('pt-BR')} km</span>
-            </h5>`;
+    html += `<div class="flex justify-between items-center mb-1">
+                <h5 class="text-[10px] font-black uppercase text-gray-500 tracking-wider">📊 Desgaste de Peças (${kmAtual.toLocaleString('pt-BR')} km)</h5>
+                <button onclick="adicionarNovaPeca('${placa}', ${kmAtual})" class="text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded transition">➕ Add Peça</button>
+            </div>`;
 
     componentesFinal.forEach(peca => {
         const kmRodadoComPeca = Math.max(0, kmAtual - peca.km_troca);
@@ -192,13 +184,19 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
         } else if (percentualDesgaste >= 75) {
             corBarra = 'bg-amber-500';
             corTexto = 'text-amber-700 font-bold';
-            badgeStatus = `🟡 ${percentualDesgaste}% gasto (Trocar em breve)`;
+            badgeStatus = `🟡 ${percentualDesgaste}% gasto`;
         }
+
+        const nomeSanitizado = (peca.nome || '').replace(/'/g, "\\'");
 
         html += `
             <div class="space-y-1 pt-1 border-t border-gray-100 first:border-0 first:pt-0">
                 <div class="flex justify-between items-center text-xs font-bold">
-                    <span class="text-gray-800">${peca.nome}</span>
+                    <span class="text-gray-800 flex items-center gap-1">
+                        ${peca.nome}
+                        <button onclick="editarPeca('${placa}', '${peca.id}', '${nomeSanitizado}', ${peca.limite_km}, ${peca.km_troca})" class="text-[10px] text-gray-400 hover:text-indigo-600" title="Editar nome/limite">✏️</button>
+                        <button onclick="excluirPeca('${placa}', '${peca.id}', '${nomeSanitizado}')" class="text-[10px] text-gray-400 hover:text-red-600" title="Excluir peça">🗑️</button>
+                    </span>
                     <span class="text-[10px] ${corTexto}">${badgeStatus}</span>
                 </div>
                 <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden flex">
@@ -213,65 +211,146 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
 }
 
 // ------------------------------------------------------
-// 2. RESET DE PEÇA INTERATIVO (ESCOLHA DA PEÇA + DIGITAÇÃO DO KM)
+// 2. FUNÇÕES DE GERENCIAMENTO (EDITAR, EXCLUIR, ADD, RESET)
 // ------------------------------------------------------
-export async function resetarContadorPeca(placa, componenteIdPadrao, kmAtual) {
-    // 1. Popup para selecionar qual peça foi trocada
-    const opcao = prompt(
-        `🔧 REGISTRO DE MANUTENÇÃO - MOTO ${placa}\n\n` +
-        `Digite o número correspondente à peça trocada:\n` +
-        `1 - 🛢️ Troca de Óleo (Limite: 1.000 km)\n` +
-        `2 - 🛞 Pneu Traseiro (Limite: 8.000 km)\n` +
-        `3 - 🛞 Pneu Dianteiro / Freios (Limite: 10.000 km)\n` +
-        `4 - ⚙️ Kit Relação (Limite: 10.000 km)`
-    );
 
-    if (!opcao) return;
+// ✏️ EDITAR NOME E LIMITE DA PEÇA
+export async function editarPeca(placa, componenteId, nomeAtual, limiteAtual, kmTrocaAtual) {
+    const novoNome = prompt(`Digite o novo nome para a peça:`, nomeAtual);
+    if (!novoNome) return;
 
-    let pecaId = 'oleo';
-    let limite = 1000;
-    
-    if (opcao === '2') { pecaId = 'pneu_tras'; limite = 8000; }
-    else if (opcao === '3') { pecaId = 'pneu_diant'; limite = 10000; }
-    else if (opcao === '4') { pecaId = 'relacao'; limite = 10000; }
-    else if (opcao !== '1') {
-        alert('Opção inválida.');
-        return;
-    }
+    const novoLimite = prompt(`Digite o novo limite de durabilidade em KM:`, limiteAtual);
+    if (!novoLimite) return;
 
-    // 2. Popup para informar o KM em que a peça foi trocada
-    const kmDigitado = prompt(`Digite o KM exato do odômetro em que a peça foi trocada:`, kmAtual);
-    if (kmDigitado === null) return;
-
-    const kmTrocaReal = parseInt(kmDigitado, 10);
-    if (isNaN(kmTrocaReal)) {
-        alert('Por favor, digite um número de KM válido.');
-        return;
-    }
+    const limiteNum = parseInt(novoLimite, 10);
+    if (isNaN(limiteNum)) { alert('Limite de KM inválido.'); return; }
 
     try {
         const res = await fetch(`${API_BASE}/admin/manutencao-componentes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                placa: placa,
-                componente_id: pecaId,
-                km_troca: kmTrocaReal,
-                limite_km: limite
+                placa,
+                componente_id: componenteId,
+                nome: novoNome,
+                limite_km: limiteNum,
+                km_troca: kmTrocaAtual
             })
         });
 
-        const data = await res.json();
-
         if (res.ok) {
-            alert(`✅ Troca de peça registrada com sucesso no KM ${kmTrocaReal.toLocaleString('pt-BR')}!`);
+            alert('✅ Peça atualizada com sucesso!');
             if (typeof carregarLocatarios === 'function') carregarLocatarios();
         } else {
-            alert(`❌ Erro ao salvar: ${data.error || 'Erro interno'}`);
+            const errData = await res.json();
+            alert(`❌ Erro ao atualizar: ${errData.error || 'Erro interno'}`);
         }
     } catch (err) {
-        console.error('Erro ao registrar troca:', err);
-        alert('❌ Erro de conexão ao salvar troca.');
+        console.error('Erro ao editar peça:', err);
+        alert('❌ Erro de conexão ao editar peça.');
     }
 }
 
+// 🗑️ EXCLUIR PEÇA
+export async function excluirPeca(placa, componenteId, nomePeca) {
+    if (!confirm(`Tem certeza que deseja remover a peça "${nomePeca}" da moto ${placa}?`)) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/manutencao-componentes`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ placa, componente_id: componenteId })
+        });
+
+        if (res.ok) {
+            alert('✅ Peça removida com sucesso!');
+            if (typeof carregarLocatarios === 'function') carregarLocatarios();
+        } else {
+            const errData = await res.json();
+            alert(`❌ Erro ao remover: ${errData.error || 'Erro interno'}`);
+        }
+    } catch (err) {
+        console.error('Erro ao excluir peça:', err);
+        alert('❌ Erro de conexão ao excluir peça.');
+    }
+}
+
+// ➕ ADICIONAR NOVA PEÇA PERSONALIZADA
+export async function adicionarNovaPeca(placa, kmAtual) {
+    const nome = prompt(`Digite o nome da nova peça (ex: Vela de Ignição, Filtro de Ar):`);
+    if (!nome) return;
+
+    const limiteStr = prompt(`Digite a durabilidade/limite em KM dessa peça:`, '10000');
+    if (!limiteStr) return;
+
+    const limiteNum = parseInt(limiteStr, 10);
+    if (isNaN(limiteNum)) { alert('Limite de KM inválido.'); return; }
+
+    const idSlug = nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_");
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/manutencao-componentes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                placa,
+                componente_id: idSlug,
+                nome,
+                limite_km: limiteNum,
+                km_troca: kmAtual
+            })
+        });
+
+        if (res.ok) {
+            alert(`✅ Nova peça "${nome}" cadastrada com sucesso!`);
+            if (typeof carregarLocatarios === 'function') carregarLocatarios();
+        } else {
+            const errData = await res.json();
+            alert(`❌ Erro ao adicionar: ${errData.error || 'Erro interno'}`);
+        }
+    } catch (err) {
+        console.error('Erro ao adicionar peça:', err);
+        alert('❌ Erro de conexão ao adicionar peça.');
+    }
+}
+
+// 🔧 RESETAR PEÇA (MANUTENÇÃO REALIZADA)
+export async function resetarContadorPeca(placa, componenteIdPadrao, kmAtual) {
+    const kmDigitado = prompt(`Digite o KM exato em que a manutenção/troca foi realizada:`, kmAtual);
+    if (!kmDigitado) return;
+
+    const kmTrocaReal = parseInt(kmDigitado, 10);
+    if (isNaN(kmTrocaReal)) { alert('KM inválido.'); return; }
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/manutencao-componentes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                placa,
+                componente_id: componenteIdPadrao || 'oleo',
+                km_troca: kmTrocaReal
+            })
+        });
+
+        if (res.ok) {
+            alert(`✅ Troca registrada no KM ${kmTrocaReal.toLocaleString('pt-BR')}!`);
+            if (typeof carregarLocatarios === 'function') carregarLocatarios();
+        } else {
+            const errData = await res.json();
+            alert(`❌ Erro ao registrar troca: ${errData.error || 'Erro interno'}`);
+        }
+    } catch (err) {
+        console.error('Erro ao resetar peça:', err);
+        alert('❌ Erro de conexão ao resetar peça.');
+    }
+}
+
+// ------------------------------------------------------
+// 3. EXPOSIÇÃO GLOBAL NO WINDOW
+// ------------------------------------------------------
+window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;
+window.editarPeca = editarPeca;
+window.excluirPeca = excluirPeca;
+window.adicionarNovaPeca = adicionarNovaPeca;
+window.resetarContadorPeca = resetarContadorPeca;

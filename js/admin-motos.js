@@ -133,11 +133,35 @@ export function fecharModalMoto() {
 // ======================================================
 // MÓDULO MOTOS E TELEMETRIA DE PEÇAS - js/admin-motos.js
 // ======================================================
+// ------------------------------------------------------
+// HELPERS DE DATA
+// ------------------------------------------------------
 
-// Helper para converter qualquer data para o formato exigido pelo <input type="date"> (AAAA-MM-DD)
-function obterDataParaInput(dataIso) {
+// Formata data ISO ou YYYY-MM-DD para DD/MM/AAAA
+export function formatarDataTroca(dataStr) {
+    if (!dataStr) return 'Sem data';
+    try {
+        if (typeof dataStr === 'string' && dataStr.includes('-')) {
+            const partes = dataStr.split('T')[0].split('-');
+            if (partes.length === 3) {
+                return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+        }
+        const d = new Date(dataStr);
+        if (isNaN(d.getTime())) return 'Sem data';
+        return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch {
+        return 'Sem data';
+    }
+}
+
+// Converte qualquer data para o formato YYYY-MM-DD exigido pelo <input type="date">
+export function obterDataParaInput(dataIso) {
     if (!dataIso) return new Date().toISOString().split('T')[0];
     try {
+        if (typeof dataIso === 'string' && dataIso.includes('-')) {
+            return dataIso.split('T')[0];
+        }
         const d = new Date(dataIso);
         if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
         return d.toISOString().split('T')[0];
@@ -147,7 +171,7 @@ function obterDataParaInput(dataIso) {
 }
 
 // ------------------------------------------------------
-// 1. RENDERIZADOR VISUAL DE DESGASTE DE PEÇAS COM DETALHES LADO A LADO
+// 1. RENDERIZADOR VISUAL DE DESGASTE DE PEÇAS
 // ------------------------------------------------------
 export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = [], placa = '') {
     const listaPadrao = [
@@ -219,7 +243,7 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
                     <span class="text-[10px] ${corTexto}">${badgeStatus}</span>
                 </div>
 
-                <!-- LINHA 2: DETALHES LADO A LADO (KM DE TROCA, DATA E DURABILIDADE) -->
+                <!-- LINHA 2: DETALHES DE TROCA, DATA E DURABILIDADE -->
                 <div class="flex justify-between items-center text-[10px] text-gray-500 font-semibold px-0.5">
                     <span>📍 Troca: <b class="text-gray-700">${peca.km_troca.toLocaleString('pt-BR')} km</b> <span class="text-gray-400">(${peca.data_troca})</span></span>
                     <span>⏱️ Dura: <b class="text-gray-700">${peca.limite_km.toLocaleString('pt-BR')} km</b></span>
@@ -238,9 +262,9 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
 }
 
 // ------------------------------------------------------
-// 2. CONTROLE DO MODAL VISUAL COM CHECAGENS DE EXISTÊNCIA
+// 2. CONTROLE DO MODAL VISUAL
 // ------------------------------------------------------
-// ➕ ABRIR MODAL PARA NOVA PEÇA (Preenche com a data de hoje)
+
 export function abrirModalNovaPeca(placa, kmAtual) {
     const modal = document.getElementById('modal-peca');
     if (!modal) {
@@ -263,7 +287,6 @@ export function abrirModalNovaPeca(placa, kmAtual) {
     modal.style.display = 'flex';
 }
 
-// ✏️ ABRIR MODAL PARA EDITAR PEÇA (Carrega e permite alterar a data)
 export function abrirModalEditarPeca(placa, componenteId, nomeAtual, limiteAtual, kmTrocaAtual, dataAtual) {
     const modal = document.getElementById('modal-peca');
     if (!modal) {
@@ -404,8 +427,11 @@ export async function resetarContadorPeca(placa, componenteIdPadrao, kmAtual) {
         console.error('Erro ao resetar peça:', err);
     }
 }
-
-// EXPOSIÇÃO GLOBAL NO WINDOW
+// ------------------------------------------------------
+// 4. VINCULAÇÃO GLOBAL NO WINDOW
+// ------------------------------------------------------
+window.formatarDataTroca = formatarDataTroca;
+window.obterDataParaInput = obterDataParaInput;
 window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;
 window.abrirModalNovaPeca = abrirModalNovaPeca;
 window.abrirModalEditarPeca = abrirModalEditarPeca;

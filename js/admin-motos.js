@@ -134,7 +134,6 @@ export function fecharModalMoto() {
 // MÓDULO DE TELEMETRIA E DESGASTE DE PEÇAS - js/admin-motos.js
 // ======================================================
 
-const API_BASE = window.API_BASE || 'https://sua-api.com';
 
 /**
  * Desenha o bloco visual com as barras de progresso de cada peça.

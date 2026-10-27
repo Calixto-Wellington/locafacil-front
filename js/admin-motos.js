@@ -368,4 +368,4 @@ window.salvarNovaMoto = salvarNovaMoto;
 window.mudarStatusMoto = mudarStatusMoto;
 window.excluirMoto = excluirMoto;
 window.abrirModalEditarMoto = abrirModalEditarMoto;
-window.fecharModalMoto = fecharModalMoto;
+window.fecharModalMoto = fecharModalMoto;   

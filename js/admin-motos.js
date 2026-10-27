@@ -134,6 +134,7 @@ export function fecharModalMoto() {
 // MÓDULO MOTOS E TELEMETRIA DE PEÇAS - js/admin-motos.js
 // ======================================================
 
+// ------------------------------------------------------
 // 1. RENDERIZADOR VISUAL DE DESGASTE DE PEÇAS
 // ------------------------------------------------------
 export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = [], placa = '') {
@@ -211,33 +212,39 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
 }
 
 // ------------------------------------------------------
-// 2. CONTROLE DO MODAL VISUAL (NOVA PEÇA & EDIÇÃO)
+// 2. CONTROLE DO MODAL VISUAL
 // ------------------------------------------------------
 
 export function abrirModalNovaPeca(placa, kmAtual) {
     const modal = document.getElementById('modal-peca');
-    if (!modal) return;
+    if (!modal) {
+        alert('⚠️ O elemento HTML #modal-peca não foi encontrado na página admin.html!');
+        return;
+    }
 
     document.getElementById('modal-peca-titulo').innerText = '➕ Cadastrar Nova Peça';
-    document.getElementById('modal-peca-subtitulo').innerText = `Moto Placa: ${placa}`;
+    document.getElementById('modal-peca-subtitulo').innerText = `Moto Placa: ${placa || 'Sem placa'}`;
 
-    document.getElementById('peca-placa').value = placa;
+    document.getElementById('peca-placa').value = placa || '';
     document.getElementById('peca-id').value = '';
     document.getElementById('peca-nome').value = '';
     document.getElementById('peca-limite').value = '10000';
-    document.getElementById('peca-km-troca').value = kmAtual;
+    document.getElementById('peca-km-troca').value = kmAtual || 0;
 
     modal.classList.remove('hidden');
 }
 
 export function abrirModalEditarPeca(placa, componenteId, nomeAtual, limiteAtual, kmTrocaAtual) {
     const modal = document.getElementById('modal-peca');
-    if (!modal) return;
+    if (!modal) {
+        alert('⚠️ O elemento HTML #modal-peca não foi encontrado na página admin.html!');
+        return;
+    }
 
     document.getElementById('modal-peca-titulo').innerText = '✏️ Editar Componente';
-    document.getElementById('modal-peca-subtitulo').innerText = `Moto Placa: ${placa}`;
+    document.getElementById('modal-peca-subtitulo').innerText = `Moto Placa: ${placa || 'Sem placa'}`;
 
-    document.getElementById('peca-placa').value = placa;
+    document.getElementById('peca-placa').value = placa || '';
     document.getElementById('peca-id').value = componenteId;
     document.getElementById('peca-nome').value = nomeAtual;
     document.getElementById('peca-limite').value = limiteAtual;
@@ -347,9 +354,8 @@ export async function resetarContadorPeca(placa, componenteIdPadrao, kmAtual) {
         console.error('Erro ao resetar peça:', err);
     }
 }
-// ------------------------------------------------------
-// 4. VINCULAÇÃO GLOBAL NO WINDOW
-// ------------------------------------------------------
+
+// VINCULAÇÃO GLOBAL NO WINDOW
 window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;
 window.abrirModalNovaPeca = abrirModalNovaPeca;
 window.abrirModalEditarPeca = abrirModalEditarPeca;

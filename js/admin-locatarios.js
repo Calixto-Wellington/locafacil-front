@@ -340,3 +340,156 @@ export async function confirmarImportacaoCSV() {
         }
     }
 }
+
+export async function carregarLocatarios() {
+    const loading = document.getElementById('loading-frota');
+    const grid = document.getElementById('grid-frota');
+    const filtroStatus = document.getElementById('filtro-status-frota')?.value || 'ATIVO';
+
+    if (loading) loading.style.display = 'block';
+    if (grid) grid.innerHTML = '';
+
+    try {
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios?status=${filtroStatus}&_t=${Date.now()}`, {
+            cache: 'no-store'
+        });
+        if (!res.ok) return;
+        const lista = await res.json();
+
+        if (loading) loading.style.display = 'none';
+        renderizarFrota(lista || []);
+    } catch (err) {
+        console.error('Erro ao carregar locatários:', err);
+        if (loading) loading.style.display = 'none';
+    }
+}
+
+// 2. FUNÇÃO PARA ARQUIVAR CONTRATO
+export async function arquivarLocatario(id, nome, placa) {
+    const motivo = prompt(`Deseja arquivar o contrato de ${nome} (Placa: ${placa})?\n\nDigite o motivo (a moto será liberada no pátio automaticamente):`, 'Devolução de veículo / Encerramento de contrato');
+    if (motivo === null) return; // Cancelou
+
+    try {
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/arquivar`, {
+            method: 'PATCH',
+            body: JSON.stringify({ motivo })
+        });
+
+        if (res.ok) {
+            alert(`📦 Piloto ${nome} arquivado com sucesso e moto ${placa} liberada no pátio!`);
+            carregarLocatarios();
+            if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
+        } else {
+            const errData = await res.json();
+            alert(`❌ Erro ao arquivar: ${errData.error || 'Erro interno'}`);
+        }
+    } catch (err) {
+        console.error('Erro ao arquivar locatário:', err);
+        alert('❌ Erro de conexão.');
+    }
+}
+
+// 3. FUNÇÃO PARA REATIVAR CONTRATO ARQUIVADO
+export async function reativarLocatario(id, nome) {
+    if (!confirm(`Deseja reativar o contrato de ${nome}?`)) return;
+
+    try {
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/reativar`, {
+            method: 'PATCH'
+        });
+
+        if (res.ok) {
+            alert(`✅ Contrato de ${nome} reativado!`);
+            carregarLocatarios();
+        } else {
+            const errData = await res.json();
+            alert(`❌ Erro ao reativar: ${errData.error || 'Erro interno'}`);
+        }
+    } catch (err) {
+        console.error('Erro ao reativar locatário:', err);
+    }
+}
+
+// 4. RENDERIZAÇÃO DOS CARDS
+function renderizarFrota(lista) {
+    const grid = document.getElementById('grid-frota');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    if (!lista || lista.length === 0) {
+        grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl text-center text-gray-500 font-bold text-base uppercase">Nenhum piloto encontrado nesta visualização.</div>`;
+        return;
+    }
+
+    lista.forEach(item => {
+        const isArquivado = item.status === 'ARQUIVADO';
+        const pct = Math.min(100, Math.round(((item.semanas_pagas || 0) / 182) * 100));
+        const jsonFormatado = JSON.stringify(item).replace(/'/g, "&apos;");
+
+        // Define se exibe o botão de Pagamento Pix ou Reativar
+        const botaoAcaoPrincipal = isArquivado ? `
+            <button onclick="reativarLocatario('${item.id}', '${item.nome}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
+                🔄 Reativar Contrato
+            </button>
+        ` : `
+            <button onclick="adicionarUmaSemana('${item.id}', '${item.placa}', '${item.telefone}', '${item.nome}', ${item.semanas_pagas || 0})" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
+                💵 +1 Semana (Baixar Pix)
+            </button>
+        `;
+
+        grid.innerHTML += `
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col justify-between ${isArquivado ? 'opacity-75 border-red-200' : ''}">
+                <div>
+                    <!-- TOPO -->
+                    <div class="bg-gray-900 text-white p-4 flex justify-between items-center">
+                        <div>
+                            <span class="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">${item.placa || 'Sem Placa'}</span>
+                            <h3 class="font-black text-lg uppercase mt-1 leading-tight">${item.nome}</h3>
+                        </div>
+                        <div class="text-right">
+                            ${isArquivado ? '<span class="bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded uppercase">📦 Arquivado</span>' : `<span class="text-2xl font-black text-orange-500">${pct}%</span>`}
+                        </div>
+                    </div>
+
+                    <div class="p-5 space-y-3">
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div><p class="text-gray-400 font-bold uppercase">Modelo</p><p class="font-bold text-gray-800">${item.modelo || 'N/A'}</p></div>
+                            <div><p class="text-gray-400 font-bold uppercase">WhatsApp</p><p class="font-bold text-gray-800">${item.telefone || 'N/A'}</p></div>
+                        </div>
+
+                        ${isArquivado ? `
+                            <div class="bg-red-50 border border-red-200 p-3 rounded-xl text-xs">
+                                <p class="text-red-700 font-black uppercase">Motivo Encerramento:</p>
+                                <p class="text-gray-700 font-semibold mt-0.5">${item.motivo_arquivamento || 'Não detalhado'}</p>
+                            </div>
+                        ` : ''}
+
+                        <!-- TELEMETRIA DE PEÇAS DE MANUTENÇÃO -->
+                        ${window.renderizarBarrasDesgasteMotos ? window.renderizarBarrasDesgasteMotos(item.km_atual || 0, item.componentes, item.placa) : ''}
+                    </div>
+                </div>
+
+                <!-- BOTÕES DE AÇÃO -->
+                <div class="p-5 pt-0 space-y-2">
+                    ${botaoAcaoPrincipal}
+
+                    <div class="flex gap-2">
+                        <button onclick='abrirModalEditar(${jsonFormatado})' class="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-2.5 rounded-lg text-xs uppercase transition">
+                            ✏️ Editar
+                        </button>
+                        ${!isArquivado ? `
+                            <button onclick="arquivarLocatario('${item.id}', '${item.nome}', '${item.placa}')" class="bg-red-100 hover:bg-red-200 text-red-600 font-black px-3 py-2.5 rounded-lg text-xs uppercase transition" title="Arquivar contrato">
+                                📦 Arquivar
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// Registro global
+window.carregarLocatarios = carregarLocatarios;
+window.arquivarLocatario = arquivarLocatario;
+window.reativarLocatario = reativarLocatario;

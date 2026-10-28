@@ -17,7 +17,9 @@ import {
     validarCaucao,
     aprovarLead,
     rejeitarLead,
-    efetivarLocacao 
+    efetivarLocacao,
+    arquivarLocatario,
+    reativarLocatario
 } from './admin-leads.js';
 
 import { 
@@ -84,6 +86,8 @@ window.carregarLocatarios = carregarLocatarios;
 window.buscarLocatario = buscarLocatario;
 window.abrirModalEditar = abrirModalEditar;
 window.fecharModal = fecharModal;
+window.arquivarLocatario = arquivarLocatario;
+window.reativarLocatario = reativarLocatario;
 
 // Motos, Pátio & Telemetria/Peças
 window.carregarMotosFrota = carregarMotosFrota;

@@ -15,23 +15,6 @@ function converterDataParaISO(dataStr) {
     return dataStr;
 }
 
-// ------------------------------------------------------
-// 1. CARREGAMENTO E BUSCA DA FROTA
-// ------------------------------------------------------
-export async function carregarLocatarios() {
-    const loading = document.getElementById('loading-frota');
-    if (loading) loading.style.display = 'block';
-    try {
-        const res = await fetch(`${API_BASE}/admin/locatarios`);
-        const lista = await res.json() || [];
-        if (loading) loading.style.display = 'none';
-        renderizarFrota(lista);
-    } catch (err) {
-        console.error('Erro ao carregar frota:', err);
-        if (loading) loading.style.display = 'none';
-    }
-}
-
 export function buscarLocatario(query) {
     const termo = (query || document.getElementById('input-busca-frota')?.value || '').toLowerCase().trim();
     const cards = document.querySelectorAll('.card-locatario');

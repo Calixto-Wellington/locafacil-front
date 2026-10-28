@@ -17,16 +17,16 @@ import {
     validarCaucao,
     aprovarLead,
     rejeitarLead,
-    efetivarLocacao,
-    arquivarLocatario,
-    reativarLocatario
+    efetivarLocacao
 } from './admin-leads.js';
 
 import { 
     carregarLocatarios, 
     buscarLocatario,
     abrirModalEditar,
-    fecharModal
+    fecharModal,
+    arquivarLocatario,
+    reativarLocatario 
 } from './admin-locatarios.js';
 
 import { 

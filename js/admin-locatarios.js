@@ -3,6 +3,7 @@
 // ======================================================
 
 import { API_BASE } from './api.js';
+import { fetchComAuth } from './auth.js'; 
 
 let dadosCSVProcessados = [];
 

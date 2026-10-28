@@ -1,251 +1,11 @@
 // ======================================================
-// MÓDULO LOCATÁRIOS E FROTA - js/admin-locatarios.js
+// MÓDULO DE LOCATÁRIOS / FROTA - js/admin-locatarios.js
 // ======================================================
 
 import { API_BASE } from './api.js';
-import { fetchComAuth } from './auth.js'; 
+import { fetchComAuth } from './auth.js';
 
-let dadosCSVProcessados = [];
-
-function converterDataParaISO(dataStr) {
-    if (!dataStr) return new Date().toISOString().split('T')[0];
-    const partes = dataStr.trim().split('/');
-    if (partes.length === 3) {
-        return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
-    }
-    return dataStr;
-}
-
-export function buscarLocatario(query) {
-    const termo = (query || document.getElementById('input-busca-frota')?.value || '').toLowerCase().trim();
-    const cards = document.querySelectorAll('.card-locatario');
-    cards.forEach(card => {
-        const texto = card.innerText.toLowerCase();
-        card.style.display = texto.includes(termo) ? 'block' : 'none';
-    });
-}
-
-
-// ------------------------------------------------------
-// 2. AÇÕES RÁPIDAS
-// ------------------------------------------------------
-window.adicionarUmaSemana = async (id, cpf, tel, nome, sem, coins) => {
-    const novasSemanas = sem + 1;
-    const novosCoins = coins + 10;
-    const primeiroNome = (nome || 'PILOTO').split(' ')[0].toUpperCase();
-    const numLimpo = (tel || '').replace(/\D/g, '');
-    const cpfLimpo = (cpf || '').replace(/\D/g, '');
-    const pct = Math.min(100, Math.round((novasSemanas / 182) * 100));
-
-    try {
-        await fetch(`${API_BASE}/admin/locatarios/${id}/pagar-semana`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ semanas_pagas: novasSemanas, locafacil_coins: novosCoins })
-        });
-
-        const URL_PAINEL_CLIENTE = "https://cashback.locafacilmotos.com.br";
-        const linkCliente = `${URL_PAINEL_CLIENTE}?cpf=${cpfLimpo}`;
-
-        let textoProgresso = `🎉 *PARABÉNS! VOCÊ COMPLETOU ${novasSemanas} SEMANAS COM SUCESSO!* 🟢`;
-        if (pct > 50) {
-            textoProgresso = `🚀 *MAIS DA METADE DA MOTO JÁ É SUA! (${pct}% QUITADO — SEMANA ${novasSemanas} DE 182)* 🟢`;
-        }
-
-        const msg = `🚀 *PIX CONFIRMADO! MAIS UM PASSO RUMO À SUA MOTO!*\n\n` +
-            `Fala ${primeiroNome}! Seu pagamento foi confirmado!\n` +
-            `${textoProgresso}\n` +
-            `🪙 *Bônus:* +10 Locafacil Coins creditados! (Saldo: ${novosCoins} Coins)\n\n` +
-            `Acompanhe seu progresso e resgate prêmios em:\n👉 ${linkCliente}\n\n*LOCAFACILMOTOS — Parceria de verdade.* 👊`;
-
-        window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
-        carregarLocatarios();
-    } catch (err) {
-        console.error('Erro ao baixar semana:', err);
-    }
-};
-
-export function abrirModalEditar(item) {
-    if (!document.getElementById('modal-editar')) return;
-    document.getElementById('edit-id').value = item.id || '';
-    document.getElementById('edit-nome').value = item.nome || '';
-    document.getElementById('edit-placa').value = item.placa || '';
-    document.getElementById('edit-modelo').value = item.modelo || 'Honda CG 160 Start';
-    document.getElementById('edit-telefone').value = item.telefone || '';
-    document.getElementById('edit-cpf').value = item.cpf || '';
-    document.getElementById('edit-semanas').value = item.semanas_pagas || 0;
-    document.getElementById('edit-coins').value = item.locafacil_coins || 0;
-    document.getElementById('edit-km-atual').value = item.km_atual || 0;
-    document.getElementById('modal-editar').classList.remove('hidden');
-}
-
-export function fecharModal() {
-    if (document.getElementById('modal-editar')) {
-        document.getElementById('modal-editar').classList.add('hidden');
-    }
-}
-
-// ------------------------------------------------------
-// 3. IMPORTADOR CSV MOBILTRACKER
-// ------------------------------------------------------
-export function abrirModalImportarCSV() {
-    dadosCSVProcessados = [];
-    const container = document.getElementById('container-preview-csv');
-    if (container) container.classList.add('hidden');
-    const input = document.getElementById('input-file-csv');
-    if (input) input.value = '';
-    const modal = document.getElementById('modal-importar-csv');
-    if (modal) modal.classList.remove('hidden');
-}
-
-export function fecharModalImportarCSV() {
-    const modal = document.getElementById('modal-importar-csv');
-    if (modal) modal.classList.add('hidden');
-}
-
-export function processarArquivoCSV(event) {
-    const file = event.target.files ? event.target.files[0] : null;
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        const conteudo = e.target.result;
-        const linhas = conteudo.split(/\r?\n/);
-        
-        dadosCSVProcessados = [];
-        const tbody = document.getElementById('tbody-preview-csv');
-        if (tbody) tbody.innerHTML = '';
-
-        if (linhas.length < 2) return;
-
-        const cabecalho = linhas[0].split(';').map(c => c.trim().replace(/"/g, ''));
-        let dataInicioISO = new Date().toISOString().split('T')[0];
-        let dataFimISO = new Date().toISOString().split('T')[0];
-
-        if (cabecalho.length >= 4) {
-            dataInicioISO = converterDataParaISO(cabecalho[2]);
-            dataFimISO = converterDataParaISO(cabecalho[cabecalho.length - 2]);
-        }
-
-        let listaLocatarios = [];
-        try {
-            const resLoc = await fetch(`${API_BASE}/admin/locatarios`);
-            listaLocatarios = await resLoc.json() || [];
-        } catch (err) {
-            console.error('Erro ao buscar locatários:', err);
-        }
-
-        linhas.forEach((linha, index) => {
-            if (index === 0 || !linha.trim()) return;
-
-            const colunas = linha.split(';').map(c => c.trim().replace(/"/g, ''));
-            if (colunas.length < 3) return;
-
-            const identificadorOriginal = colunas[0] || '';
-            const placaLimpa = identificadorOriginal.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-            const valorTotalStr = colunas[colunas.length - 1] || '0';
-            const kmRodados = Math.round(parseFloat(valorTotalStr.replace('.', '').replace(',', '.')) || 0);
-
-            if (placaLimpa && kmRodados > 0) {
-                const locatarioEncontrado = listaLocatarios.find(l => 
-                    (l.placa || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase() === placaLimpa
-                );
-
-                const semanaReal = locatarioEncontrado 
-                    ? (locatarioEncontrado.semanas_pagas || locatarioEncontrado.semana_atual || 1) 
-                    : 1;
-
-                const item = {
-                    locatario_id: locatarioEncontrado ? locatarioEncontrado.id : null,
-                    placa: placaLimpa,
-                    placa_exibicao: identificadorOriginal,
-                    km_rodados: kmRodados,
-                    km_anterior: locatarioEncontrado ? (locatarioEncontrado.km_atual || 0) : 0,
-                    semana: semanaReal,
-                    data_inicio: dataInicioISO,
-                    data_fim: dataFimISO,
-                    status: locatarioEncontrado ? 'VALIDO' : 'NAO_ENCONTRADO',
-                    nome: locatarioEncontrado ? locatarioEncontrado.nome : 'Placa não cadastrada'
-                };
-
-                dadosCSVProcessados.push(item);
-
-                if (tbody) {
-                    tbody.innerHTML += `
-                        <tr class="${item.status === 'VALIDO' ? 'text-gray-900 border-b border-gray-100' : 'text-red-500 bg-red-50 border-b border-red-100'}">
-                            <td class="p-2 font-black">${item.placa_exibicao} <span class="text-[10px] text-gray-400 block font-normal">${item.nome} (Semana ${item.semana})</span></td>
-                            <td class="p-2 text-orange-600 font-black">+${item.km_rodados.toLocaleString('pt-BR')} km</td>
-                            <td class="p-2">
-                                ${item.status === 'VALIDO' 
-                                    ? '<span class="text-green-700 bg-green-100 font-bold px-2 py-0.5 rounded text-[10px]">🟢 Pronta</span>' 
-                                    : '<span class="text-red-700 bg-red-100 font-bold px-2 py-0.5 rounded text-[10px]">⚠️ Não Encontrada</span>'}
-                            </td>
-                        </tr>
-                    `;
-                }
-            }
-        });
-
-        const qtdValidos = dadosCSVProcessados.filter(d => d.status === 'VALIDO').length;
-        const elQtd = document.getElementById('qtd-veiculos-csv');
-        if (elQtd) elQtd.innerText = `${qtdValidos} de ${dadosCSVProcessados.length} veículos identificados`;
-
-        document.getElementById('container-preview-csv')?.classList.remove('hidden');
-    };
-
-    reader.readAsText(file, 'ISO-8859-1');
-}
-
-export async function confirmarImportacaoCSV() {
-    const validos = dadosCSVProcessados.filter(d => d.status === 'VALIDO');
-
-    if (validos.length === 0) {
-        alert('Nenhum veículo válido encontrado para atualizar.');
-        return;
-    }
-
-    const btnConfirmar = document.querySelector("#modal-importar-csv button[onclick='confirmarImportacaoCSV()']");
-    if (btnConfirmar) {
-        btnConfirmar.disabled = true;
-        btnConfirmar.innerText = '⏳ Gravando no banco...';
-    }
-
-    try {
-        for (const item of validos) {
-            const novoKmTotal = item.km_anterior + item.km_rodados;
-
-            await fetch(`${API_BASE}/admin/rastreador`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    locatario_id: item.locatario_id,
-                    placa: item.placa,
-                    semana: item.semana,
-                    data_inicio: item.data_inicio,
-                    data_fim: item.data_fim,
-                    km_anterior: item.km_anterior,
-                    km_atual: novoKmTotal,
-                    km_rodados: item.km_rodados,
-                    observacao: 'Importação CSV Mobiltracker'
-                })
-            });
-        }
-
-        alert(`✅ Sucesso! Telemetria gravada com datas e semanas reais!`);
-        fecharModalImportarCSV();
-        if (typeof carregarLocatarios === 'function') carregarLocatarios();
-
-    } catch (err) {
-        console.error('Erro ao importar CSV:', err);
-        alert(`❌ Erro ao gravar dados: ${err.message}`);
-    } finally {
-        if (btnConfirmar) {
-            btnConfirmar.disabled = false;
-            btnConfirmar.innerText = '💾 Confirmar e Atualizar Frota';
-        }
-    }
-}
-
+// 1. CARREGAR LOCATÁRIOS COM FILTRO DE STATUS
 export async function carregarLocatarios() {
     const loading = document.getElementById('loading-frota');
     const grid = document.getElementById('grid-frota');
@@ -269,10 +29,34 @@ export async function carregarLocatarios() {
     }
 }
 
-// 2. FUNÇÃO PARA ARQUIVAR CONTRATO
+// 2. BUSCA POR NOME / PLACA / CPF
+export async function buscarLocatario() {
+    const termo = document.getElementById('input-busca-frota')?.value?.trim() || '';
+    if (!termo) return carregarLocatarios();
+
+    const loading = document.getElementById('loading-frota');
+    const grid = document.getElementById('grid-frota');
+
+    if (loading) loading.style.display = 'block';
+    if (grid) grid.innerHTML = '';
+
+    try {
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios?busca=${encodeURIComponent(termo)}&_t=${Date.now()}`);
+        if (!res.ok) return;
+        const lista = await res.json();
+
+        if (loading) loading.style.display = 'none';
+        renderizarFrota(lista || []);
+    } catch (err) {
+        console.error('Erro na busca de locatários:', err);
+        if (loading) loading.style.display = 'none';
+    }
+}
+
+// 3. ARQUIVAR LOCATÁRIO
 export async function arquivarLocatario(id, nome, placa) {
     const motivo = prompt(`Deseja arquivar o contrato de ${nome} (Placa: ${placa})?\n\nDigite o motivo (a moto será liberada no pátio automaticamente):`, 'Devolução de veículo / Encerramento de contrato');
-    if (motivo === null) return; // Cancelou
+    if (motivo === null) return;
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/arquivar`, {
@@ -294,7 +78,7 @@ export async function arquivarLocatario(id, nome, placa) {
     }
 }
 
-// 3. FUNÇÃO PARA REATIVAR CONTRATO ARQUIVADO
+// 4. REATIVAR LOCATÁRIO
 export async function reativarLocatario(id, nome) {
     if (!confirm(`Deseja reativar o contrato de ${nome}?`)) return;
 
@@ -315,29 +99,79 @@ export async function reativarLocatario(id, nome) {
     }
 }
 
-// 4. RENDERIZAÇÃO DOS CARDS
+// 5. BAIXAR +1 SEMANA (PIX)
+export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais) {
+    if (!confirm(`Confirmar baixa de +1 semana paga para ${nome} (Placa: ${placa})?`)) return;
+
+    try {
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/pagamento`, {
+            method: 'POST',
+            body: JSON.stringify({ semanas: 1 })
+        });
+
+        if (res.ok) {
+            carregarLocatarios();
+        } else {
+            const errData = await res.json();
+            alert(`❌ Erro ao registrar pagamento: ${errData.error || 'Erro interno'}`);
+        }
+    } catch (err) {
+        console.error('Erro ao adicionar semana:', err);
+    }
+}
+
+// 6. MODAL EDITAR LOCATÁRIO
+export function abrirModalEditar(locatario) {
+    const modal = document.getElementById('modal-locatario');
+    if (!modal) return;
+
+    document.getElementById('edit-id').value = locatario.id || '';
+    document.getElementById('edit-nome').value = locatario.nome || '';
+    document.getElementById('edit-cpf').value = locatario.cpf || '';
+    document.getElementById('edit-telefone').value = locatario.telefone || '';
+    document.getElementById('edit-placa').value = locatario.placa || '';
+    document.getElementById('edit-modelo').value = locatario.modelo || '';
+    document.getElementById('edit-semanas').value = locatario.semanas_pagas || 0;
+    document.getElementById('edit-km').value = locatario.km_atual || 0;
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
+export function fecharModal() {
+    const modal = document.getElementById('modal-locatario');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+}
+
+// 7. RENDERIZAÇÃO DOS CARDS DA FROTA
 function renderizarFrota(lista) {
     const grid = document.getElementById('grid-frota');
     if (!grid) return;
 
     grid.innerHTML = '';
     if (!lista || lista.length === 0) {
-        grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-xl text-center text-gray-500 font-bold text-base uppercase">Nenhum piloto encontrado nesta visualização.</div>`;
+        grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center text-gray-500 font-bold text-base uppercase shadow-sm">Nenhum piloto encontrado nesta visualização.</div>`;
         return;
     }
 
     lista.forEach(item => {
         const isArquivado = item.status === 'ARQUIVADO';
-        const pct = Math.min(100, Math.round(((item.semanas_pagas || 0) / 182) * 100));
-        const jsonFormatado = JSON.stringify(item).replace(/'/g, "&apos;");
+        const semanasPagas = parseInt(item.semanas_pagas || 0, 10);
+        const pct = Math.min(100, Math.round((semanasPagas / 182) * 100));
+        
+        // Evita quebra de sintaxe no JSON no atributo onclick
+        const jsonSanitizado = JSON.stringify(item).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+        const nomeSanitizado = (item.nome || '').replace(/'/g, "\\'");
 
-        // Define se exibe o botão de Pagamento Pix ou Reativar
         const botaoAcaoPrincipal = isArquivado ? `
-            <button onclick="reativarLocatario('${item.id}', '${item.nome}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
+            <button type="button" onclick="reativarLocatario('${item.id}', '${nomeSanitizado}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
                 🔄 Reativar Contrato
             </button>
         ` : `
-            <button onclick="adicionarUmaSemana('${item.id}', '${item.placa}', '${item.telefone}', '${item.nome}', ${item.semanas_pagas || 0})" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
+            <button type="button" onclick="adicionarUmaSemana('${item.id}', '${item.placa || ''}', '${item.telefone || ''}', '${nomeSanitizado}', ${semanasPagas})" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
                 💵 +1 Semana (Baixar Pix)
             </button>
         `;
@@ -345,14 +179,21 @@ function renderizarFrota(lista) {
         grid.innerHTML += `
             <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col justify-between ${isArquivado ? 'opacity-75 border-red-200' : ''}">
                 <div>
-                    <!-- TOPO -->
+                    <!-- CABEÇALHO DO CARD -->
                     <div class="bg-gray-900 text-white p-4 flex justify-between items-center">
                         <div>
-                            <span class="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">${item.placa || 'Sem Placa'}</span>
-                            <h3 class="font-black text-lg uppercase mt-1 leading-tight">${item.nome}</h3>
+                            <span class="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">${item.placa || 'Sem Placa'}</span>
+                            <h3 class="font-black text-lg uppercase mt-1 leading-tight">${item.nome || 'Sem Nome'}</h3>
                         </div>
+                        <!-- EXIBIÇÃO DA SEMANA PAGA E PORCENTAGEM -->
                         <div class="text-right">
-                            ${isArquivado ? '<span class="bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded uppercase">📦 Arquivado</span>' : `<span class="text-2xl font-black text-orange-500">${pct}%</span>`}
+                            ${isArquivado 
+                                ? '<span class="bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded uppercase">📦 Arquivado</span>' 
+                                : `<div class="text-right">
+                                    <span class="text-xl font-black text-orange-500 block leading-none">Semana ${semanasPagas}</span>
+                                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">${semanasPagas}/182 sem (${pct}%)</span>
+                                   </div>`
+                            }
                         </div>
                     </div>
 
@@ -379,11 +220,11 @@ function renderizarFrota(lista) {
                     ${botaoAcaoPrincipal}
 
                     <div class="flex gap-2">
-                        <button onclick='abrirModalEditar(${jsonFormatado})' class="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-2.5 rounded-lg text-xs uppercase transition">
+                        <button type="button" onclick="abrirModalEditar(${jsonSanitizado})" class="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-2.5 rounded-lg text-xs uppercase transition">
                             ✏️ Editar
                         </button>
                         ${!isArquivado ? `
-                            <button onclick="arquivarLocatario('${item.id}', '${item.nome}', '${item.placa}')" class="bg-red-100 hover:bg-red-200 text-red-600 font-black px-3 py-2.5 rounded-lg text-xs uppercase transition" title="Arquivar contrato">
+                            <button type="button" onclick="arquivarLocatario('${item.id}', '${nomeSanitizado}', '${item.placa || ''}')" class="bg-red-100 hover:bg-red-200 text-red-600 font-black px-3 py-2.5 rounded-lg text-xs uppercase transition" title="Arquivar contrato">
                                 📦 Arquivar
                             </button>
                         ` : ''}
@@ -394,7 +235,11 @@ function renderizarFrota(lista) {
     });
 }
 
-// Registro global
+// VINCULAÇÃO GLOBAL NO WINDOW
 window.carregarLocatarios = carregarLocatarios;
+window.buscarLocatario = buscarLocatario;
 window.arquivarLocatario = arquivarLocatario;
 window.reativarLocatario = reativarLocatario;
+window.adicionarUmaSemana = adicionarUmaSemana;
+window.abrirModalEditar = abrirModalEditar;
+window.fecharModal = fecharModal;

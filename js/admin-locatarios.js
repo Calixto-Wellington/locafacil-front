@@ -99,8 +99,8 @@ export async function reativarLocatario(id, nome) {
     }
 }
 
-// 5. BAIXAR +1 SEMANA (PIX)
-export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais) {
+// 5. BAIXAR +1 SEMANA (PIX) COM MENSAGEM DIFERENCIADA PELO TIPO DE CONTRATO
+export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais, tipoContrato = 'OPCAO_COMPRA') {
     if (!confirm(`Confirmar baixa de +1 semana paga para ${nome} (Placa: ${placa})?`)) return;
 
     try {
@@ -110,6 +110,37 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
         });
 
         if (res.ok) {
+            const data = await res.json();
+            const novaSemana = data.semanas_pagas || (parseInt(semanasAtuais, 10) + 1);
+            const primeiroNome = (nome || '').split(' ').toUpperCase();
+            const numLimpo = (telefone || '').replace(/\D/g, '');
+
+            let mensagem = '';
+
+            if (tipoContrato === 'CONVENCIONAL') {
+                // Mensagem para Aluguel Normal
+                mensagem = `🟢 *PIX CONFIRMADO — ALUGUEL EM DIA!*\n\n` +
+                    `Fala ${primeiroNome}! Confirmamos o recebimento do seu Pix referente à *Semana ${novaSemana}* de aluguel! ✅\n\n` +
+                    `🏍️ *Moto:* Placa ${placa.toUpperCase()}\n` +
+                    `📅 *Total de semanas pagas:* ${novaSemana} semanas\n\n` +
+                    `Agradecemos pela parceria de sempre e por manter o seu pagamento em dia. Tenha uma excelente semana de trabalho! 👊💨\n\n` +
+                    `*LOCAFACILMOTOS — Acelerando com você!*`;
+            } else {
+                // Mensagem para Opção de Compra (Minha Locafacil)
+                const pct = Math.min(100, Math.round((novaSemana / 182) * 100));
+                mensagem = `🚀 *PIX CONFIRMADO! MAIS UM PASSO RUMO À SUA MOTO!*\n\n` +
+                    `Fala ${primeiroNome}! Confirmamos o recebimento do seu Pix da *Semana ${novaSemana} de 182*! 🟢\n\n` +
+                    `📊 *SEU PROGRESSO:* Você já conquistou *${pct}%* da sua moto!\n` +
+                    `🏆 *Status:* Semana ${novaSemana} / 182 concluída com sucesso.\n` +
+                    `🏁 *Faltam:* Apenas ${182 - novaSemana} semanas para a transferência do documento no DETRAN!\n\n` +
+                    `*LOCAFACILMOTOS — Acelerando junto com você!* 👊💨`;
+            }
+
+            // Abre o WhatsApp com a mensagem personalizada
+            if (numLimpo) {
+                window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(mensagem)}`, '_blank');
+            }
+
             carregarLocatarios();
         } else {
             const errData = await res.json();
@@ -117,6 +148,7 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
         }
     } catch (err) {
         console.error('Erro ao adicionar semana:', err);
+        alert('❌ Erro de conexão ao registrar pagamento.');
     }
 }
 
@@ -133,6 +165,10 @@ export function abrirModalEditar(locatario) {
     document.getElementById('edit-modelo').value = locatario.modelo || '';
     document.getElementById('edit-semanas').value = locatario.semanas_pagas || 0;
     document.getElementById('edit-km').value = locatario.km_atual || 0;
+    
+    if (document.getElementById('edit-tipo-contrato')) {
+        document.getElementById('edit-tipo-contrato').value = locatario.tipo_contrato || 'OPCAO_COMPRA';
+    }
 
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
@@ -146,7 +182,7 @@ export function fecharModal() {
     }
 }
 
-// 7. RENDERIZAÇÃO DOS CARDS DA FROTA
+// 7. RENDERIZAÇÃO DOS CARDS DA FROTA COM BADGES DE MODALIDADE
 function renderizarFrota(lista) {
     const grid = document.getElementById('grid-frota');
     if (!grid) return;
@@ -160,18 +196,35 @@ function renderizarFrota(lista) {
     lista.forEach(item => {
         const isArquivado = item.status === 'ARQUIVADO';
         const semanasPagas = parseInt(item.semanas_pagas || 0, 10);
-        const pct = Math.min(100, Math.round((semanasPagas / 182) * 100));
+        const tipoContrato = item.tipo_contrato || 'OPCAO_COMPRA';
+        const isOpcaoCompra = tipoContrato === 'OPCAO_COMPRA';
         
-        // Evita quebra de sintaxe no JSON no atributo onclick
+        const pct = Math.min(100, Math.round((semanasPagas / 182) * 100));
         const jsonSanitizado = JSON.stringify(item).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
         const nomeSanitizado = (item.nome || '').replace(/'/g, "\\'");
+
+        // Badge da Modalidade
+        const badgeModalidade = isOpcaoCompra
+            ? `<span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1">🏆 Opção de Compra (42m)</span>`
+            : `<span class="bg-blue-100 text-blue-900 border border-blue-300 text-[10px] font-black px-2 py-0.5 rounded-full uppercase flex items-center gap-1">🔑 Aluguel Convencional</span>`;
+
+        // Indicador de semanas no topo
+        const blocoSemanas = isOpcaoCompra
+            ? `<div class="text-right">
+                <span class="text-xl font-black text-orange-500 block leading-none">Semana ${semanasPagas}</span>
+                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">${semanasPagas}/182 sem (${pct}%)</span>
+               </div>`
+            : `<div class="text-right">
+                <span class="text-xl font-black text-blue-400 block leading-none">${semanasPagas} sem</span>
+                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Pagas (Contínuo)</span>
+               </div>`;
 
         const botaoAcaoPrincipal = isArquivado ? `
             <button type="button" onclick="reativarLocatario('${item.id}', '${nomeSanitizado}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
                 🔄 Reativar Contrato
             </button>
         ` : `
-            <button type="button" onclick="adicionarUmaSemana('${item.id}', '${item.placa || ''}', '${item.telefone || ''}', '${nomeSanitizado}', ${semanasPagas})" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
+            <button type="button" onclick="adicionarUmaSemana('${item.id}', '${item.placa || ''}', '${item.telefone || ''}', '${nomeSanitizado}', ${semanasPagas}, '${tipoContrato}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
                 💵 +1 Semana (Baixar Pix)
             </button>
         `;
@@ -185,22 +238,24 @@ function renderizarFrota(lista) {
                             <span class="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">${item.placa || 'Sem Placa'}</span>
                             <h3 class="font-black text-lg uppercase mt-1 leading-tight">${item.nome || 'Sem Nome'}</h3>
                         </div>
-                        <!-- EXIBIÇÃO DA SEMANA PAGA E PORCENTAGEM -->
                         <div class="text-right">
                             ${isArquivado 
                                 ? '<span class="bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded uppercase">📦 Arquivado</span>' 
-                                : `<div class="text-right">
-                                    <span class="text-xl font-black text-orange-500 block leading-none">Semana ${semanasPagas}</span>
-                                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">${semanasPagas}/182 sem (${pct}%)</span>
-                                   </div>`
+                                : blocoSemanas
                             }
                         </div>
                     </div>
 
                     <div class="p-5 space-y-3">
+                        <!-- SEGUNDA LINHA: BADGE DE MODALIDADE DE CONTRATO -->
+                        <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                            ${badgeModalidade}
+                            <span class="text-[10px] font-bold text-gray-400 uppercase">WhatsApp: ${item.telefone || 'N/A'}</span>
+                        </div>
+
                         <div class="grid grid-cols-2 gap-2 text-xs">
                             <div><p class="text-gray-400 font-bold uppercase">Modelo</p><p class="font-bold text-gray-800">${item.modelo || 'N/A'}</p></div>
-                            <div><p class="text-gray-400 font-bold uppercase">WhatsApp</p><p class="font-bold text-gray-800">${item.telefone || 'N/A'}</p></div>
+                            <div><p class="text-gray-400 font-bold uppercase">CPF</p><p class="font-bold text-gray-800">${item.cpf || 'N/A'}</p></div>
                         </div>
 
                         ${isArquivado ? `
@@ -235,6 +290,54 @@ function renderizarFrota(lista) {
     });
 }
 
+// ======================================================
+// 8. SALVAR EDIÇÃO DO CARD DO LOCATÁRIO (PASSO 4)
+// ======================================================
+export async function salvarEdicaoCard(event) {
+    if (event) event.preventDefault(); // Impede o recarregamento da página
+
+    const id = document.getElementById('edit-id').value;
+    const nome = document.getElementById('edit-nome').value;
+    const placa = document.getElementById('edit-placa').value;
+    const modelo = document.getElementById('edit-modelo').value;
+    const telefone = document.getElementById('edit-telefone').value;
+    const cpf = document.getElementById('edit-cpf').value;
+    const semanas = document.getElementById('edit-semanas').value;
+    const km = document.getElementById('edit-km').value;
+    
+    // Captura a modalidade do contrato selecionada no modal
+    const tipoContrato = document.getElementById('edit-tipo-contrato')?.value || 'OPCAO_COMPRA';
+
+    try {
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                nome,
+                placa: placa.toUpperCase().trim(),
+                modelo,
+                telefone,
+                cpf,
+                semanas_pagas: parseInt(semanas, 10),
+                km_atual: parseInt(km, 10),
+                tipo_contrato: tipoContrato // 👈 Envia a modalidade para o Supabase
+            })
+        });
+
+        if (res.ok) {
+            alert('✅ Dados do piloto e modalidade de contrato atualizados com sucesso!');
+            fecharModal();
+            carregarLocatarios(); // Recarrega os cards exibindo a nova badge (🏆 ou 🔑)
+        } else {
+            const errData = await res.json();
+            alert(`❌ Erro ao salvar: ${errData.error || 'Erro interno'}`);
+        }
+    } catch (err) {
+        console.error('Erro ao salvar edição do piloto:', err);
+        alert('❌ Erro de conexão.');
+    }
+}
+
+
 // VINCULAÇÃO GLOBAL NO WINDOW
 window.carregarLocatarios = carregarLocatarios;
 window.buscarLocatario = buscarLocatario;
@@ -243,3 +346,4 @@ window.reativarLocatario = reativarLocatario;
 window.adicionarUmaSemana = adicionarUmaSemana;
 window.abrirModalEditar = abrirModalEditar;
 window.fecharModal = fecharModal;
+window.salvarEdicaoCard = salvarEdicaoCard;

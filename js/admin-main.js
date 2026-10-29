@@ -26,7 +26,8 @@ import {
     abrirModalEditar,
     fecharModal,
     arquivarLocatario,
-    reativarLocatario 
+    reativarLocatario,
+    salvarEdicaoCard
 } from './admin-locatarios.js';
 
 import { 

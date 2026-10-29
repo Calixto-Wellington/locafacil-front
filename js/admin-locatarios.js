@@ -5,6 +5,9 @@
 import { API_BASE } from './api.js';
 import { fetchComAuth } from './auth.js';
 
+// Variável temporária para guardar os dados do CSV processado
+window.dadosCSVImportacao = [];
+
 // 1. CARREGAR LOCATÁRIOS COM FILTRO DE STATUS (ATIVO / ARQUIVADO / TODOS)
 export async function carregarLocatarios() {
     const loading = document.getElementById('loading-frota');
@@ -99,7 +102,7 @@ export async function reativarLocatario(id, nome) {
     }
 }
 
-// 5. BAIXAR +1 SEMANA (PIX) + MENSAGEM DINÂMICA COM LINK DO CASHBACK
+// 5. BAIXAR +1 SEMANA (PIX) + MENSAGEM DINÂMICA DE WHATSAPP
 export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais, tipoContrato = 'OPCAO_COMPRA', semanasTotais = 182, cpf = '') {
     if (!confirm(`Confirmar baixa de +1 semana paga para ${nome} (Placa: ${placa})?`)) return;
 
@@ -113,13 +116,12 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
             const data = await res.json();
             const novaSemana = data.semanas_pagas || (parseInt(semanasAtuais, 10) + 1);
             
-            // 💡 Pega a primeira palavra [0] do nome com segurança
-            const primeiroNome = (nome || '').trim().split(' ')[0].toUpperCase();
+            const primeiroNome = (nome || '').trim().split(' ').toUpperCase();
             const numLimpo = (telefone || '').replace(/\D/g, '');
             const cpfLimpo = (cpf || '').replace(/\D/g, '');
             const totalSem = parseInt(semanasTotais || 182, 10);
 
-            // Monta a URL do Cashback com o CPF do piloto
+            // Monta a URL do Cashback
             const dominio = 'cashback.locafacilmotos.com.br';
             const linkCashback = cpfLimpo 
                 ? 'https://' + dominio + '/?cpf=' + cpfLimpo
@@ -128,7 +130,6 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
             let mensagem = '';
 
             if (tipoContrato === 'CONVENCIONAL') {
-                // Mensagem para Aluguel Normal
                 mensagem = `🟢 *PIX CONFIRMADO — ALUGUEL EM DIA!*\n\n` +
                     `Fala ${primeiroNome}! Confirmamos o recebimento do seu Pix referente à *Semana ${novaSemana}* de aluguel! ✅\n\n` +
                     `🏍️ *Moto:* Placa ${(placa || '').toUpperCase()}\n` +
@@ -137,7 +138,6 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
                     `Agradecemos pela parceria e por manter o seu pagamento em dia. Tenha uma excelente semana de trabalho! 👊💨\n\n` +
                     `*LOCAFACILMOTOS — Acelerando com você!*`;
             } else {
-                // Mensagem para Opção de Compra (Minha Locafacil)
                 const pct = Math.min(100, Math.round((novaSemana / totalSem) * 100));
                 const faltam = totalSem - novaSemana;
 
@@ -150,7 +150,6 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
                     `*LOCAFACILMOTOS — Acelerando junto com você!* 👊💨`;
             }
 
-            // Dispara para o WhatsApp do piloto
             if (numLimpo) {
                 window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(mensagem)}`, '_blank');
             }
@@ -246,7 +245,187 @@ export async function salvarEdicaoCard(event) {
     }
 }
 
-// 8. RENDERIZAÇÃO DOS CARDS DA FROTA
+// ======================================================
+// 8. IMPORTAÇÃO DE TELEMETRIA CSV DA MOBILTRACKER
+// ======================================================
+
+export function abrirModalImportarCSV() {
+    const modal = document.getElementById('modal-importar-csv');
+    const containerPreview = document.getElementById('container-preview-csv');
+    const input = document.getElementById('input-file-csv');
+    const tbody = document.getElementById('tbody-preview-csv');
+
+    if (input) input.value = '';
+    if (tbody) tbody.innerHTML = '';
+    if (containerPreview) containerPreview.classList.add('hidden');
+    window.dadosCSVImportacao = [];
+
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+    }
+}
+
+export function fecharModalImportarCSV() {
+    const modal = document.getElementById('modal-importar-csv');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+    window.dadosCSVImportacao = [];
+}
+
+export function processarArquivoCSV(event) {
+    const file = event.target.files;
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const conteudo = e.target.result || '';
+        const linhas = conteudo.split(/\r?\n/);
+
+        if (linhas.length < 2) {
+            alert('⚠️ O arquivo CSV selecionado está vazio ou inválido.');
+            return;
+        }
+
+        const cabecalho = linhas.split(';');
+        let dataInicio = new Date().toISOString().split('T');
+        let dataFim = new Date().toISOString().split('T');
+
+        // Extrai datas do cabeçalho do relatório se disponíveis
+        const colunasData = cabecalho.filter(c => c.includes('/') && c.split('/').length === 3);
+        if (colunasData.length > 0) {
+            const converterData = (strData) => {
+                const partes = strData.trim().split('/');
+                if (partes.length === 3) {
+                    return `${partes[1]}-${partes[2].padStart(2, '0')}-${partes.padStart(2, '0')}`;
+                }
+                return dataInicio;
+            };
+            dataInicio = converterData(colunasData);
+            dataFim = converterData(colunasData[colunasData.length - 1]);
+        }
+
+        const dadosValidos = [];
+        const tbody = document.getElementById('tbody-preview-csv');
+        if (tbody) tbody.innerHTML = '';
+
+        for (let i = 1; i < linhas.length; i++) {
+            const linha = linhas[i].trim();
+            if (!linha) continue;
+
+            const cols = linha.split(';');
+            if (cols.length < 3) continue;
+
+            const nomeOuPlacaBruta = (cols[2] || '').trim();
+            const placaFormatada = nomeOuPlacaBruta.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+
+            if (!placaFormatada || placaFormatada === 'NOME' || placaFormatada === 'L200') continue;
+
+            let kmRodadosStr = cols[cols.length - 1] || cols[cols.length - 2] || '0';
+            kmRodadosStr = kmRodadosStr.trim().replace(/\./g, '').replace(',', '.');
+            const kmRodados = Math.round(parseFloat(kmRodadosStr) || 0);
+
+            if (kmRodados > 0) {
+                dadosValidos.push({
+                    placa: placaFormatada,
+                    km_rodados: kmRodados,
+                    data_inicio: dataInicio,
+                    data_fim: dataFim
+                });
+
+                if (tbody) {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-100">
+                            <td class="py-2 border-b"><span class="bg-orange-100 text-orange-800 font-black px-2 py-0.5 rounded text-[11px]">${placaFormatada}</span></td>
+                            <td class="py-2 border-b text-right font-black text-gray-900">+${kmRodados.toLocaleString('pt-BR')} km</td>
+                        </tr>
+                    `;
+                }
+            }
+        }
+
+        window.dadosCSVImportacao = dadosValidos;
+
+        const containerPreview = document.getElementById('container-preview-csv');
+        const qtdVeiculos = document.getElementById('qtd-veiculos-csv');
+
+        if (containerPreview) containerPreview.classList.remove('hidden');
+        if (qtdVeiculos) qtdVeiculos.innerText = `${dadosValidos.length} veículos identificados`;
+
+        if (dadosValidos.length === 0) {
+            alert('⚠️ Nenhum veículo com rodagem positiva foi identificado neste arquivo CSV.');
+        }
+    };
+
+    reader.readAsText(file, 'ISO-8859-1');
+}
+
+export async function confirmarImportacaoCSV() {
+    const lista = window.dadosCSVImportacao || [];
+    if (!lista || lista.length === 0) {
+        alert('⚠️ Nenhum dado selecionado para importação.');
+        return;
+    }
+
+    if (!confirm(`Confirmar atualização de quilometragem para os ${lista.length} veículos identificados no CSV?`)) {
+        return;
+    }
+
+    let sucessos = 0;
+
+    for (const item of lista) {
+        try {
+            const resBusca = await fetchComAuth(`${API_BASE}/admin/locatarios?busca=${encodeURIComponent(item.placa)}`);
+            if (resBusca.ok) {
+                const locatarios = await resBusca.json();
+                const piloto = Array.isArray(locatarios) 
+                    ? locatarios.find(l => (l.placa || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase() === item.placa)
+                    : null;
+
+                if (piloto) {
+                    const kmAnterior = parseInt(piloto.km_atual || 0, 10);
+                    const novoKmTotal = kmAnterior + item.km_rodados;
+
+                    // 1. Registra no histórico de rodagem da telemetria
+                    await fetchComAuth(`${API_BASE}/admin/rastreador`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            locatario_id: piloto.id,
+                            placa: item.placa,
+                            semana: piloto.semanas_pagas || 0,
+                            data_inicio: item.data_inicio,
+                            data_fim: item.data_fim,
+                            km_anterior: kmAnterior,
+                            km_atual: novoKmTotal,
+                            km_rodados: item.km_rodados,
+                            observacao: 'Importação CSV Mobiltracker'
+                        })
+                    });
+
+                    // 2. Atualiza a quilometragem atual do piloto
+                    await fetchComAuth(`${API_BASE}/admin/locatarios/${piloto.id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            km_atual: novoKmTotal
+                        })
+                    });
+
+                    sucessos++;
+                }
+            }
+        } catch (err) {
+            console.error(`Erro ao importar placa ${item.placa}:`, err);
+        }
+    }
+
+    alert(`✅ Importação concluída com sucesso!\n\n📊 Total de ${sucessos} piloto(s) e moto(s) atualizados.`);
+    fecharModalImportarCSV();
+    carregarLocatarios();
+}
+
+// 9. RENDERIZAÇÃO DOS CARDS DA FROTA
 function renderizarFrota(lista) {
     const grid = document.getElementById('grid-frota');
     if (!grid) return;
@@ -266,16 +445,13 @@ function renderizarFrota(lista) {
 
         const pct = Math.min(100, Math.round((semanasPagas / semanasTotais) * 100));
         
-        // Sanitização contra quebra de sintaxe em strings HTML
         const jsonSanitizado = JSON.stringify(item).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
         const nomeSanitizado = (item.nome || '').replace(/'/g, "\\'");
 
-        // Badge de Modalidade
         const badgeModalidade = isOpcaoCompra
             ? `<span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">🏆 Opção de Compra (${semanasTotais} sem)</span>`
             : `<span class="bg-blue-100 text-blue-900 border border-blue-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">🔑 Aluguel Convencional</span>`;
 
-        // Bloco de Semanas
         const blocoSemanas = isOpcaoCompra
             ? `<div class="text-right">
                 <span class="text-xl font-black text-orange-500 block leading-none">Semana ${semanasPagas}</span>
@@ -286,15 +462,15 @@ function renderizarFrota(lista) {
                 <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Pagas (Contínuo)</span>
                </div>`;
 
- const botaoAcaoPrincipal = isArquivado ? `
-    <button type="button" onclick="reativarLocatario('${item.id}', '${nomeSanitizado}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
-        🔄 Reativar Contrato
-    </button>
-` : `
-    <button type="button" onclick="adicionarUmaSemana('${item.id}', '${item.placa || ''}', '${item.telefone || ''}', '${nomeSanitizado}', ${semanasPagas}, '${tipoContrato}', ${semanasTotais}, '${item.cpf || ''}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
-        💵 +1 Semana (Baixar Pix)
-    </button>
-`;
+        const botaoAcaoPrincipal = isArquivado ? `
+            <button type="button" onclick="reativarLocatario('${item.id}', '${nomeSanitizado}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
+                🔄 Reativar Contrato
+            </button>
+        ` : `
+            <button type="button" onclick="adicionarUmaSemana('${item.id}', '${item.placa || ''}', '${item.telefone || ''}', '${nomeSanitizado}', ${semanasPagas}, '${tipoContrato}', ${semanasTotais}, '${item.cpf || ''}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
+                💵 +1 Semana (Baixar Pix)
+            </button>
+        `;
 
         grid.innerHTML += `
             <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col justify-between ${isArquivado ? 'opacity-75 border-red-200' : ''}">
@@ -357,7 +533,7 @@ function renderizarFrota(lista) {
     });
 }
 
-// VINCULAÇÃO GLOBAL NO WINDOW PARA SUPORTE AOS ATRIBUTOS HTML (onclick / onsubmit)
+// VINCULAÇÃO GLOBAL NO WINDOW PARA SUPORTE AOS EVENTOS HTML
 window.carregarLocatarios = carregarLocatarios;
 window.buscarLocatario = buscarLocatario;
 window.arquivarLocatario = arquivarLocatario;
@@ -366,3 +542,7 @@ window.adicionarUmaSemana = adicionarUmaSemana;
 window.abrirModalEditar = abrirModalEditar;
 window.fecharModal = fecharModal;
 window.salvarEdicaoCard = salvarEdicaoCard;
+window.abrirModalImportarCSV = abrirModalImportarCSV;
+window.fecharModalImportarCSV = fecharModalImportarCSV;
+window.processarArquivoCSV = processarArquivoCSV;
+window.confirmarImportacaoCSV = confirmarImportacaoCSV;

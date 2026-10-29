@@ -28,43 +28,42 @@
                 </div>
             </div>
 
-            <!-- ABAS DE NAVEGAÇÃO -->
+            <!-- SUBDIVISÕES / ABAS DE NAVEGAÇÃO -->
             <div class="flex bg-gray-800 p-1.5 rounded-xl border border-gray-700 w-full md:w-auto flex-wrap gap-1 items-center">
                 <button id="btn-aba-mesa" onclick="alternarAba('mesa')" 
-                    class="aba-btn ativa flex-1 md:flex-none font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    class="aba-btn ativa tab-btn flex-1 md:flex-none font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     📋 Mesa de Aprovação
                 </button>
                 <button id="btn-aba-frota" onclick="alternarAba('frota')" 
-                    class="aba-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    class="aba-btn tab-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     🏍️ Gestão de Frota
                 </button>
                 <button id="btn-aba-motos" onclick="alternarAba('motos')" 
-                    class="aba-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    class="aba-btn tab-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     🛵 Pátio & Frota
                 </button>
                 <button id="btn-aba-loja" onclick="alternarAba('loja')" 
-                    class="aba-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    class="aba-btn tab-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     🎁 Loja Coins & Regras
                 </button>
                 <button id="btn-aba-planos" onclick="alternarAba('planos')" 
-                    class="aba-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    class="aba-btn tab-btn flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
                     📋 Gestão de Planos
                 </button>
                 <button id="btn-aba-usuarios" onclick="alternarAba('usuarios')" 
-                    class="aba-btn hidden flex-1 md:flex-none text-gray-400 hover:text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2">
+                    class="aba-btn tab-btn px-4 py-2 rounded-lg font-black text-xs uppercase flex items-center gap-2 text-gray-400 hover:text-white hidden transition-all">
                     👥 Usuários
                 </button>
-                <button onclick="realizarLogout()" 
-                    class="bg-red-600/80 hover:bg-red-600 text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2 ml-auto">
+                <button onclick="realizarLogout()" class="bg-red-600/80 hover:bg-red-600 text-white font-black py-2.5 px-4 rounded-lg text-xs uppercase transition-all flex items-center justify-center gap-2 ml-auto">
                     🚪 Sair
                 </button>
             </div>
         </header>
 
         <!-- ================================================================= -->
-        <!-- SEÇÃO 1: MESA DE APROVAÇÃO (LEADS / FICHAS) -->
+        <!-- SUBDIVISÃO 1: MESA DE APROVAÇÃO (FICHAS) -->
         <!-- ================================================================= -->
-        <section id="secao-mesa" class="space-y-6">
+        <section id="secao-mesa" class="aba-conteudo space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
                 <div>
                     <h2 class="text-xl font-black uppercase text-gray-900">Análise de Risco & Fichas</h2>
@@ -93,22 +92,20 @@
         </section>
 
         <!-- ================================================================= -->
-        <!-- SEÇÃO 2: GESTÃO DE FROTA & PILOTOS (LOCATÁRIOS) -->
+        <!-- SUBDIVISÃO 2: GESTÃO DE FROTA & CONTRATOS (LOCATÁRIOS) -->
         <!-- ================================================================= -->
-        <section id="secao-frota" class="space-y-6 hidden">
+        <section id="secao-frota" class="aba-conteudo space-y-6 hidden">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
                 <div>
                     <h2 class="text-xl font-black uppercase text-gray-900">Pilotos na Frota & Baixa de Pix</h2>
-                    <p class="text-xs text-gray-500 font-bold uppercase mt-0.5">Gestão de Contratos, Moedas e Manutenção</p>
+                    <p class="text-xs text-gray-500 font-bold uppercase mt-0.5">Gestão de Contratos, Moedas e Telemetria</p>
                 </div>
 
-                <div class="flex flex-col md:flex-row w-full md:w-auto gap-2">
-                    <select id="filtro-status-frota" onchange="carregarLocatarios()" 
-                        class="p-2.5 border border-gray-300 rounded-xl text-xs font-bold outline-none uppercase text-gray-700 bg-white">
-                        <option value="ATIVO" selected>🟢 Pilotos Ativos</option>
-                        <option value="ARQUIVADO">📦 Pilotos Arquivados</option>
-                        <option value="TODOS">📋 Todos os Pilotos</option>
-                    </select>
+                <div class="flex flex-col md:flex-row w-full md:w-auto gap-2 items-center">
+                    <!-- BOTÃO IMPORTAR CSV MOBILTRACKER -->
+                    <button type="button" onclick="abrirModalImportarCSV()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2.5 px-4 rounded-xl transition text-xs uppercase flex items-center gap-1.5 shadow-md">
+                        📥 Importar CSV Mobiltracker
+                    </button>
 
                     <input type="text" id="input-busca-frota" placeholder="Digitar Placa, Nome ou CPF..."
                         class="p-2.5 border border-gray-300 rounded-xl text-xs font-bold outline-none w-full md:w-64 uppercase">
@@ -122,9 +119,9 @@
         </section>
 
         <!-- ================================================================= -->
-        <!-- SEÇÃO 3: PÁTIO & MOTOS FÍSICAS -->
+        <!-- SUBDIVISÃO 3: PÁTIO & MOTOS FÍSICAS -->
         <!-- ================================================================= -->
-        <section id="secao-motos" class="space-y-6 hidden">
+        <section id="secao-motos" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b">
                     <div>
@@ -167,23 +164,23 @@
         </section>
 
         <!-- ================================================================= -->
-        <!-- SEÇÃO 4: LOJA DE COINS & REGRAS -->
+        <!-- SUBDIVISÃO 4: LOJA DE COINS & REGRAS -->
         <!-- ================================================================= -->
-        <section id="secao-loja" class="space-y-6 hidden">
+        <section id="secao-loja" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h2 class="text-xl font-black uppercase text-gray-900 mb-6">Configuração de Brindes & Regras de Coins</h2>
+                <h2 class="text-xl font-black uppercase text-gray-900 mb-4">Configuração de Brindes & Regras de Coins</h2>
                 <div class="bg-orange-50 p-4 rounded-2xl border border-orange-200 mb-6 flex justify-between items-center">
-                    <p class="text-xs font-black text-orange-950 uppercase">Coins por Pix Baixado:</p>
+                    <p class="text-xs font-black text-orange-950 uppercase">Coins por Pix:</p>
                     <div class="flex gap-2">
                         <input type="number" id="input-config-coins-pix" class="p-2.5 border rounded-xl text-xs font-black w-28 text-center">
                         <button onclick="salvarConfigCoinsPix()" class="bg-orange-600 text-white font-black px-5 py-2.5 rounded-xl text-xs uppercase">Salvar</button>
                     </div>
                 </div>
 
-                <form onsubmit="adicionarItemLoja(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-amber-50 p-4 rounded-xl border border-amber-200 mb-6">
+                <form onsubmit="adicionarItemLoja(event)" class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-amber-50 p-4 rounded-xl border mb-6">
                     <input type="text" id="novo-brinde-titulo" placeholder="Nome do Brinde" required class="p-2.5 border rounded-lg text-xs font-bold">
                     <input type="number" id="novo-brinde-custo" placeholder="Custo em Coins" required min="1" class="p-2.5 border rounded-lg text-xs font-bold">
-                    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-black py-2.5 rounded-lg text-xs uppercase shadow-md">➕ Adicionar à Loja</button>
+                    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-black py-2.5 rounded-lg text-xs uppercase shadow-md">➕ Adicionar</button>
                 </form>
 
                 <div id="grid-itens-admin-loja" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
@@ -191,9 +188,9 @@
         </section>
 
         <!-- ================================================================= -->
-        <!-- SEÇÃO 5: GESTÃO DE PLANOS & VALORES -->
+        <!-- SUBDIVISÃO 5: GESTÃO DE PLANOS & VALORES -->
         <!-- ================================================================= -->
-        <section id="secao-planos" class="space-y-6 hidden">
+        <section id="secao-planos" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div class="flex justify-between items-center mb-6 pb-4 border-b">
                     <div>
@@ -242,9 +239,9 @@
         </section>
 
         <!-- ================================================================= -->
-        <!-- SEÇÃO 6: GESTÃO DE USUÁRIOS (ADMIN) -->
+        <!-- SUBDIVISÃO 6: GESTÃO DE USUÁRIOS (ADMIN) -->
         <!-- ================================================================= -->
-        <section id="secao-usuarios" class="space-y-6 hidden">
+        <section id="secao-usuarios" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white rounded-3xl p-6 shadow-md border border-gray-100">
                 <h3 class="text-lg font-black uppercase text-gray-900 mb-4">Cadastrar Novo Usuário</h3>
                 <form onsubmit="cadastrarNovoUsuario(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -280,150 +277,119 @@
                 <div id="grid-usuarios" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
             </div>
         </section>
-    </div> <!-- FIM DO CONTAINER CENTRAL MAX-W-7XL -->
-
+    </div>
 
     <!-- ================================================================= -->
-    <!-- MODAIS DE AÇÃO (FORA DO CONTAINER CENTRAL PARA NÃO QUEBRAR O LAYOUT) -->
+    <!-- MODAIS DE SISTEMA -->
     <!-- ================================================================= -->
 
-    <!-- 1. MODAL DE EDITAR MOTO -->
-    <div id="modal-editar-moto" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 relative">
+    <!-- 1. MODAL EDITAR PILOTO / LOCATÁRIO -->
+    <div id="modal-locatario" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-gray-200 relative">
             <div class="flex justify-between items-center pb-3 border-b mb-4">
-                <h3 class="text-lg font-black text-gray-900 uppercase">Editar Dados da Moto</h3>
-                <button onclick="fecharModalMoto()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+                <h3 class="text-xl font-black text-gray-900 uppercase">Editar Dados do Piloto</h3>
+                <button type="button" onclick="fecharModal()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
             </div>
 
-            <form id="form-editar-moto" onsubmit="salvarEdicaoMoto(event)" class="space-y-4">
-                <input type="hidden" id="edit-moto-id">
+            <form id="form-editar" onsubmit="salvarEdicaoCard(event)" class="space-y-4">
+                <input type="hidden" id="edit-id">
 
+                <!-- NOME COMPLETO -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Nome Completo</label>
+                    <input type="text" id="edit-nome" required class="w-full p-2.5 border rounded-lg text-sm font-bold uppercase">
+                </div>
+
+                <!-- PLACA E MODELO DA MOTO -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Marca</label>
-                        <input type="text" id="edit-moto-marca" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
+                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Placa da Moto</label>
+                        <input type="text" id="edit-placa" required class="w-full p-2.5 border rounded-lg text-sm font-bold uppercase">
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Modelo</label>
-                        <input type="text" id="edit-moto-modelo" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
+                        <input type="text" id="edit-modelo" required class="w-full p-2.5 border rounded-lg text-sm font-bold">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Cor</label>
-                        <input type="text" id="edit-moto-cor" required class="w-full p-2.5 border rounded-lg text-xs font-bold">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Ano</label>
-                        <input type="number" id="edit-moto-ano" class="w-full p-2.5 border rounded-lg text-xs font-bold">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Placa</label>
-                        <input type="text" id="edit-moto-placa" required class="w-full p-2.5 border rounded-lg text-xs font-black uppercase">
-                    </div>
+                <!-- MODALIDADE DO CONTRATO -->
+                <div>
+                    <label class="block text-xs font-bold uppercase text-orange-900 mb-1">Modalidade do Contrato</label>
+                    <select id="edit-tipo-contrato" class="w-full p-2.5 border border-orange-300 rounded-lg text-sm font-black uppercase bg-orange-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="OPCAO_COMPRA">🏆 Locação com Opção de Compra (Minha Locafacil - 182 sem)</option>
+                        <option value="CONVENCIONAL">🔑 Aluguel Convencional / Normal (Sem Opção de Compra)</option>
+                    </select>
                 </div>
 
+                <!-- CONTATO E DOCUMENTO -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">KM Atual</label>
-                        <input type="number" id="edit-moto-km" min="0" class="w-full p-2.5 border rounded-lg text-xs font-bold">
+                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">WhatsApp</label>
+                        <input type="text" id="edit-telefone" required class="w-full p-2.5 border rounded-lg text-sm font-bold">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Status</label>
-                        <select id="edit-moto-status" class="w-full p-2.5 border rounded-lg text-xs font-bold">
-                            <option value="DISPONIVEL">🟢 Disponível no Pátio</option>
-                            <option value="ALUGADA">🔵 Alugada (Em Rua)</option>
-                            <option value="MANUTENCAO">🟡 Manutenção (Oficina)</option>
-                        </select>
+                        <label class="block text-xs font-bold uppercase text-gray-600 mb-1">CPF</label>
+                        <input type="text" id="edit-cpf" required class="w-full p-2.5 border rounded-lg text-sm font-bold">
                     </div>
                 </div>
 
-                <div class="flex gap-3 pt-3 border-t mt-4">
-                    <button type="button" onclick="fecharModalMoto()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2.5 rounded-xl uppercase text-xs">Cancelar</button>
-                    <button type="submit" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-black py-2.5 rounded-xl uppercase text-xs shadow-md">💾 Salvar</button>
+                <!-- CONTROLE DE SEMANAS E KM PAINEL (BLOCO DESTACADO) -->
+                <div class="grid grid-cols-3 gap-2 bg-orange-50 p-3 rounded-xl border border-orange-200">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-orange-900 mb-1">Sem. Pagas</label>
+                        <input type="number" id="edit-semanas" required min="0" class="w-full p-2 border rounded-lg text-sm font-black text-orange-600">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-orange-900 mb-1">Total Semanas</label>
+                        <input type="number" id="edit-semanas-totais" required min="1" value="182" class="w-full p-2 border rounded-lg text-sm font-black text-gray-800">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase text-orange-900 mb-1">KM Painel</label>
+                        <input type="number" id="edit-km" required min="0" class="w-full p-2 border rounded-lg text-sm font-bold">
+                    </div>
+                </div>
+
+                <!-- BOTÕES DE AÇÃO -->
+                <div class="flex gap-3 pt-4 border-t mt-4">
+                    <button type="button" onclick="fecharModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl uppercase text-xs">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-black py-3 rounded-xl uppercase text-xs shadow-md">💾 Salvar Alterações</button>
                 </div>
             </form>
         </div>
     </div>
 
-<!-- 2. MODAL DE EDITAR PILOTO / LOCATÁRIO -->
-<div id="modal-locatario" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-gray-200 relative">
-        <div class="flex justify-between items-center pb-3 border-b mb-4">
-            <h3 class="text-xl font-black text-gray-900 uppercase">Editar Dados do Piloto</h3>
-            <button type="button" onclick="fecharModal()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+    <!-- 2. MODAL DE EDIÇÃO DE MOTO -->
+    <div id="modal-editar-moto" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border relative">
+            <h3 class="text-lg font-black text-gray-900 uppercase mb-4">Editar Dados da Moto</h3>
+            <form id="form-editar-moto" onsubmit="salvarEdicaoMoto(event)" class="space-y-4">
+                <input type="hidden" id="edit-moto-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="edit-moto-marca" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Marca">
+                    <input type="text" id="edit-moto-modelo" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Modelo">
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <input type="text" id="edit-moto-cor" required class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Cor">
+                    <input type="number" id="edit-moto-ano" class="p-2.5 border rounded-lg text-xs font-bold" placeholder="Ano">
+                    <input type="text" id="edit-moto-placa" required class="p-2.5 border rounded-lg text-xs font-black uppercase" placeholder="Placa">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="number" id="edit-moto-km" class="p-2.5 border rounded-lg text-xs font-bold" placeholder="KM">
+                    <select id="edit-moto-status" class="p-2.5 border rounded-lg text-xs font-bold">
+                        <option value="DISPONIVEL">Disponível</option>
+                        <option value="ALUGADA">Alugada</option>
+                        <option value="MANUTENCAO">Manutenção</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-3 border-t">
+                    <button type="button" onclick="fecharModalMoto()" class="flex-1 bg-gray-200 py-2 rounded-xl text-xs font-bold">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-orange-600 text-white py-2 rounded-xl text-xs font-black">Salvar</button>
+                </div>
+            </form>
         </div>
-
-        <form id="form-editar" onsubmit="salvarEdicaoCard(event)" class="space-y-4">
-            <input type="hidden" id="edit-id">
-
-            <!-- 1. NOME COMPLETO -->
-            <div>
-                <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Nome Completo</label>
-                <input type="text" id="edit-nome" required class="w-full p-2.5 border rounded-lg text-sm font-bold uppercase">
-            </div>
-
-            <!-- 2. PLACA E MODELO DA MOTO -->
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Placa da Moto</label>
-                    <input type="text" id="edit-placa" required class="w-full p-2.5 border rounded-lg text-sm font-bold uppercase">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Modelo</label>
-                    <input type="text" id="edit-modelo" required class="w-full p-2.5 border rounded-lg text-sm font-bold">
-                </div>
-            </div>
-
-            <!-- 3. MODALIDADE DO CONTRATO -->
-            <div>
-                <label class="block text-xs font-bold uppercase text-orange-900 mb-1">Modalidade do Contrato</label>
-                <select id="edit-tipo-contrato" class="w-full p-2.5 border border-orange-300 rounded-lg text-sm font-black uppercase bg-orange-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500">
-                    <option value="OPCAO_COMPRA">🏆 Locação com Opção de Compra (Minha Locafacil)</option>
-                    <option value="CONVENCIONAL">🔑 Aluguel Convencional / Normal (Sem Opção de Compra)</option>
-                </select>
-            </div>
-            
-
-            <!-- 4. CONTATO E DOCUMENTO -->
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">WhatsApp</label>
-                    <input type="text" id="edit-telefone" required class="w-full p-2.5 border rounded-lg text-sm font-bold">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-gray-600 mb-1">CPF</label>
-                    <input type="text" id="edit-cpf" required class="w-full p-2.5 border rounded-lg text-sm font-bold">
-                </div>
-            </div>
-
-            <!-- 5. CONTROLE DE SEMANAS E KM PAINEL (BLOCO DESTACADO) -->
-            <div class="grid grid-cols-3 gap-2 bg-orange-50 p-3 rounded-xl border border-orange-200">
-                <div>
-                    <label class="block text-[10px] font-bold uppercase text-orange-900 mb-1">Sem. Pagas</label>
-                    <input type="number" id="edit-semanas" required min="0" class="w-full p-2 border rounded-lg text-sm font-black text-orange-600">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase text-orange-900 mb-1">Total Semanas</label>
-                    <input type="number" id="edit-semanas-totais" required min="1" value="182" class="w-full p-2 border rounded-lg text-sm font-black text-gray-800">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold uppercase text-orange-900 mb-1">KM Painel</label>
-                    <input type="number" id="edit-km" required min="0" class="w-full p-2 border rounded-lg text-sm font-bold">
-                </div>
-            </div>
-
-            <!-- 6. BOTÕES DE AÇÃO -->
-            <div class="flex gap-3 pt-4 border-t mt-4">
-                <button type="button" onclick="fecharModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl uppercase text-xs">Cancelar</button>
-                <button type="submit" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-black py-3 rounded-xl uppercase text-xs shadow-md">💾 Salvar Alterações</button>
-            </div>
-        </form>
     </div>
-</div>
 
-    <!-- 3. MODAL DE EDITAR PLANO -->
+    <!-- 3. MODAL DE EDIÇÃO DE PLANO -->
     <div id="modal-editar-plano" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border relative">
             <h3 class="text-lg font-black text-gray-900 uppercase mb-4">Editar Plano</h3>
@@ -461,62 +427,7 @@
         </div>
     </div>
 
-    <!-- 4. MODAL VISUAL DE GESTÃO DE PEÇAS DE MANUTENÇÃO -->
-    <div id="modal-peca" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100 relative">
-            <div class="bg-gray-900 text-white p-5 flex justify-between items-center border-b border-gray-800">
-                <div>
-                    <h3 id="modal-peca-titulo" class="text-base font-black uppercase text-white flex items-center gap-2">
-                        ➕ Cadastrar Nova Peça
-                    </h3>
-                    <p id="modal-peca-subtitulo" class="text-xs text-orange-400 font-bold mt-0.5">Moto Placa: ---</p>
-                </div>
-                <button type="button" onclick="fecharModalPeca()" class="text-gray-400 hover:text-white text-xl font-bold p-1 rounded-lg hover:bg-gray-800 transition">×</button>
-            </div>
-
-            <form id="form-modal-peca" onsubmit="salvarModalPeca(event)" class="p-6 space-y-4">
-                <input type="hidden" id="peca-placa" />
-                <input type="hidden" id="peca-id" />
-
-                <div>
-                    <label class="block text-xs font-black uppercase text-gray-600 mb-1">Nome do Componente / Peça</label>
-                    <input type="text" id="peca-nome" required placeholder="Ex: Troca de Óleo, Pneu Traseiro"
-                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 focus:outline-none focus:border-orange-500 focus:bg-white transition" />
-                </div>
-
-                <div>
-                    <label class="block text-xs font-black uppercase text-gray-600 mb-1">Durabilidade Estimada (KM)</label>
-                    <input type="number" id="peca-limite" required min="100" placeholder="Ex: 8000"
-                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 focus:outline-none focus:border-orange-500 focus:bg-white transition" />
-                </div>
-
-                <div>
-                    <label class="block text-xs font-black uppercase text-gray-600 mb-1">KM da Última Troca</label>
-                    <input type="number" id="peca-km-troca" required min="0" placeholder="Ex: 35000"
-                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 focus:outline-none focus:border-orange-500 focus:bg-white transition" />
-                </div>
-
-                <div>
-                    <label class="block text-xs font-black uppercase text-gray-600 mb-1">Data da Troca</label>
-                    <input type="date" id="peca-data-troca" required
-                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-800 focus:outline-none focus:border-orange-500 focus:bg-white transition" />
-                </div>
-
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="fecharModalPeca()"
-                        class="w-1/3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl text-xs uppercase transition">
-                        Cancelar
-                    </button>
-                    <button type="submit" id="btn-salvar-peca"
-                        class="w-2/3 bg-orange-600 hover:bg-orange-700 text-white font-black py-3 rounded-xl text-xs uppercase transition shadow-md">
-                        💾 Salvar Peça
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 5. MODAL DE LOGIN ADMINISTRATIVO -->
+    <!-- 4. MODAL DE LOGIN ADMINISTRATIVO -->
     <div id="modal-login" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border border-gray-100">
             <div class="text-center mb-6">
@@ -545,7 +456,53 @@
         </div>
     </div>
 
-    <!-- SCRIPT CENTRALIZADOR MODULARIZADO DO SISTEMA -->
+    <!-- 5. MODAL DE IMPORTAÇÃO CSV MOBILTRACKER -->
+    <div id="modal-importar-csv" class="fixed inset-0 bg-black/70 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border relative space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <div>
+                    <h3 class="text-lg font-black text-gray-900 uppercase">📥 Importar Telemetria (Mobiltracker)</h3>
+                    <p class="text-xs text-gray-500 font-bold">Selecione o arquivo .csv exportado do portal mobiltracker.com.br</p>
+                </div>
+                <button type="button" onclick="fecharModalImportarCSV()" class="text-gray-400 hover:text-red-500 font-black text-lg">&times;</button>
+            </div>
+
+            <!-- SELEÇÃO DE ARQUIVO -->
+            <div class="bg-indigo-50 border-2 border-dashed border-indigo-300 p-6 rounded-2xl text-center cursor-pointer hover:bg-indigo-100/50 transition" onclick="document.getElementById('input-file-csv').click()">
+                <span class="text-3xl block mb-2">📄</span>
+                <p class="text-xs font-black text-indigo-950 uppercase">Clique para selecionar o arquivo .CSV do Mobiltracker</p>
+                <p class="text-[10px] text-gray-500 font-bold mt-1">O sistema mapeia automaticamente por Placa (Ex: TKA3E77)</p>
+                <input type="file" id="input-file-csv" accept=".csv" class="hidden" onchange="processarArquivoCSV(event)">
+            </div>
+
+            <div id="container-preview-csv" class="hidden space-y-3">
+                <div class="flex justify-between items-center text-xs font-bold">
+                    <span>🔍 Veículos Identificados no Arquivo</span>
+                    <span id="qtd-veiculos-csv" class="text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full text-[10px]">0 encontrados</span>
+                </div>
+                <div class="max-h-48 overflow-y-auto border rounded-xl p-2 bg-gray-50">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="text-gray-400 font-bold border-b text-[10px] uppercase">
+                                <th class="pb-1">Placa</th>
+                                <th class="pb-1 text-right">KM Rodados</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-preview-csv" class="divide-y divide-gray-200 font-bold"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t">
+                <button type="button" onclick="fecharModalImportarCSV()" class="bg-gray-200 text-gray-800 font-bold px-4 py-2.5 rounded-xl text-xs uppercase">Cancelar</button>
+                <button type="button" onclick="confirmarImportacaoCSV()" class="bg-green-600 hover:bg-green-700 text-white font-black px-6 py-2.5 rounded-xl text-xs uppercase shadow-md flex items-center gap-1">
+                    💾 Confirmar e Atualizar Frota
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT ORQUESTRADOR CENTRAL MODULARIZADO -->
     <script type="module" src="./js/admin-main.js"></script>
 </body>
 

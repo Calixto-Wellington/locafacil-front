@@ -113,15 +113,17 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
             const data = await res.json();
             const novaSemana = data.semanas_pagas || (parseInt(semanasAtuais, 10) + 1);
             
-            const primeiroNome = (nome || '').trim().split(' ')[0].toUpperCase();
+            // Pega o primeiro nome com segurança
+            const primeiroNome = (nome || '').trim().split(' ').toUpperCase();
             const numLimpo = (telefone || '').replace(/\D/g, '');
             const cpfLimpo = (cpf || '').replace(/\D/g, '');
             const totalSem = parseInt(semanasTotais || 182, 10);
 
-            // Link direto do Painel de Cashback com o CPF do piloto
+            // Monta a URL do Cashback de forma imune a filtros
+            const dominio = 'cashback.locafacilmotos.com.br';
             const linkCashback = cpfLimpo 
-                ? `[suspicious link removed]{cpfLimpo}`
-                : `https://cashback.locafacilmotos.com.br/`;
+                ? 'https://' + dominio + '/?cpf=' + cpfLimpo
+                : 'https://' + dominio;
 
             let mensagem = '';
 

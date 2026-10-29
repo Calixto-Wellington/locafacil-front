@@ -112,7 +112,9 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
         if (res.ok) {
             const data = await res.json();
             const novaSemana = data.semanas_pagas || (parseInt(semanasAtuais, 10) + 1);
-            const primeiroNome = (nome || '').split(' ').toUpperCase();
+            
+            // 💡 CORRIGIDO: Pega o primeiro elemento [0] antes de aplicar .toUpperCase()
+            const primeiroNome = (nome || '').trim().split(' ')[0].toUpperCase();
             const numLimpo = (telefone || '').replace(/\D/g, '');
             const totalSem = parseInt(semanasTotais || 182, 10);
 
@@ -139,7 +141,7 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
                     `*LOCAFACILMOTOS — Acelerando junto com você!* 👊💨`;
             }
 
-            // Dispara para o WhatsApp do piloto
+            // Dispara a mensagem no WhatsApp do piloto
             if (numLimpo) {
                 window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(mensagem)}`, '_blank');
             }

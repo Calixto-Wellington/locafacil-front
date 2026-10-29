@@ -116,12 +116,13 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
             const data = await res.json();
             const novaSemana = data.semanas_pagas || (parseInt(semanasAtuais, 10) + 1);
             
-            const primeiroNome = (nome || '').trim().split(' ').toUpperCase();
+            // 💡 Pega a primeira palavra do nome com o elemento [0]
+            const primeiroNome = (nome || '').trim().split(' ')[0].toUpperCase();
             const numLimpo = (telefone || '').replace(/\D/g, '');
             const cpfLimpo = (cpf || '').replace(/\D/g, '');
             const totalSem = parseInt(semanasTotais || 182, 10);
 
-            // Monta a URL do Cashback
+            // Monta a URL do Cashback com o CPF do piloto
             const dominio = 'cashback.locafacilmotos.com.br';
             const linkCashback = cpfLimpo 
                 ? 'https://' + dominio + '/?cpf=' + cpfLimpo
@@ -199,7 +200,7 @@ export function fecharModal() {
     }
 }
 
-// 7. SALVAR EDIÇÃO DO CARD DO PILOTO (ENVIO DE DADOS PARA A API)
+// 7. SALVAR EDIÇÃO DO CARD DO PILOTO
 export async function salvarEdicaoCard(event) {
     if (event) event.preventDefault();
 
@@ -245,10 +246,7 @@ export async function salvarEdicaoCard(event) {
     }
 }
 
-// ======================================================
 // 8. IMPORTAÇÃO DE TELEMETRIA CSV DA MOBILTRACKER
-// ======================================================
-
 export function abrirModalImportarCSV() {
     const modal = document.getElementById('modal-importar-csv');
     const containerPreview = document.getElementById('container-preview-csv');
@@ -276,7 +274,7 @@ export function fecharModalImportarCSV() {
 }
 
 export function processarArquivoCSV(event) {
-    const file = event.target.files;
+    const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
@@ -289,21 +287,20 @@ export function processarArquivoCSV(event) {
             return;
         }
 
-        const cabecalho = linhas.split(';');
-        let dataInicio = new Date().toISOString().split('T');
-        let dataFim = new Date().toISOString().split('T');
+        const cabecalho = linhas[0].split(';');
+        let dataInicio = new Date().toISOString().split('T')[0];
+        let dataFim = new Date().toISOString().split('T')[0];
 
-        // Extrai datas do cabeçalho do relatório se disponíveis
         const colunasData = cabecalho.filter(c => c.includes('/') && c.split('/').length === 3);
         if (colunasData.length > 0) {
             const converterData = (strData) => {
                 const partes = strData.trim().split('/');
                 if (partes.length === 3) {
-                    return `${partes[1]}-${partes[2].padStart(2, '0')}-${partes.padStart(2, '0')}`;
+                    return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
                 }
                 return dataInicio;
             };
-            dataInicio = converterData(colunasData);
+            dataInicio = converterData(colunasData[0]);
             dataFim = converterData(colunasData[colunasData.length - 1]);
         }
 
@@ -318,7 +315,7 @@ export function processarArquivoCSV(event) {
             const cols = linha.split(';');
             if (cols.length < 3) continue;
 
-            const nomeOuPlacaBruta = (cols[2] || '').trim();
+            const nomeOuPlacaBruta = (cols[0] || '').trim();
             const placaFormatada = nomeOuPlacaBruta.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
 
             if (!placaFormatada || placaFormatada === 'NOME' || placaFormatada === 'L200') continue;
@@ -388,7 +385,6 @@ export async function confirmarImportacaoCSV() {
                     const kmAnterior = parseInt(piloto.km_atual || 0, 10);
                     const novoKmTotal = kmAnterior + item.km_rodados;
 
-                    // 1. Registra no histórico de rodagem da telemetria
                     await fetchComAuth(`${API_BASE}/admin/rastreador`, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -404,7 +400,6 @@ export async function confirmarImportacaoCSV() {
                         })
                     });
 
-                    // 2. Atualiza a quilometragem atual do piloto
                     await fetchComAuth(`${API_BASE}/admin/locatarios/${piloto.id}`, {
                         method: 'PUT',
                         body: JSON.stringify({

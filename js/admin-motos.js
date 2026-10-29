@@ -261,7 +261,6 @@ export async function salvarEdicaoMoto(e) {
 // 6. MANUTENÇÃO & TELEMETRIA DE PEÇAS DA OFICINA
 // ======================================================
 
-// Renderiza as barras visuais de desgaste com DATA, KM DA TROCA, INCLUSÃO, EDIÇÃO E EXCLUSÃO
 export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = [], placa = '') {
     const placaSanitizada = (placa || '').replace(/'/g, "\\'");
 
@@ -291,7 +290,6 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
         const rodadoDesdeTroca = Math.max(0, kmAtual - kmTroca);
         const pctUso = Math.min(100, Math.round((rodadoDesdeTroca / limite) * 100));
 
-        // Formatação de data da troca
         let dataTrocaStr = '---';
         if (peca.data_troca) {
             const dt = new Date(peca.data_troca.includes('T') ? peca.data_troca : peca.data_troca + 'T00:00:00');
@@ -453,7 +451,7 @@ export async function salvarModalPeca(event) {
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/manutencao-componentes`, {
-            method: id ? 'PUT' : 'POST',
+            method: 'POST',
             body: JSON.stringify({
                 id: id || undefined,
                 placa,
@@ -471,8 +469,9 @@ export async function salvarModalPeca(event) {
             if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
             if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
         } else {
-            const errData = await res.json();
-            alert(`❌ Erro ao salvar peça: ${errData.error || 'Erro interno'}`);
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const errData = isJson ? await res.json() : null;
+            alert(`❌ Erro ao salvar (${res.status}): ${errData?.error || 'Erro ao processar no servidor.'}`);
         }
     } catch (err) {
         console.error('Erro ao salvar peça:', err);

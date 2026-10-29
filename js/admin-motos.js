@@ -315,6 +315,7 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
         }
 
         const nomeSanitizado = (peca.nome || peca.componente_id || 'Componente').replace(/'/g, "\\'");
+        const pecaIdSanitizado = (peca.id || '').replace(/'/g, "\\'");
         const jsonPecaSanitizado = JSON.stringify(peca).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
 
         html += `
@@ -338,14 +339,14 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
                 </div>
 
                 <div class="flex justify-between items-center text-[10px] font-bold pt-1 border-t border-gray-100">
-                    <button type="button" onclick="resetarContadorPeca('${peca.id}', '${nomeSanitizado}', ${kmAtual})" class="text-green-700 hover:text-green-800 font-black flex items-center gap-0.5 hover:underline transition">
+                    <button type="button" onclick="resetarContadorPeca('${pecaIdSanitizado}', '${nomeSanitizado}', ${kmAtual})" class="text-green-700 hover:text-green-800 font-black flex items-center gap-0.5 hover:underline transition">
                         🔄 Zerar Troca
                     </button>
                     <div class="flex items-center gap-2">
                         <button type="button" onclick='abrirModalEditarPeca("${placaSanitizada}", ${jsonPecaSanitizado})' class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-0.5 hover:underline transition">
                             ✏️ Editar
                         </button>
-                        <button type="button" onclick="excluirPeca('${peca.id}', '${nomeSanitizado}')" class="text-red-600 hover:text-red-800 font-bold flex items-center gap-0.5 hover:underline transition" title="Excluir peça">
+                        <button type="button" onclick="excluirPeca('${pecaIdSanitizado}', '${nomeSanitizado}')" class="text-red-600 hover:text-red-800 font-bold flex items-center gap-0.5 hover:underline transition" title="Excluir peça">
                             🗑️ Excluir
                         </button>
                     </div>
@@ -449,9 +450,15 @@ export async function salvarModalPeca(event) {
         return;
     }
 
+    const url = id 
+        ? `${API_BASE}/admin/manutencao-componentes/${id}` 
+        : `${API_BASE}/admin/manutencao-componentes`;
+    
+    const metodo = id ? 'PUT' : 'POST';
+
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/manutencao-componentes`, {
-            method: 'POST',
+        const res = await fetchComAuth(url, {
+            method: metodo,
             body: JSON.stringify({
                 id: id || undefined,
                 placa,
@@ -464,7 +471,7 @@ export async function salvarModalPeca(event) {
         });
 
         if (res.ok) {
-            alert('✅ Peça de manutenção salva com sucesso!');
+            alert(id ? '✅ Peça atualizada com sucesso!' : '✅ Nova peça cadastrada com sucesso!');
             fecharModalPeca();
             if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
             if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
@@ -480,6 +487,10 @@ export async function salvarModalPeca(event) {
 }
 
 export async function excluirPeca(id, nomePeca = '') {
+    if (!id) {
+        alert('⚠️ ID da peça não informado.');
+        return;
+    }
     if (!confirm(`Tem certeza que deseja excluir a peça "${nomePeca || 'selecionada'}"?`)) return;
 
     try {
@@ -493,11 +504,13 @@ export async function excluirPeca(id, nomePeca = '') {
             if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
             if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
         } else {
-            alert('❌ Erro ao excluir componente.');
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const errData = isJson ? await res.json() : null;
+            alert(`❌ Erro ao excluir componente: ${errData?.error || 'Erro no servidor'}`);
         }
     } catch (err) {
         console.error('Erro ao excluir peça:', err);
-        alert('❌ Erro de conexão.');
+        alert('❌ Erro de conexão ao excluir peça.');
     }
 }
 

@@ -99,8 +99,8 @@ export async function reativarLocatario(id, nome) {
     }
 }
 
-// 5. BAIXAR +1 SEMANA (PIX) + MENSAGEM DINÂMICA DE WHATSAPP
-export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais, tipoContrato = 'OPCAO_COMPRA', semanasTotais = 182) {
+// 5. BAIXAR +1 SEMANA (PIX) + MENSAGEM COM LINK DO CASHBACK NO WHATSAPP
+export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais, tipoContrato = 'OPCAO_COMPRA', semanasTotais = 182, cpf = '') {
     if (!confirm(`Confirmar baixa de +1 semana paga para ${nome} (Placa: ${placa})?`)) return;
 
     try {
@@ -113,10 +113,15 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
             const data = await res.json();
             const novaSemana = data.semanas_pagas || (parseInt(semanasAtuais, 10) + 1);
             
-            // 💡 CORRIGIDO: Pega o primeiro elemento [0] antes de aplicar .toUpperCase()
             const primeiroNome = (nome || '').trim().split(' ')[0].toUpperCase();
             const numLimpo = (telefone || '').replace(/\D/g, '');
+            const cpfLimpo = (cpf || '').replace(/\D/g, '');
             const totalSem = parseInt(semanasTotais || 182, 10);
+
+            // Link direto do Painel de Cashback com o CPF do piloto
+            const linkCashback = cpfLimpo 
+                ? `[suspicious link removed]{cpfLimpo}`
+                : `https://cashback.locafacilmotos.com.br/`;
 
             let mensagem = '';
 
@@ -126,7 +131,8 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
                     `Fala ${primeiroNome}! Confirmamos o recebimento do seu Pix referente à *Semana ${novaSemana}* de aluguel! ✅\n\n` +
                     `🏍️ *Moto:* Placa ${(placa || '').toUpperCase()}\n` +
                     `📅 *Total de semanas pagas:* ${novaSemana} semanas\n\n` +
-                    `Agradecemos pela parceria de sempre e por manter o seu pagamento em dia. Tenha uma excelente semana de trabalho! 👊💨\n\n` +
+                    `🎁 *Acesse seu Painel de Cashback & Coins:*\n${linkCashback}\n\n` +
+                    `Agradecemos pela parceria e por manter o seu pagamento em dia. Tenha uma excelente semana de trabalho! 👊💨\n\n` +
                     `*LOCAFACILMOTOS — Acelerando com você!*`;
             } else {
                 // Mensagem para Opção de Compra (Minha Locafacil)
@@ -138,10 +144,11 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
                     `📊 *SEU PROGRESSO:* Você já conquistou *${pct}%* da sua moto!\n` +
                     `🏆 *Status:* Semana ${novaSemana} / ${totalSem} concluída com sucesso.\n` +
                     `🏁 *Faltam:* Apenas ${faltam} semanas para a transferência do documento no DETRAN!\n\n` +
+                    `🎁 *Acompanhe seus Coins & Resgate Prêmios:*\n${linkCashback}\n\n` +
                     `*LOCAFACILMOTOS — Acelerando junto com você!* 👊💨`;
             }
 
-            // Dispara a mensagem no WhatsApp do piloto
+            // Dispara para o WhatsApp do piloto
             if (numLimpo) {
                 window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(mensagem)}`, '_blank');
             }
@@ -277,15 +284,15 @@ function renderizarFrota(lista) {
                 <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Pagas (Contínuo)</span>
                </div>`;
 
-        const botaoAcaoPrincipal = isArquivado ? `
-            <button type="button" onclick="reativarLocatario('${item.id}', '${nomeSanitizado}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
-                🔄 Reativar Contrato
-            </button>
-        ` : `
-            <button type="button" onclick="adicionarUmaSemana('${item.id}', '${item.placa || ''}', '${item.telefone || ''}', '${nomeSanitizado}', ${semanasPagas}, '${tipoContrato}', ${semanasTotais})" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
-                💵 +1 Semana (Baixar Pix)
-            </button>
-        `;
+ const botaoAcaoPrincipal = isArquivado ? `
+    <button type="button" onclick="reativarLocatario('${item.id}', '${nomeSanitizado}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
+        🔄 Reativar Contrato
+    </button>
+` : `
+    <button type="button" onclick="adicionarUmaSemana('${item.id}', '${item.placa || ''}', '${item.telefone || ''}', '${nomeSanitizado}', ${semanasPagas}, '${tipoContrato}', ${semanasTotais}, '${item.cpf || ''}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
+        💵 +1 Semana (Baixar Pix)
+    </button>
+`;
 
         grid.innerHTML += `
             <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col justify-between ${isArquivado ? 'opacity-75 border-red-200' : ''}">

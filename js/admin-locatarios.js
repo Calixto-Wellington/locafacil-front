@@ -116,8 +116,8 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
             const data = await res.json();
             const novaSemana = data.semanas_pagas || (parseInt(semanasAtuais, 10) + 1);
             
-            // 💡 Pega a primeira palavra do nome com o elemento [0]
-            const primeiroNome = (nome || '').trim().split(' ')[0].toUpperCase();
+            // 💡 Pega a primeira palavra [0] antes de transformar em maiúsculas
+            const primeiroNome = ((nome || '').trim().split(' ')[0] || '').toUpperCase();
             const numLimpo = (telefone || '').replace(/\D/g, '');
             const cpfLimpo = (cpf || '').replace(/\D/g, '');
             const totalSem = parseInt(semanasTotais || 182, 10);
@@ -246,7 +246,7 @@ export async function salvarEdicaoCard(event) {
     }
 }
 
-// 8. IMPORTAÇÃO DE TELEMETRIA CSV DA MOBILTRACKER
+// 8. IMPORTAÇÃO DE TELEMETRIA CSV DA MOBILTRACKER (LEITURA DINÂMICA DE COLUNAS)
 export function abrirModalImportarCSV() {
     const modal = document.getElementById('modal-importar-csv');
     const containerPreview = document.getElementById('container-preview-csv');
@@ -280,14 +280,30 @@ export function processarArquivoCSV(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         const conteudo = e.target.result || '';
-        const linhas = conteudo.split(/\r?\n/);
+        const linhas = conteudo.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
 
         if (linhas.length < 2) {
             alert('⚠️ O arquivo CSV selecionado está vazio ou inválido.');
             return;
         }
 
-        const cabecalho = linhas[0].split(';');
+        // Detecta o delimitador do CSV (; ou ,)
+        const delimitador = linhas[0].includes(';') ? ';' : ',';
+        const cabecalho = linhas[0].split(delimitador).map(c => c.trim().toLowerCase());
+
+        // Identifica dinamicamente a coluna da Placa/Nome (Mobiltracker usa coluna "nome")
+        let idxPlaca = cabecalho.findIndex(c => c.includes('nome') || c.includes('placa') || c.includes('veiculo') || c.includes('dispositivo'));
+        if (idxPlaca === -1) {
+            idxPlaca = cabecalho.length > 1 ? 1 : 0;
+        }
+
+        // Identifica dinamicamente a coluna do Total de KM (Mobiltracker usa coluna "total")
+        let idxTotal = cabecalho.findIndex(c => c.includes('total'));
+        if (idxTotal === -1) {
+            idxTotal = cabecalho.length - 1;
+        }
+
+        // Extrai o intervalo de datas das colunas do cabeçalho
         let dataInicio = new Date().toISOString().split('T')[0];
         let dataFim = new Date().toISOString().split('T')[0];
 
@@ -309,19 +325,17 @@ export function processarArquivoCSV(event) {
         if (tbody) tbody.innerHTML = '';
 
         for (let i = 1; i < linhas.length; i++) {
-            const linha = linhas[i].trim();
-            if (!linha) continue;
+            const cols = linhas[i].split(delimitador);
+            if (cols.length <= idxPlaca) continue;
 
-            const cols = linha.split(';');
-            if (cols.length < 3) continue;
-
-            const nomeOuPlacaBruta = (cols[0] || '').trim();
+            const nomeOuPlacaBruta = (cols[idxPlaca] || '').trim();
             const placaFormatada = nomeOuPlacaBruta.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
 
-            if (!placaFormatada || placaFormatada === 'NOME' || placaFormatada === 'L200') continue;
+            if (!placaFormatada || placaFormatada === 'NOME' || placaFormatada === 'PLACA') continue;
 
-            let kmRodadosStr = cols[cols.length - 1] || cols[cols.length - 2] || '0';
-            kmRodadosStr = kmRodadosStr.trim().replace(/\./g, '').replace(',', '.');
+            let kmRodadosStr = (cols[idxTotal] || '0').trim();
+            // Trata a formatação brasileira de decimal (ex: 1.233,36 -> 1233.36)
+            kmRodadosStr = kmRodadosStr.replace(/\./g, '').replace(',', '.');
             const kmRodados = Math.round(parseFloat(kmRodadosStr) || 0);
 
             if (kmRodados > 0) {

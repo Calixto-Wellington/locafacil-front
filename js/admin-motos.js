@@ -264,21 +264,21 @@ export async function salvarEdicaoMoto(e) {
 export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = [], placa = '') {
     const placaSanitizada = (placa || '').replace(/'/g, "\\'");
 
-    let html = `<div class="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-3 mt-2 shadow-inner">
+    let html = `<div class="bg-gray-50 border border-gray-200 rounded-xl p-3.5 space-y-3 mt-2 shadow-inner">
         <div class="flex justify-between items-center pb-2 border-b border-gray-200">
-            <span class="text-[10px] font-black uppercase text-gray-700 tracking-wider flex items-center gap-1">
+            <span class="text-xs font-black uppercase text-gray-800 tracking-wider flex items-center gap-1">
                 📊 Desgaste de Peças (Telemetria)
             </span>
             <div class="flex items-center gap-2">
-                <span class="text-[10px] text-orange-600 font-black">KM: ${Number(kmAtual).toLocaleString('pt-BR')}</span>
-                <button type="button" onclick="abrirModalNovaPeca('${placaSanitizada}', ${kmAtual})" class="bg-orange-600 hover:bg-orange-700 text-white font-black text-[10px] px-2.5 py-1 rounded-lg uppercase transition shadow flex items-center gap-1" title="Cadastrar nova peça">
+                <span class="text-xs text-orange-600 font-black">KM: ${Number(kmAtual).toLocaleString('pt-BR')}</span>
+                <button type="button" onclick="abrirModalNovaPeca('${placaSanitizada}', ${kmAtual})" class="bg-orange-600 hover:bg-orange-700 text-white font-black text-xs px-2.5 py-1 rounded-lg uppercase transition shadow flex items-center gap-1" title="Cadastrar nova peça">
                     ➕ Nova Peça
                 </button>
             </div>
         </div>`;
 
     if (!componentesDoBanco || componentesDoBanco.length === 0) {
-        html += `<div class="text-[11px] text-gray-400 font-bold text-center py-2">
+        html += `<div class="text-xs text-gray-500 font-bold text-center py-2">
             Nenhuma peça cadastrada. Clique em <b class="text-orange-600">+ Nova Peça</b> para incluir.
         </div></div>`;
         return html;
@@ -298,9 +298,6 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
             } else {
                 dataTrocaStr = peca.data_troca;
             }
-        } else if (peca.created_at) {
-            const dt = new Date(peca.created_at);
-            if (!isNaN(dt.getTime())) dataTrocaStr = dt.toLocaleDateString('pt-BR');
         }
 
         let corBarra = 'bg-green-500';
@@ -319,26 +316,26 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
         const jsonPecaSanitizado = JSON.stringify(peca).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
 
         html += `
-            <div class="text-[11px] bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm space-y-1.5">
+            <div class="text-xs bg-white p-3 rounded-xl border border-gray-200 shadow-sm space-y-2">
                 <div class="flex justify-between items-center font-bold text-gray-800">
-                    <span class="font-black uppercase text-gray-900">${peca.nome || peca.componente_id || 'Peça'}</span>
-                    <span class="text-[10px] ${pctUso >= 90 ? 'text-red-600 font-black' : pctUso >= 75 ? 'text-amber-600 font-black' : 'text-green-600 font-bold'}">
+                    <span class="font-black uppercase text-gray-900 text-xs">${peca.nome || peca.componente_id || 'Peça'}</span>
+                    <span class="text-xs ${pctUso >= 90 ? 'text-red-600 font-black' : pctUso >= 75 ? 'text-amber-600 font-black' : 'text-green-600 font-bold'}">
                         ${pctUso}% (${statusTexto})
                     </span>
                 </div>
 
-                <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden border border-gray-200 flex items-center">
+                <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden border border-gray-200 flex items-center">
                     <div class="${corBarra} h-full rounded-full transition-all duration-500" style="width: ${pctUso}%"></div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-1 text-[10px] font-semibold text-gray-500 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
+                <div class="grid grid-cols-2 gap-1.5 text-xs font-semibold text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-100">
                     <div>📍 Trocado com: <b class="text-gray-900">${Number(kmTroca).toLocaleString('pt-BR')} km</b></div>
                     <div>📅 Data: <b class="text-gray-900">${dataTrocaStr}</b></div>
                     <div>⏱️ Rodado: <b class="text-orange-600">${Number(rodadoDesdeTroca).toLocaleString('pt-BR')} km</b></div>
                     <div>🏁 Limite: <b class="text-gray-900">${Number(limite).toLocaleString('pt-BR')} km</b></div>
                 </div>
 
-                <div class="flex justify-between items-center text-[10px] font-bold pt-1 border-t border-gray-100">
+                <div class="flex justify-between items-center text-xs font-bold pt-1 border-t border-gray-100">
                     <button type="button" onclick="resetarContadorPeca('${pecaIdSanitizado}', '${nomeSanitizado}', ${kmAtual})" class="text-green-700 hover:text-green-800 font-black flex items-center gap-0.5 hover:underline transition">
                         🔄 Zerar Troca
                     </button>

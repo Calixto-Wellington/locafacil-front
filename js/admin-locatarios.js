@@ -446,26 +446,29 @@ function renderizarFrota(lista) {
         const jsonSanitizado = JSON.stringify(item).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
         const nomeSanitizado = (item.nome || '').replace(/'/g, "\\'");
 
+        // Badges com fonte text-xs (12px) em vez de 10px
         const badgeModalidade = isOpcaoCompra
-            ? `<span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">🏆 Opção de Compra (${semanasTotais} sem)</span>`
-            : `<span class="bg-blue-100 text-blue-900 border border-blue-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">🔑 Aluguel Convencional</span>`;
+            ? `<span class="bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black px-3 py-1 rounded-full uppercase flex items-center gap-1">🏆 Opção de Compra (${semanasTotais} sem)</span>`
+            : `<span class="bg-blue-100 text-blue-900 border border-blue-300 text-xs font-black px-3 py-1 rounded-full uppercase flex items-center gap-1">🔑 Aluguel Convencional</span>`;
 
+        // Contador de semanas com número expandido (text-2xl) e rótulo text-xs
         const blocoSemanas = isOpcaoCompra
             ? `<div class="text-right">
-                <span class="text-xl font-black text-orange-500 block leading-none">Semana ${semanasPagas}</span>
-                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">${semanasPagas}/${semanasTotais} sem (${pct}%)</span>
+                <span class="text-2xl font-black text-orange-500 block leading-none">Semana ${semanasPagas}</span>
+                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">${semanasPagas}/${semanasTotais} sem (${pct}%)</span>
                </div>`
             : `<div class="text-right">
-                <span class="text-xl font-black text-blue-400 block leading-none">${semanasPagas} sem</span>
-                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Pagas (Contínuo)</span>
+                <span class="text-2xl font-black text-blue-400 block leading-none">${semanasPagas} sem</span>
+                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Pagas (Contínuo)</span>
                </div>`;
 
+        // Botão principal expandido para text-sm (14px)
         const botaoAcaoPrincipal = isArquivado ? `
-            <button type="button" onclick="reativarLocatario('${item.id}', '${nomeSanitizado}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
+            <button type="button" onclick="reativarLocatario('${item.id}', '${nomeSanitizado}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 rounded-xl transition uppercase text-sm shadow-md">
                 🔄 Reativar Contrato
             </button>
         ` : `
-            <button type="button" onclick="adicionarUmaSemana('${item.id}', '${item.placa || ''}', '${item.telefone || ''}', '${nomeSanitizado}', ${semanasPagas}, '${tipoContrato}', ${semanasTotais}, '${item.cpf || ''}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition uppercase text-xs shadow-md">
+            <button type="button" onclick="adicionarUmaSemana('${item.id}', '${item.placa || ''}', '${item.telefone || ''}', '${nomeSanitizado}', ${semanasPagas}, '${tipoContrato}', ${semanasTotais}, '${item.cpf || ''}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 rounded-xl transition uppercase text-sm shadow-md">
                 💵 +1 Semana (Baixar Pix)
             </button>
         `;
@@ -474,35 +477,36 @@ function renderizarFrota(lista) {
             <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col justify-between ${isArquivado ? 'opacity-75 border-red-200' : ''}">
                 <div>
                     <!-- CABEÇALHO DO CARD -->
-                    <div class="bg-gray-900 text-white p-4 flex justify-between items-center">
+                    <div class="bg-gray-900 text-white p-4.5 flex justify-between items-center">
                         <div>
-                            <span class="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">${item.placa || 'Sem Placa'}</span>
-                            <h3 class="font-black text-lg uppercase mt-1 leading-tight">${item.nome || 'Sem Nome'}</h3>
+                            <span class="bg-orange-600 text-white text-xs font-black px-2.5 py-1 rounded uppercase tracking-wider">${item.placa || 'Sem Placa'}</span>
+                            <h3 class="font-black text-xl uppercase mt-1.5 leading-tight">${item.nome || 'Sem Nome'}</h3>
                         </div>
                         <div class="text-right">
                             ${isArquivado 
-                                ? '<span class="bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded uppercase">📦 Arquivado</span>' 
+                                ? '<span class="bg-red-600 text-white text-xs font-black px-2.5 py-1 rounded uppercase">📦 Arquivado</span>' 
                                 : blocoSemanas
                             }
                         </div>
                     </div>
 
-                    <div class="p-5 space-y-3">
-                        <!-- MODALIDADE DO CONTRATO -->
-                        <div class="flex justify-between items-center pb-2 border-b border-gray-100">
+                    <div class="p-5 space-y-3.5">
+                        <!-- MODALIDADE DO CONTRATO E TELEFONE -->
+                        <div class="flex justify-between items-center pb-2.5 border-b border-gray-100 flex-wrap gap-2">
                             ${badgeModalidade}
-                            <span class="text-[10px] font-bold text-gray-400 uppercase">Whats: ${item.telefone || 'N/A'}</span>
+                            <span class="text-xs font-bold text-gray-500 uppercase">Whats: ${item.telefone || 'N/A'}</span>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <div><p class="text-gray-400 font-bold uppercase">Modelo</p><p class="font-bold text-gray-800">${item.modelo || 'N/A'}</p></div>
-                            <div><p class="text-gray-400 font-bold uppercase">CPF</p><p class="font-bold text-gray-800">${item.cpf || 'N/A'}</p></div>
+                        <!-- GRID MODELO E CPF DA MOTO -->
+                        <div class="grid grid-cols-2 gap-3 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100">
+                            <div><p class="text-gray-500 font-bold uppercase text-xs">Modelo</p><p class="font-black text-gray-900 text-sm mt-0.5">${item.modelo || 'N/A'}</p></div>
+                            <div><p class="text-gray-500 font-bold uppercase text-xs">CPF</p><p class="font-black text-gray-900 text-sm mt-0.5">${item.cpf || 'N/A'}</p></div>
                         </div>
 
                         ${isArquivado ? `
-                            <div class="bg-red-50 border border-red-200 p-3 rounded-xl text-xs">
-                                <p class="text-red-700 font-black uppercase">Motivo Encerramento:</p>
-                                <p class="text-gray-700 font-semibold mt-0.5">${item.motivo_arquivamento || 'Não detalhado'}</p>
+                            <div class="bg-red-50 border border-red-200 p-3.5 rounded-xl text-sm">
+                                <p class="text-red-700 font-black uppercase text-xs">Motivo Encerramento:</p>
+                                <p class="text-gray-800 font-bold mt-1">${item.motivo_arquivamento || 'Não detalhado'}</p>
                             </div>
                         ` : ''}
 
@@ -512,15 +516,15 @@ function renderizarFrota(lista) {
                 </div>
 
                 <!-- BOTÕES DE AÇÃO -->
-                <div class="p-5 pt-0 space-y-2">
+                <div class="p-5 pt-0 space-y-2.5">
                     ${botaoAcaoPrincipal}
 
-                    <div class="flex gap-2">
-                        <button type="button" onclick="abrirModalEditar(${jsonSanitizado})" class="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-2.5 rounded-lg text-xs uppercase transition">
+                    <div class="flex gap-2.5">
+                        <button type="button" onclick="abrirModalEditar(${jsonSanitizado})" class="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-3 rounded-xl text-sm uppercase transition">
                             ✏️ Editar
                         </button>
                         ${!isArquivado ? `
-                            <button type="button" onclick="arquivarLocatario('${item.id}', '${nomeSanitizado}', '${item.placa || ''}')" class="bg-red-100 hover:bg-red-200 text-red-600 font-black px-3 py-2.5 rounded-lg text-xs uppercase transition" title="Arquivar contrato">
+                            <button type="button" onclick="arquivarLocatario('${item.id}', '${nomeSanitizado}', '${item.placa || ''}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-black px-4 py-3 rounded-xl text-sm uppercase transition" title="Arquivar contrato">
                                 📦 Arquivar
                             </button>
                         ` : ''}
@@ -531,16 +535,17 @@ function renderizarFrota(lista) {
     });
 }
 
-// VINCULAÇÃO GLOBAL NO WINDOW PARA SUPORTE AOS EVENTOS HTML
-window.carregarLocatarios = carregarLocatarios;
-window.buscarLocatario = buscarLocatario;
-window.arquivarLocatario = arquivarLocatario;
-window.reativarLocatario = reativarLocatario;
-window.adicionarUmaSemana = adicionarUmaSemana;
-window.abrirModalEditar = abrirModalEditar;
-window.fecharModal = fecharModal;
-window.salvarEdicaoCard = salvarEdicaoCard;
-window.abrirModalImportarCSV = abrirModalImportarCSV;
-window.fecharModalImportarCSV = fecharModalImportarCSV;
-window.processarArquivoCSV = processarArquivoCSV;
-window.confirmarImportacaoCSV = confirmarImportacaoCSV;
+
+    // VINCULAÇÃO GLOBAL NO WINDOW PARA SUPORTE AOS EVENTOS HTML
+    window.carregarLocatarios = carregarLocatarios;
+    window.buscarLocatario = buscarLocatario;
+    window.arquivarLocatario = arquivarLocatario;
+    window.reativarLocatario = reativarLocatario;
+    window.adicionarUmaSemana = adicionarUmaSemana;
+    window.abrirModalEditar = abrirModalEditar;
+    window.fecharModal = fecharModal;
+    window.salvarEdicaoCard = salvarEdicaoCard;
+    window.abrirModalImportarCSV = abrirModalImportarCSV;
+    window.fecharModalImportarCSV = fecharModalImportarCSV;
+    window.processarArquivoCSV = processarArquivoCSV;
+    window.confirmarImportacaoCSV = confirmarImportacaoCSV;

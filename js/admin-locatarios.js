@@ -99,7 +99,7 @@ export async function reativarLocatario(id, nome) {
     }
 }
 
-// 5. BAIXAR +1 SEMANA (PIX) + MENSAGEM COM LINK DO CASHBACK NO WHATSAPP
+// 5. BAIXAR +1 SEMANA (PIX) + MENSAGEM DINÂMICA COM LINK DO CASHBACK
 export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais, tipoContrato = 'OPCAO_COMPRA', semanasTotais = 182, cpf = '') {
     if (!confirm(`Confirmar baixa de +1 semana paga para ${nome} (Placa: ${placa})?`)) return;
 
@@ -113,13 +113,13 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
             const data = await res.json();
             const novaSemana = data.semanas_pagas || (parseInt(semanasAtuais, 10) + 1);
             
-            // Pega o primeiro nome com segurança
-            const primeiroNome = (nome || '').trim().split(' ').toUpperCase();
+            // 💡 Pega a primeira palavra [0] do nome com segurança
+            const primeiroNome = (nome || '').trim().split(' ')[0].toUpperCase();
             const numLimpo = (telefone || '').replace(/\D/g, '');
             const cpfLimpo = (cpf || '').replace(/\D/g, '');
             const totalSem = parseInt(semanasTotais || 182, 10);
 
-            // Monta a URL do Cashback de forma imune a filtros
+            // Monta a URL do Cashback com o CPF do piloto
             const dominio = 'cashback.locafacilmotos.com.br';
             const linkCashback = cpfLimpo 
                 ? 'https://' + dominio + '/?cpf=' + cpfLimpo

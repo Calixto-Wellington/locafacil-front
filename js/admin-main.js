@@ -2,7 +2,7 @@
 // ORQUESTRADOR CENTRAL DO PAINEL ADMIN — js/admin-main.js
 // ======================================================
 
-// 1. AUTENTICAÇÃO E PERMISSÕES
+// 1. AUTENTICAÇÃO E SESSÃO
 import { 
     exibirModalLogin, 
     realizarLoginAdmin, 
@@ -15,7 +15,7 @@ import {
     realizarBuscaLeads 
 } from './admin-leads.js';
 
-// 3. GESTÃO DE FROTA, LOCATÁRIOS E IMPORTAÇÃO CSV MOBILTRACKER
+// 3. GESTÃO DE FROTA, LOCATÁRIOS E TELEMETRIA CSV (MOBILTRACKER)
 import { 
     carregarLocatarios, 
     buscarLocatario, 
@@ -31,7 +31,7 @@ import {
     confirmarImportacaoCSV
 } from './admin-locatarios.js';
 
-// 4. PÁTIO, MOTOS E COMPONENTES DE OFICINA
+// 4. PÁTIO, MOTOS E COMPONENTES DE MANUTENÇÃO / OFICINA
 import { 
     carregarMotosFrota, 
     salvarNovaMoto, 
@@ -75,7 +75,7 @@ import {
 // EXPOSIÇÃO GLOBAL NO WINDOW PARA SUPORTE AOS EVENTOS HTML
 // ======================================================
 
-// Auth
+// Login e Sessão
 window.exibirModalLogin = exibirModalLogin;
 window.realizarLoginAdmin = realizarLoginAdmin;
 window.realizarLogout = realizarLogout;
@@ -115,7 +115,7 @@ window.salvarModalPeca = salvarModalPeca;
 window.excluirPeca = excluirPeca;
 window.resetarContadorPeca = resetarContadorPeca;
 
-// Planos & Loja de Coins
+// Planos, Regras & Loja de Coins
 window.carregarPlanosAdmin = carregarPlanosAdmin;
 window.salvarNovoPlano = salvarNovoPlano;
 window.excluirPlano = excluirPlano;
@@ -135,7 +135,7 @@ window.excluirUsuario = excluirUsuario;
 
 
 // ======================================================
-// CONTROLE DE NAVEGAÇÃO DE ABAS
+// CONTROLE DE NAVEGAÇÃO ENTRE ABAS DO PAINEL
 // ======================================================
 window.alternarAba = function(aba) {
     const secoes = { 
@@ -146,7 +146,7 @@ window.alternarAba = function(aba) {
         planos: document.getElementById('secao-planos'),
         usuarios: document.getElementById('secao-usuarios')
     };
-    
+
     const botoes = { 
         mesa: document.getElementById('btn-aba-mesa'), 
         frota: document.getElementById('btn-aba-frota'), 
@@ -155,7 +155,7 @@ window.alternarAba = function(aba) {
         planos: document.getElementById('btn-aba-planos'),
         usuarios: document.getElementById('btn-aba-usuarios')
     };
-    
+
     // Oculta todas as seções e reseta o visual dos botões
     Object.keys(secoes).forEach(k => { 
         if (secoes[k]) secoes[k].classList.add('hidden'); 
@@ -164,7 +164,7 @@ window.alternarAba = function(aba) {
             botoes[k].classList.add('text-gray-400', 'hover:text-white'); 
         } 
     });
-    
+
     // Exibe a seção desejada e ativa o botão correspondente
     if (secoes[aba]) secoes[aba].classList.remove('hidden');
     if (botoes[aba]) {
@@ -175,7 +175,7 @@ window.alternarAba = function(aba) {
 
 
 // ======================================================
-// INICIALIZAÇÃO DO PAINEL E VERIFICAÇÃO DE PERMISSÕES
+// VERIFICAÇÃO DE PERMISSÕES & INICIALIZAÇÃO
 // ======================================================
 function verificarPermissoesAdmin() {
     const token = localStorage.getItem('lf_admin_token');
@@ -190,11 +190,11 @@ function verificarPermissoesAdmin() {
             if (btnUsuarios) btnUsuarios.classList.remove('hidden');
         }
     } catch (e) { 
-        console.error('Erro ao validar permissões do token JWT:', e); 
+        console.error('Erro ao verificar permissões do JWT:', e); 
     }
 }
 
-export function carregarDadosPainel() {
+window.carregarDadosPainel = function() {
     verificarPermissoesAdmin();
     if (typeof window.carregarLeads === 'function') window.carregarLeads();
     if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
@@ -203,9 +203,7 @@ export function carregarDadosPainel() {
     if (typeof window.carregarItensLojaAdmin === 'function') window.carregarItensLojaAdmin();
     if (typeof window.carregarConfiguracaoCoinsPix === 'function') window.carregarConfiguracaoCoinsPix();
     if (typeof window.carregarUsuarios === 'function') window.carregarUsuarios();
-}
-
-window.carregarDadosPainel = carregarDadosPainel;
+};
 
 window.onload = async () => {
     const token = localStorage.getItem('lf_admin_token');
@@ -214,9 +212,9 @@ window.onload = async () => {
         return;
     }
     try {
-        carregarDadosPainel();
+        window.carregarDadosPainel();
     } catch (err) {
-        console.error('Erro na inicialização do painel:', err);
+        console.error('Erro ao inicializar o painel:', err);
         localStorage.removeItem('lf_admin_token');
         exibirModalLogin();
     }

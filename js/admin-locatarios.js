@@ -104,7 +104,7 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
     if (!confirm(`Confirmar baixa de +1 semana paga para ${nome} (Placa: ${placa})?`)) return;
 
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/pagamento`, {
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/pagar-semana`, {
             method: 'POST',
             body: JSON.stringify({ semanas: 1 })
         });

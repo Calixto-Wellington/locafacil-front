@@ -116,13 +116,11 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
             const data = await res.json();
             const novaSemana = data.semanas_pagas || (parseInt(semanasAtuais, 10) + 1);
             
-            // 💡 Pega a primeira palavra [0] antes de transformar em maiúsculas
             const primeiroNome = ((nome || '').trim().split(' ')[0] || '').toUpperCase();
             const numLimpo = (telefone || '').replace(/\D/g, '');
             const cpfLimpo = (cpf || '').replace(/\D/g, '');
             const totalSem = parseInt(semanasTotais || 182, 10);
 
-            // Monta a URL do Cashback com o CPF do piloto
             const dominio = 'cashback.locafacilmotos.com.br';
             const linkCashback = cpfLimpo 
                 ? 'https://' + dominio + '/?cpf=' + cpfLimpo
@@ -246,7 +244,7 @@ export async function salvarEdicaoCard(event) {
     }
 }
 
-// 8. IMPORTAÇÃO DE TELEMETRIA CSV DA MOBILTRACKER (LEITURA DINÂMICA DE COLUNAS)
+// 8. IMPORTAÇÃO DE TELEMETRIA CSV DA MOBILTRACKER
 export function abrirModalImportarCSV() {
     const modal = document.getElementById('modal-importar-csv');
     const containerPreview = document.getElementById('container-preview-csv');
@@ -274,7 +272,7 @@ export function fecharModalImportarCSV() {
 }
 
 export function processarArquivoCSV(event) {
-    const file = event.target.files[0];
+    const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
@@ -287,23 +285,15 @@ export function processarArquivoCSV(event) {
             return;
         }
 
-        // Detecta o delimitador do CSV (; ou ,)
         const delimitador = linhas[0].includes(';') ? ';' : ',';
         const cabecalho = linhas[0].split(delimitador).map(c => c.trim().toLowerCase());
 
-        // Identifica dinamicamente a coluna da Placa/Nome (Mobiltracker usa coluna "nome")
         let idxPlaca = cabecalho.findIndex(c => c.includes('nome') || c.includes('placa') || c.includes('veiculo') || c.includes('dispositivo'));
-        if (idxPlaca === -1) {
-            idxPlaca = cabecalho.length > 1 ? 1 : 0;
-        }
+        if (idxPlaca === -1) idxPlaca = cabecalho.length > 1 ? 1 : 0;
 
-        // Identifica dinamicamente a coluna do Total de KM (Mobiltracker usa coluna "total")
         let idxTotal = cabecalho.findIndex(c => c.includes('total'));
-        if (idxTotal === -1) {
-            idxTotal = cabecalho.length - 1;
-        }
+        if (idxTotal === -1) idxTotal = cabecalho.length - 1;
 
-        // Extrai o intervalo de datas das colunas do cabeçalho
         let dataInicio = new Date().toISOString().split('T')[0];
         let dataFim = new Date().toISOString().split('T')[0];
 
@@ -334,7 +324,6 @@ export function processarArquivoCSV(event) {
             if (!placaFormatada || placaFormatada === 'NOME' || placaFormatada === 'PLACA') continue;
 
             let kmRodadosStr = (cols[idxTotal] || '0').trim();
-            // Trata a formatação brasileira de decimal (ex: 1.233,36 -> 1233.36)
             kmRodadosStr = kmRodadosStr.replace(/\./g, '').replace(',', '.');
             const kmRodados = Math.round(parseFloat(kmRodadosStr) || 0);
 
@@ -517,7 +506,7 @@ function renderizarFrota(lista) {
                             </div>
                         ` : ''}
 
-                        <!-- TELEMETRIA DE PEÇAS DE MANUTENÇÃO (OFICINA) -->
+                        <!-- TELEMETRIA E DESGASTE DE PEÇAS DA OFICINA -->
                         ${window.renderizarBarrasDesgasteMotos ? window.renderizarBarrasDesgasteMotos(item.km_atual || 0, item.componentes, item.placa) : ''}
                     </div>
                 </div>

@@ -9,7 +9,7 @@ import {
     realizarLogout 
 } from './auth.js';
 
-// 2. MESA DE APROVAÇÃO (FICHAS DE CANDIDATOS / LEADS)
+// 2. MESA DE APROVAÇÃO (LEADS & FICHAS DE CLIENTES)
 import { 
     carregarLeads, 
     realizarBuscaLeads 
@@ -31,7 +31,7 @@ import {
     confirmarImportacaoCSV
 } from './admin-locatarios.js';
 
-// 4. PÁTIO, MOTOS E COMPONENTES DE MANUTENÇÃO / OFICINA
+// 4. PÁTIO, MOTOS FÍSICAS E PEÇAS DE MANUTENÇÃO (OFICINA)
 import { 
     carregarMotosFrota, 
     salvarNovaMoto, 
@@ -40,6 +40,7 @@ import {
     abrirModalEditarMoto, 
     fecharModalMoto,
     salvarEdicaoMoto,
+    renderizarBarrasDesgasteMotos,
     abrirModalNovaPeca,
     abrirModalEditarPeca,
     fecharModalPeca,
@@ -63,19 +64,25 @@ import {
     excluirItemLoja
 } from './admin-planos.js';
 
-// 6. GESTÃO DE USUÁRIOS E PERMISSÕES
+// 6. GESTÃO DE USUÁRIOS E PERMISSÕES (ADMIN / OPERADOR)
 import { 
     carregarUsuarios, 
     cadastrarNovoUsuario, 
     excluirUsuario 
 } from './admin-usuarios.js';
 
+// 7. GESTÃO FINANCEIRA E CAIXA / DRE
+import { 
+    salvarTransacao, 
+    initFinanceiro 
+} from './admin-financeiro.js';
+
 
 // ======================================================
 // EXPOSIÇÃO GLOBAL NO WINDOW PARA SUPORTE AOS EVENTOS HTML
 // ======================================================
 
-// Login e Sessão
+// Autenticação
 window.exibirModalLogin = exibirModalLogin;
 window.realizarLoginAdmin = realizarLoginAdmin;
 window.realizarLogout = realizarLogout;
@@ -84,7 +91,7 @@ window.realizarLogout = realizarLogout;
 window.carregarLeads = carregarLeads;
 window.realizarBuscaLeads = realizarBuscaLeads;
 
-// Frota & Locatários
+// Frota & Contratos
 window.carregarLocatarios = carregarLocatarios;
 window.buscarLocatario = buscarLocatario;
 window.abrirModalEditar = abrirModalEditar;
@@ -108,6 +115,7 @@ window.excluirMoto = excluirMoto;
 window.abrirModalEditarMoto = abrirModalEditarMoto;
 window.fecharModalMoto = fecharModalMoto;
 window.salvarEdicaoMoto = salvarEdicaoMoto;
+window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;
 window.abrirModalNovaPeca = abrirModalNovaPeca;
 window.abrirModalEditarPeca = abrirModalEditarPeca;
 window.fecharModalPeca = fecharModalPeca;
@@ -115,7 +123,7 @@ window.salvarModalPeca = salvarModalPeca;
 window.excluirPeca = excluirPeca;
 window.resetarContadorPeca = resetarContadorPeca;
 
-// Planos, Regras & Loja de Coins
+// Planos & Loja de Coins
 window.carregarPlanosAdmin = carregarPlanosAdmin;
 window.salvarNovoPlano = salvarNovoPlano;
 window.excluirPlano = excluirPlano;
@@ -133,9 +141,13 @@ window.carregarUsuarios = carregarUsuarios;
 window.cadastrarNovoUsuario = cadastrarNovoUsuario;
 window.excluirUsuario = excluirUsuario;
 
+// Financeiro
+window.salvarTransacao = salvarTransacao;
+window.initFinanceiro = initFinanceiro;
+
 
 // ======================================================
-// CONTROLE DE NAVEGAÇÃO ENTRE ABAS DO PAINEL
+// NAVEGAÇÃO ENTRE ABAS DO PAINEL
 // ======================================================
 window.alternarAba = function(aba) {
     const secoes = { 
@@ -144,7 +156,8 @@ window.alternarAba = function(aba) {
         motos: document.getElementById('secao-motos'), 
         loja: document.getElementById('secao-loja'), 
         planos: document.getElementById('secao-planos'),
-        usuarios: document.getElementById('secao-usuarios')
+        usuarios: document.getElementById('secao-usuarios'),
+        financeiro: document.getElementById('secao-financeiro')
     };
 
     const botoes = { 
@@ -153,10 +166,11 @@ window.alternarAba = function(aba) {
         motos: document.getElementById('btn-aba-motos'), 
         loja: document.getElementById('btn-aba-loja'), 
         planos: document.getElementById('btn-aba-planos'),
-        usuarios: document.getElementById('btn-aba-usuarios')
+        usuarios: document.getElementById('btn-aba-usuarios'),
+        financeiro: document.getElementById('btn-aba-financeiro')
     };
 
-    // Oculta todas as seções e reseta o visual dos botões
+    // Oculta todas as seções e reseta o destaque visual dos botões
     Object.keys(secoes).forEach(k => { 
         if (secoes[k]) secoes[k].classList.add('hidden'); 
         if (botoes[k]) { 
@@ -165,7 +179,7 @@ window.alternarAba = function(aba) {
         } 
     });
 
-    // Exibe a seção desejada e ativa o botão correspondente
+    // Exibe a seção ativa e destaca o botão correspondente
     if (secoes[aba]) secoes[aba].classList.remove('hidden');
     if (botoes[aba]) {
         botoes[aba].classList.remove('text-gray-400', 'hover:text-white');
@@ -175,7 +189,7 @@ window.alternarAba = function(aba) {
 
 
 // ======================================================
-// VERIFICAÇÃO DE PERMISSÕES & INICIALIZAÇÃO
+// CHECAGEM DE PERMISSÕES JWT E CARREGAMENTO
 // ======================================================
 function verificarPermissoesAdmin() {
     const token = localStorage.getItem('lf_admin_token');
@@ -190,7 +204,7 @@ function verificarPermissoesAdmin() {
             if (btnUsuarios) btnUsuarios.classList.remove('hidden');
         }
     } catch (e) { 
-        console.error('Erro ao verificar permissões do JWT:', e); 
+        console.error('Erro ao decodificar token de permissão:', e); 
     }
 }
 
@@ -203,6 +217,7 @@ window.carregarDadosPainel = function() {
     if (typeof window.carregarItensLojaAdmin === 'function') window.carregarItensLojaAdmin();
     if (typeof window.carregarConfiguracaoCoinsPix === 'function') window.carregarConfiguracaoCoinsPix();
     if (typeof window.carregarUsuarios === 'function') window.carregarUsuarios();
+    if (typeof window.initFinanceiro === 'function') window.initFinanceiro();
 };
 
 window.onload = async () => {

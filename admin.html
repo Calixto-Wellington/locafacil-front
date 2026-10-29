@@ -60,9 +60,7 @@
             </div>
         </header>
 
-        <!-- ================================================================= -->
         <!-- SUBDIVISÃO 1: MESA DE APROVAÇÃO (FICHAS) -->
-        <!-- ================================================================= -->
         <section id="secao-mesa" class="aba-conteudo space-y-6">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
                 <div>
@@ -91,9 +89,7 @@
             <div id="grid-leads" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
         </section>
 
-        <!-- ================================================================= -->
         <!-- SUBDIVISÃO 2: GESTÃO DE FROTA & CONTRATOS (LOCATÁRIOS) -->
-        <!-- ================================================================= -->
         <section id="secao-frota" class="aba-conteudo space-y-6 hidden">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 rounded-2xl border border-gray-200 shadow-sm gap-4">
                 <div>
@@ -102,7 +98,6 @@
                 </div>
 
                 <div class="flex flex-col md:flex-row w-full md:w-auto gap-2 items-center">
-                    <!-- BOTÃO IMPORTAR CSV MOBILTRACKER -->
                     <button type="button" onclick="abrirModalImportarCSV()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2.5 px-4 rounded-xl transition text-xs uppercase flex items-center gap-1.5 shadow-md">
                         📥 Importar CSV Mobiltracker
                     </button>
@@ -118,9 +113,7 @@
             <div id="grid-frota" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
 
-        <!-- ================================================================= -->
         <!-- SUBDIVISÃO 3: PÁTIO & MOTOS FÍSICAS -->
-        <!-- ================================================================= -->
         <section id="secao-motos" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b">
@@ -163,9 +156,7 @@
             </div>
         </section>
 
-        <!-- ================================================================= -->
         <!-- SUBDIVISÃO 4: LOJA DE COINS & REGRAS -->
-        <!-- ================================================================= -->
         <section id="secao-loja" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <h2 class="text-xl font-black uppercase text-gray-900 mb-4">Configuração de Brindes & Regras de Coins</h2>
@@ -187,9 +178,7 @@
             </div>
         </section>
 
-        <!-- ================================================================= -->
         <!-- SUBDIVISÃO 5: GESTÃO DE PLANOS & VALORES -->
-        <!-- ================================================================= -->
         <section id="secao-planos" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -238,9 +227,7 @@
             </div>
         </section>
 
-        <!-- ================================================================= -->
         <!-- SUBDIVISÃO 6: GESTÃO DE USUÁRIOS (ADMIN) -->
-        <!-- ================================================================= -->
         <section id="secao-usuarios" class="aba-conteudo space-y-6 hidden">
             <div class="bg-white rounded-3xl p-6 shadow-md border border-gray-100">
                 <h3 class="text-lg font-black uppercase text-gray-900 mb-4">Cadastrar Novo Usuário</h3>
@@ -279,9 +266,7 @@
         </section>
     </div>
 
-    <!-- ================================================================= -->
     <!-- MODAIS DE SISTEMA -->
-    <!-- ================================================================= -->
 
     <!-- 1. MODAL EDITAR PILOTO / LOCATÁRIO -->
     <div id="modal-locatario" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -294,13 +279,11 @@
             <form id="form-editar" onsubmit="salvarEdicaoCard(event)" class="space-y-4">
                 <input type="hidden" id="edit-id">
 
-                <!-- NOME COMPLETO -->
                 <div>
                     <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Nome Completo</label>
                     <input type="text" id="edit-nome" required class="w-full p-2.5 border rounded-lg text-sm font-bold uppercase">
                 </div>
 
-                <!-- PLACA E MODELO DA MOTO -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-600 mb-1">Placa da Moto</label>
@@ -312,7 +295,6 @@
                     </div>
                 </div>
 
-                <!-- MODALIDADE DO CONTRATO -->
                 <div>
                     <label class="block text-xs font-bold uppercase text-orange-900 mb-1">Modalidade do Contrato</label>
                     <select id="edit-tipo-contrato" class="w-full p-2.5 border border-orange-300 rounded-lg text-sm font-black uppercase bg-orange-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500">
@@ -321,7 +303,6 @@
                     </select>
                 </div>
 
-                <!-- CONTATO E DOCUMENTO -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-600 mb-1">WhatsApp</label>
@@ -333,7 +314,6 @@
                     </div>
                 </div>
 
-                <!-- CONTROLE DE SEMANAS E KM PAINEL (BLOCO DESTACADO) -->
                 <div class="grid grid-cols-3 gap-2 bg-orange-50 p-3 rounded-xl border border-orange-200">
                     <div>
                         <label class="block text-[10px] font-bold uppercase text-orange-900 mb-1">Sem. Pagas</label>
@@ -349,7 +329,6 @@
                     </div>
                 </div>
 
-                <!-- BOTÕES DE AÇÃO -->
                 <div class="flex gap-3 pt-4 border-t mt-4">
                     <button type="button" onclick="fecharModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl uppercase text-xs">Cancelar</button>
                     <button type="submit" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-black py-3 rounded-xl uppercase text-xs shadow-md">💾 Salvar Alterações</button>
@@ -389,7 +368,7 @@
         </div>
     </div>
 
-    <!-- 3. MODAL DE EDIÇÃO DE PLANO -->
+    <!-- 3. MODAL DE EDITAR PLANO -->
     <div id="modal-editar-plano" class="fixed inset-0 bg-black/60 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border relative">
             <h3 class="text-lg font-black text-gray-900 uppercase mb-4">Editar Plano</h3>
@@ -427,7 +406,63 @@
         </div>
     </div>
 
-    <!-- 4. MODAL DE LOGIN ADMINISTRATIVO -->
+    <!-- 4. MODAL COMPLETO DE MANUTENÇÃO / PEÇAS (CADASTRO E EDIÇÃO COM DATA) -->
+    <div id="modal-peca" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-200 relative">
+            <div class="bg-gray-900 p-4 flex justify-between items-center text-white">
+                <div>
+                    <h3 id="modal-peca-titulo" class="text-base font-black uppercase flex items-center gap-2">
+                        ➕ Cadastrar Nova Peça
+                    </h3>
+                    <p id="modal-peca-subtitulo" class="text-xs text-orange-400 font-bold mt-0.5">Moto Placa: ---</p>
+                </div>
+                <button type="button" onclick="fecharModalPeca()" class="text-gray-400 hover:text-white text-xl font-bold p-1 rounded-lg hover:bg-gray-800 transition">&times;</button>
+            </div>
+
+            <form id="form-modal-peca" onsubmit="salvarModalPeca(event)" class="p-6 space-y-4">
+                <input type="hidden" id="edit-peca-placa" />
+                <input type="hidden" id="edit-peca-id" />
+
+                <div>
+                    <label class="block text-xs font-black uppercase text-gray-700 mb-1">Nome da Peça / Componente *</label>
+                    <input type="text" id="edit-peca-nome" required placeholder="Ex: Troca de Óleo, Pneu Traseiro, Kit Relação"
+                        class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 focus:outline-none focus:border-orange-500 focus:bg-white transition" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-black uppercase text-gray-700 mb-1">Durabilidade Limite (KM) *</label>
+                        <input type="number" id="edit-peca-limite" required min="100" placeholder="Ex: 5000"
+                            class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 focus:outline-none focus:border-orange-500 focus:bg-white transition" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black uppercase text-gray-700 mb-1">KM da Troca Realizada *</label>
+                        <input type="number" id="edit-peca-km-troca" required min="0" placeholder="Ex: 35000"
+                            class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 focus:outline-none focus:border-orange-500 focus:bg-white transition" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black uppercase text-gray-700 mb-1">Data da Troca / Substituição *</label>
+                    <input type="date" id="edit-peca-data-troca" required
+                        class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 focus:outline-none focus:border-orange-500 focus:bg-white transition" />
+                </div>
+
+                <div class="flex gap-3 pt-3 border-t border-gray-100">
+                    <button type="button" onclick="fecharModalPeca()"
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl uppercase text-xs transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-salvar-peca"
+                        class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-black py-3 rounded-xl uppercase text-xs shadow-md transition">
+                        💾 Salvar Peça
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. MODAL DE LOGIN ADMINISTRATIVO -->
     <div id="modal-login" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border border-gray-100">
             <div class="text-center mb-6">
@@ -456,7 +491,7 @@
         </div>
     </div>
 
-    <!-- 5. MODAL DE IMPORTAÇÃO CSV MOBILTRACKER -->
+    <!-- 6. MODAL DE IMPORTAÇÃO CSV MOBILTRACKER -->
     <div id="modal-importar-csv" class="fixed inset-0 bg-black/70 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border relative space-y-4">
             <div class="flex justify-between items-center pb-3 border-b">
@@ -467,7 +502,6 @@
                 <button type="button" onclick="fecharModalImportarCSV()" class="text-gray-400 hover:text-red-500 font-black text-lg">&times;</button>
             </div>
 
-            <!-- SELEÇÃO DE ARQUIVO -->
             <div class="bg-indigo-50 border-2 border-dashed border-indigo-300 p-6 rounded-2xl text-center cursor-pointer hover:bg-indigo-100/50 transition" onclick="document.getElementById('input-file-csv').click()">
                 <span class="text-3xl block mb-2">📄</span>
                 <p class="text-xs font-black text-indigo-950 uppercase">Clique para selecionar o arquivo .CSV do Mobiltracker</p>
@@ -502,7 +536,7 @@
         </div>
     </div>
 
-    <!-- SCRIPT ORQUESTRADOR CENTRAL MODULARIZADO -->
+    <!-- SCRIPT ORQUESTRADOR CENTRAL -->
     <script type="module" src="./js/admin-main.js"></script>
 </body>
 

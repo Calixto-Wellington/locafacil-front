@@ -41,11 +41,9 @@ export async function carregarMotosFrota() {
             const km = item.km_atual ?? item.km ?? 0;
             const status = (item.status || 'DISPONIVEL').toUpperCase();
 
-            // Sanitização de objeto JSON e strings para injeção segura no HTML
             const jsonSanitizado = JSON.stringify(item).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
             const placaSanitizada = placa.replace(/'/g, "\\'");
 
-            // Badge visual por status no pátio
             let badgeStatus = '';
             if (status === 'DISPONIVEL') {
                 badgeStatus = '<span class="bg-green-100 text-green-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase border border-green-200">🟢 Disponível</span>';
@@ -55,7 +53,6 @@ export async function carregarMotosFrota() {
                 badgeStatus = '<span class="bg-yellow-100 text-yellow-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase border border-yellow-200">🟡 Manutenção</span>';
             }
 
-            // Ações dinâmicas de mudança de status rápidas
             let botoesAcao = '';
             if (status === 'DISPONIVEL') {
                 botoesAcao = `
@@ -139,16 +136,7 @@ export async function salvarNovaMoto(e) {
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/motos`, {
             method: 'POST',
-            body: JSON.stringify({
-                marca,
-                modelo,
-                cor,
-                ano,
-                placa,
-                km_atual,
-                status,
-                imagem
-            })
+            body: JSON.stringify({ marca, modelo, cor, ano, placa, km_atual, status, imagem })
         });
 
         if (res.ok) {
@@ -208,7 +196,7 @@ export async function excluirMoto(id, placa) {
 }
 
 // ======================================================
-// 5. MODAL DE EDIÇÃO DE MOTO (ABRIR / FECHAR / SALVAR)
+// 5. MODAL DE EDIÇÃO DE MOTO
 // ======================================================
 export function abrirModalEditarMoto(item) {
     const modal = document.getElementById('modal-editar-moto');
@@ -270,26 +258,52 @@ export async function salvarEdicaoMoto(e) {
 }
 
 // ======================================================
-// 6. MANUTENÇÃO & COMPONENTES DE OFICINA (TELEMETRIA DE KM)
+// 6. MANUTENÇÃO & TELEMETRIA DE PEÇAS DA OFICINA
 // ======================================================
 
-// Renderiza as barras visuais de desgaste de cada peça na frota
+// Renderiza as barras visuais de desgaste com DATA, KM DA TROCA, INCLUSÃO, EDIÇÃO E EXCLUSÃO
 export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = [], placa = '') {
-    if (!componentesDoBanco || componentesDoBanco.length === 0) {
-        return `<div class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-[11px] text-gray-400 font-bold text-center">Nenhuma peça cadastrada para monitoramento.</div>`;
-    }
+    const placaSanitizada = (placa || '').replace(/'/g, "\\'");
 
-    let html = `<div class="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-2.5 mt-2">
-        <div class="flex justify-between items-center text-[10px] font-black uppercase text-gray-500 pb-1 border-b border-gray-200">
-            <span>📊 Telemetria de Peças</span>
-            <span class="text-orange-600 font-black">KM: ${Number(kmAtual).toLocaleString('pt-BR')}</span>
+    let html = `<div class="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-3 mt-2 shadow-inner">
+        <div class="flex justify-between items-center pb-2 border-b border-gray-200">
+            <span class="text-[10px] font-black uppercase text-gray-700 tracking-wider flex items-center gap-1">
+                📊 Desgaste de Peças (Telemetria)
+            </span>
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] text-orange-600 font-black">KM: ${Number(kmAtual).toLocaleString('pt-BR')}</span>
+                <button type="button" onclick="abrirModalNovaPeca('${placaSanitizada}', ${kmAtual})" class="bg-orange-600 hover:bg-orange-700 text-white font-black text-[10px] px-2.5 py-1 rounded-lg uppercase transition shadow flex items-center gap-1" title="Cadastrar nova peça">
+                    ➕ Nova Peça
+                </button>
+            </div>
         </div>`;
+
+    if (!componentesDoBanco || componentesDoBanco.length === 0) {
+        html += `<div class="text-[11px] text-gray-400 font-bold text-center py-2">
+            Nenhuma peça cadastrada. Clique em <b class="text-orange-600">+ Nova Peça</b> para incluir.
+        </div></div>`;
+        return html;
+    }
 
     componentesDoBanco.forEach(peca => {
         const limite = peca.limite_km || 5000;
         const kmTroca = peca.km_troca || 0;
         const rodadoDesdeTroca = Math.max(0, kmAtual - kmTroca);
         const pctUso = Math.min(100, Math.round((rodadoDesdeTroca / limite) * 100));
+
+        // Formatação de data da troca
+        let dataTrocaStr = '---';
+        if (peca.data_troca) {
+            const dt = new Date(peca.data_troca.includes('T') ? peca.data_troca : peca.data_troca + 'T00:00:00');
+            if (!isNaN(dt.getTime())) {
+                dataTrocaStr = dt.toLocaleDateString('pt-BR');
+            } else {
+                dataTrocaStr = peca.data_troca;
+            }
+        } else if (peca.created_at) {
+            const dt = new Date(peca.created_at);
+            if (!isNaN(dt.getTime())) dataTrocaStr = dt.toLocaleDateString('pt-BR');
+        }
 
         let corBarra = 'bg-green-500';
         let statusTexto = 'OK';
@@ -302,20 +316,41 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
             statusTexto = 'Trocar em Breve';
         }
 
-        const nomeSanitizado = (peca.nome || '').replace(/'/g, "\\'");
+        const nomeSanitizado = (peca.nome || peca.componente_id || 'Componente').replace(/'/g, "\\'");
+        const jsonPecaSanitizado = JSON.stringify(peca).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
 
         html += `
-            <div class="text-[11px]">
-                <div class="flex justify-between font-bold text-gray-700 mb-0.5">
-                    <span>${peca.nome}</span>
-                    <span class="text-[10px] ${pctUso >= 90 ? 'text-red-600 font-black' : 'text-gray-500'}">${pctUso}% (${statusTexto})</span>
+            <div class="text-[11px] bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm space-y-1.5">
+                <div class="flex justify-between items-center font-bold text-gray-800">
+                    <span class="font-black uppercase text-gray-900">${peca.nome || peca.componente_id || 'Peça'}</span>
+                    <span class="text-[10px] ${pctUso >= 90 ? 'text-red-600 font-black' : pctUso >= 75 ? 'text-amber-600 font-black' : 'text-green-600 font-bold'}">
+                        ${pctUso}% (${statusTexto})
+                    </span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden flex items-center">
+
+                <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden border border-gray-200 flex items-center">
                     <div class="${corBarra} h-full rounded-full transition-all duration-500" style="width: ${pctUso}%"></div>
                 </div>
-                <div class="flex justify-between text-[9px] font-bold text-gray-400 mt-1">
-                    <button type="button" onclick="resetarContadorPeca('${peca.id}', '${nomeSanitizado}', ${kmAtual})" class="hover:text-green-600 transition flex items-center gap-0.5">🔄 Zerar Troca</button>
-                    <button type="button" onclick="abrirModalEditarPeca('${placa}', '${peca.id}', '${nomeSanitizado}', ${limite}, ${kmTroca})" class="hover:text-orange-600 transition flex items-center gap-0.5">✏️ Limite (${limite}km)</button>
+
+                <div class="grid grid-cols-2 gap-1 text-[10px] font-semibold text-gray-500 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
+                    <div>📍 Trocado com: <b class="text-gray-900">${Number(kmTroca).toLocaleString('pt-BR')} km</b></div>
+                    <div>📅 Data: <b class="text-gray-900">${dataTrocaStr}</b></div>
+                    <div>⏱️ Rodado: <b class="text-orange-600">${Number(rodadoDesdeTroca).toLocaleString('pt-BR')} km</b></div>
+                    <div>🏁 Limite: <b class="text-gray-900">${Number(limite).toLocaleString('pt-BR')} km</b></div>
+                </div>
+
+                <div class="flex justify-between items-center text-[10px] font-bold pt-1 border-t border-gray-100">
+                    <button type="button" onclick="resetarContadorPeca('${peca.id}', '${nomeSanitizado}', ${kmAtual})" class="text-green-700 hover:text-green-800 font-black flex items-center gap-0.5 hover:underline transition">
+                        🔄 Zerar Troca
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick='abrirModalEditarPeca("${placaSanitizada}", ${jsonPecaSanitizado})' class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-0.5 hover:underline transition">
+                            ✏️ Editar
+                        </button>
+                        <button type="button" onclick="excluirPeca('${peca.id}', '${nomeSanitizado}')" class="text-red-600 hover:text-red-800 font-bold flex items-center gap-0.5 hover:underline transition" title="Excluir peça">
+                            🗑️ Excluir
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -325,37 +360,69 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
     return html;
 }
 
-export function abrirModalNovaPeca(placa, kmAtual) {
+export function abrirModalNovaPeca(placa, kmAtual = 0) {
     const modal = document.getElementById('modal-peca');
     if (!modal) return;
 
-    document.getElementById('edit-peca-id').value = '';
-    document.getElementById('edit-peca-placa').value = placa || '';
-    document.getElementById('edit-peca-nome').value = '';
-    document.getElementById('edit-peca-limite').value = '5000';
-    document.getElementById('edit-peca-km-troca').value = kmAtual || '0';
+    const elId = document.getElementById('edit-peca-id') || document.getElementById('peca-id');
+    const elPlaca = document.getElementById('edit-peca-placa') || document.getElementById('peca-placa');
+    const elNome = document.getElementById('edit-peca-nome') || document.getElementById('peca-nome');
+    const elLimite = document.getElementById('edit-peca-limite') || document.getElementById('peca-limite');
+    const elKmTroca = document.getElementById('edit-peca-km-troca') || document.getElementById('peca-km-troca');
+    const elDataTroca = document.getElementById('edit-peca-data-troca') || document.getElementById('peca-data-troca');
+    const elTitulo = document.getElementById('modal-peca-titulo');
+    const elSub = document.getElementById('modal-peca-subtitulo');
 
-    if (document.getElementById('modal-peca-subtitulo')) {
-        document.getElementById('modal-peca-subtitulo').innerText = `Moto Placa: ${placa || 'Sem placa'}`;
-    }
+    if (elId) elId.value = '';
+    if (elPlaca) elPlaca.value = placa || '';
+    if (elNome) elNome.value = '';
+    if (elLimite) elLimite.value = '5000';
+    if (elKmTroca) elKmTroca.value = kmAtual || '0';
+
+    const hoje = new Date().toISOString().split('T');
+    if (elDataTroca) elDataTroca.value = hoje;
+
+    if (elTitulo) elTitulo.innerText = '➕ Cadastrar Nova Peça';
+    if (elSub) elSub.innerText = `Moto Placa: ${placa || 'Sem placa'}`;
 
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
 }
 
-export function abrirModalEditarPeca(placa, componenteId, nomeAtual, limiteAtual, kmTrocaAtual) {
+export function abrirModalEditarPeca(placa, pecaObj) {
     const modal = document.getElementById('modal-peca');
     if (!modal) return;
 
-    document.getElementById('edit-peca-id').value = componenteId || '';
-    document.getElementById('edit-peca-placa').value = placa || '';
-    document.getElementById('edit-peca-nome').value = nomeAtual || '';
-    document.getElementById('edit-peca-limite').value = limiteAtual || 5000;
-    document.getElementById('edit-peca-km-troca').value = kmTrocaAtual || 0;
+    const peca = (typeof pecaObj === 'object' && pecaObj !== null) ? pecaObj : { id: pecaObj };
 
-    if (document.getElementById('modal-peca-subtitulo')) {
-        document.getElementById('modal-peca-subtitulo').innerText = `Moto Placa: ${placa || 'Sem placa'}`;
+    const elId = document.getElementById('edit-peca-id') || document.getElementById('peca-id');
+    const elPlaca = document.getElementById('edit-peca-placa') || document.getElementById('peca-placa');
+    const elNome = document.getElementById('edit-peca-nome') || document.getElementById('peca-nome');
+    const elLimite = document.getElementById('edit-peca-limite') || document.getElementById('peca-limite');
+    const elKmTroca = document.getElementById('edit-peca-km-troca') || document.getElementById('peca-km-troca');
+    const elDataTroca = document.getElementById('edit-peca-data-troca') || document.getElementById('peca-data-troca');
+    const elTitulo = document.getElementById('modal-peca-titulo');
+    const elSub = document.getElementById('modal-peca-subtitulo');
+
+    if (elId) elId.value = peca.id || '';
+    if (elPlaca) elPlaca.value = placa || peca.placa || '';
+    if (elNome) elNome.value = peca.nome || peca.componente_id || '';
+    if (elLimite) elLimite.value = peca.limite_km || 5000;
+    if (elKmTroca) elKmTroca.value = peca.km_troca || 0;
+
+    let dataVal = peca.data_troca;
+    if (!dataVal && peca.created_at) {
+        dataVal = peca.created_at.split('T');
     }
+    if (!dataVal) {
+        dataVal = new Date().toISOString().split('T');
+    } else if (dataVal.includes('T')) {
+        dataVal = dataVal.split('T');
+    }
+    if (elDataTroca) elDataTroca.value = dataVal;
+
+    if (elTitulo) elTitulo.innerText = '✏️ Editar Peça de Manutenção';
+    if (elSub) elSub.innerText = `Moto Placa: ${placa || peca.placa || 'Sem placa'}`;
 
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
@@ -372,14 +439,15 @@ export function fecharModalPeca() {
 export async function salvarModalPeca(event) {
     if (event) event.preventDefault();
 
-    const id = document.getElementById('edit-peca-id').value;
-    const placa = document.getElementById('edit-peca-placa').value;
-    const nome = document.getElementById('edit-peca-nome').value.trim();
-    const limiteNum = parseInt(document.getElementById('edit-peca-limite').value, 10) || 5000;
-    const kmTrocaNum = parseInt(document.getElementById('edit-peca-km-troca').value, 10) || 0;
+    const id = (document.getElementById('edit-peca-id') || document.getElementById('peca-id'))?.value;
+    const placa = (document.getElementById('edit-peca-placa') || document.getElementById('peca-placa'))?.value;
+    const nome = (document.getElementById('edit-peca-nome') || document.getElementById('peca-nome'))?.value?.trim();
+    const limiteNum = parseInt((document.getElementById('edit-peca-limite') || document.getElementById('peca-limite'))?.value, 10) || 5000;
+    const kmTrocaNum = parseInt((document.getElementById('edit-peca-km-troca') || document.getElementById('peca-km-troca'))?.value, 10) || 0;
+    const dataTroca = (document.getElementById('edit-peca-data-troca') || document.getElementById('peca-data-troca'))?.value || new Date().toISOString().split('T');
 
     if (!nome) {
-        alert('⚠️ Digite o nome do componente.');
+        alert('⚠️ Digite o nome do componente/peça.');
         return;
     }
 
@@ -390,27 +458,30 @@ export async function salvarModalPeca(event) {
                 id: id || undefined,
                 placa,
                 nome,
+                componente_id: nome.toLowerCase().replace(/[^a-z0-9]/g, '_'),
                 limite_km: limiteNum,
-                km_troca: kmTrocaNum
+                km_troca: kmTrocaNum,
+                data_troca: dataTroca
             })
         });
 
         if (res.ok) {
-            alert('✅ Componente salvo com sucesso!');
+            alert('✅ Peça de manutenção salva com sucesso!');
             fecharModalPeca();
             if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
+            if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
         } else {
             const errData = await res.json();
             alert(`❌ Erro ao salvar peça: ${errData.error || 'Erro interno'}`);
         }
     } catch (err) {
         console.error('Erro ao salvar peça:', err);
-        alert('❌ Erro de conexão.');
+        alert('❌ Erro de conexão ao salvar peça.');
     }
 }
 
-export async function excluirPeca(id) {
-    if (!confirm('Tem certeza que deseja remover este componente de manutenção?')) return;
+export async function excluirPeca(id, nomePeca = '') {
+    if (!confirm(`Tem certeza que deseja excluir a peça "${nomePeca || 'selecionada'}"?`)) return;
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/manutencao-componentes/${id}`, {
@@ -418,11 +489,12 @@ export async function excluirPeca(id) {
         });
 
         if (res.ok) {
-            alert('✅ Peça removida com sucesso!');
+            alert(`✅ Peça "${nomePeca || 'removida'}" excluída com sucesso!`);
             fecharModalPeca();
             if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
+            if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
         } else {
-            alert('❌ Erro ao remover componente.');
+            alert('❌ Erro ao excluir componente.');
         }
     } catch (err) {
         console.error('Erro ao excluir peça:', err);
@@ -431,17 +503,22 @@ export async function excluirPeca(id) {
 }
 
 export async function resetarContadorPeca(componenteId, nomePeca, kmAtual) {
-    if (!confirm(`Confirmar a substituição da peça "${nomePeca}" no KM ${kmAtual.toLocaleString('pt-BR')}?`)) return;
+    const dataHoje = new Date().toISOString().split('T');
+    if (!confirm(`Confirmar a substituição da peça "${nomePeca}" no KM ${Number(kmAtual).toLocaleString('pt-BR')} (Data: ${new Date().toLocaleDateString('pt-BR')})?`)) return;
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/manutencao-componentes/${componenteId}/reset`, {
             method: 'PATCH',
-            body: JSON.stringify({ km_troca: kmAtual })
+            body: JSON.stringify({ 
+                km_troca: kmAtual,
+                data_troca: dataHoje
+            })
         });
 
         if (res.ok) {
-            alert(`✅ Troca da peça "${nomePeca}" registrada no KM ${kmAtual.toLocaleString('pt-BR')}. Contador zerado!`);
+            alert(`✅ Troca da peça "${nomePeca}" registrada no KM ${Number(kmAtual).toLocaleString('pt-BR')}. Contador zerado!`);
             if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
+            if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
         } else {
             alert('❌ Erro ao zerar contador da peça.');
         }
@@ -451,9 +528,7 @@ export async function resetarContadorPeca(componenteId, nomePeca, kmAtual) {
     }
 }
 
-// ======================================================
 // VINCULAÇÃO GLOBAL NO WINDOW PARA SUPORTE AOS EVENTOS HTML
-// ======================================================
 window.carregarMotosFrota = carregarMotosFrota;
 window.salvarNovaMoto = salvarNovaMoto;
 window.mudarStatusMoto = mudarStatusMoto;

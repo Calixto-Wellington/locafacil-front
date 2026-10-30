@@ -423,116 +423,115 @@ export async function confirmarImportacaoCSV() {
     carregarLocatarios();
 }
 
-// 9. RENDERIZAÇÃO DOS CARDS DA FROTA
+// 9. RENDERIZAÇÃO DOS CARDS DA FROTA (CORRIGIDO)
 function renderizarFrota(lista) {
     const grid = document.getElementById('grid-frota');
     if (!grid) return;
 
-    grid.innerHTML = '';
     if (!lista || lista.length === 0) {
-        grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center text-gray-500 font-bold text-base uppercase shadow-sm">Nenhum piloto encontrado nesta visualização.</div>`;
+        grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center shadow-sm text-gray-500 font-bold text-base uppercase">Nenhum piloto/moto cadastrado nesta visualização.</div>`;
         return;
     }
 
+    grid.innerHTML = '';
+
     lista.forEach(item => {
-        const isArquivado = item.status === 'ARQUIVADO';
-        const semanasPagas = parseInt(item.semanas_pagas || 0, 10);
-        const semanasTotais = parseInt(item.semanas_totais || 182, 10);
-        const tipoContrato = item.tipo_contrato || 'OPCAO_COMPRA';
-        const isOpcaoCompra = tipoContrato === 'OPCAO_COMPRA';
+        // Alias de segurança: Garante que tanto 'item' quanto 'locatario' funcionem no código
+        const locatario = item; 
 
+        const isArquivado = locatario.status === 'ARQUIVADO' || locatario.status === 'ENCERRADO';
+        const tipoContrato = locatario.tipo_contrato || 'OPCAO_COMPRA';
+        const semanasTotais = locatario.semanas_totais || 182;
+        const semanasPagas = locatario.semanas_pagas || 0;
         const pct = Math.min(100, Math.round((semanasPagas / semanasTotais) * 100));
-        
-        const jsonSanitizado = JSON.stringify(item).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-        const nomeSanitizado = (item.nome || '').replace(/'/g, "\\'");
+        const coins = locatario.locafacil_coins !== undefined ? locatario.locafacil_coins : (semanasPagas * 10);
 
-        // Badges com fonte text-xs (12px) em vez de 10px
-        const badgeModalidade = isOpcaoCompra
-            ? `<span class="bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black px-3 py-1 rounded-full uppercase flex items-center gap-1">🏆 Opção de Compra (${semanasTotais} sem)</span>`
+        const jsonFormatado = JSON.stringify(locatario)
+            .replace(/'/g, "&#39;")
+            .replace(/"/g, "&quot;");
+
+        const nomeSanitizado = (locatario.nome || 'Piloto').replace(/'/g, "\\'");
+
+        const badgeTipoContrato = tipoContrato === 'OPCAO_COMPRA' 
+            ? `<span class="bg-orange-100 text-orange-950 border border-orange-300 text-xs font-black px-3 py-1 rounded-full uppercase flex items-center gap-1">🏆 Opção de Compra (${semanasTotais}x)</span>`
             : `<span class="bg-blue-100 text-blue-900 border border-blue-300 text-xs font-black px-3 py-1 rounded-full uppercase flex items-center gap-1">🔑 Aluguel Convencional</span>`;
 
-        // Contador de semanas com número expandido (text-2xl) e rótulo text-xs
-        const blocoSemanas = isOpcaoCompra
-            ? `<div class="text-right">
-                <span class="text-2xl font-black text-orange-500 block leading-none">Semana ${semanasPagas}</span>
-                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">${semanasPagas}/${semanasTotais} sem (${pct}%)</span>
-               </div>`
-            : `<div class="text-right">
-                <span class="text-2xl font-black text-blue-400 block leading-none">${semanasPagas} sem</span>
-                <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Pagas (Contínuo)</span>
-               </div>`;
-
-        // Botão principal expandido para text-sm (14px)
         const botaoAcaoPrincipal = isArquivado ? `
-            <button type="button" onclick="reativarLocatario('${item.id}', '${nomeSanitizado}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 rounded-xl transition uppercase text-sm shadow-md">
-                🔄 Reativar Contrato
+            <button type="button" onclick="reativarLocatario('${locatario.id}', '${nomeSanitizado}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 rounded-xl transition uppercase text-sm shadow-md">
+                🔄 Reativar Contrato do Piloto
             </button>
         ` : `
-            <button type="button" onclick="adicionarUmaSemana('${item.id}', '${item.placa || ''}', '${item.telefone || ''}', '${nomeSanitizado}', ${semanasPagas}, '${tipoContrato}', ${semanasTotais}, '${item.cpf || ''}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 rounded-xl transition uppercase text-sm shadow-md">
+            <button type="button" onclick="adicionarUmaSemana('${locatario.id}', '${locatario.placa || ''}', '${locatario.telefone || ''}', '${nomeSanitizado}', ${semanasPagas}, '${tipoContrato}', ${semanasTotais}, '${locatario.cpf || ''}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 rounded-xl transition uppercase text-sm shadow-md flex items-center justify-center gap-2">
                 💵 +1 Semana (Baixar Pix)
             </button>
-
-            <div class="flex gap-2">
-        <!-- 🔘 NOVO BOTÃO DE SIMULAÇÃO -->
-        <button type="button" onclick='abrirSimuladorDevolucao(${JSON.stringify(locatario).replace(/'/g, "&#39;").replace(/"/g, "&quot;")})' class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-3 py-2.5 rounded-xl text-xs uppercase transition shadow">
-    🔍 Simular Devolução
-</button>
         `;
 
         grid.innerHTML += `
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden flex flex-col justify-between ${isArquivado ? 'opacity-75 border-red-200' : ''}">
+            <div class="bg-white rounded-2xl shadow-lg border ${isArquivado ? 'border-red-300 bg-red-50/20' : 'border-gray-200'} overflow-hidden flex flex-col justify-between">
                 <div>
-                    <!-- CABEÇALHO DO CARD -->
-                    <div class="bg-gray-900 text-white p-4.5 flex justify-between items-center">
+                    <!-- TOPO DO CARD -->
+                    <div class="bg-gray-900 text-white p-4 flex justify-between items-center">
                         <div>
-                            <span class="bg-orange-600 text-white text-xs font-black px-2.5 py-1 rounded uppercase tracking-wider">${item.placa || 'Sem Placa'}</span>
-                            <h3 class="font-black text-xl uppercase mt-1.5 leading-tight">${item.nome || 'Sem Nome'}</h3>
+                            <span class="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">${locatario.placa || 'SEM PLACA'}</span>
+                            <h3 class="font-black text-lg uppercase mt-1 leading-tight text-white">${locatario.nome || 'Piloto'}</h3>
                         </div>
                         <div class="text-right">
-                            ${isArquivado 
-                                ? '<span class="bg-red-600 text-white text-xs font-black px-2.5 py-1 rounded uppercase">📦 Arquivado</span>' 
-                                : blocoSemanas
-                            }
+                            <span class="text-2xl font-black text-orange-500">${pct}%</span>
                         </div>
                     </div>
 
-                    <div class="p-5 space-y-3.5">
-                        <!-- MODALIDADE DO CONTRATO E TELEFONE -->
-                        <div class="flex justify-between items-center pb-2.5 border-b border-gray-100 flex-wrap gap-2">
-                            ${badgeModalidade}
-                            <span class="text-xs font-bold text-gray-500 uppercase">Whats: ${item.telefone || 'N/A'}</span>
+                    <!-- CORPO DO CARD -->
+                    <div class="p-5 space-y-4">
+                        <div class="flex justify-between items-center text-xs">
+                            ${badgeTipoContrato}
+                            <span class="font-black text-gray-500">CPF: ${locatario.cpf || 'N/I'}</span>
                         </div>
 
-                        <!-- GRID MODELO E CPF DA MOTO -->
                         <div class="grid grid-cols-2 gap-3 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100">
-                            <div><p class="text-gray-500 font-bold uppercase text-xs">Modelo</p><p class="font-black text-gray-900 text-sm mt-0.5">${item.modelo || 'N/A'}</p></div>
-                            <div><p class="text-gray-500 font-bold uppercase text-xs">CPF</p><p class="font-black text-gray-900 text-sm mt-0.5">${item.cpf || 'N/A'}</p></div>
+                            <div><p class="text-gray-400 font-bold uppercase text-xs">Modelo</p><p class="font-bold text-gray-800">${locatario.modelo || 'Não informado'}</p></div>
+                            <div><p class="text-gray-400 font-bold uppercase text-xs">WhatsApp</p><p class="font-bold text-gray-800">${locatario.telefone || 'N/I'}</p></div>
                         </div>
 
-                        ${isArquivado ? `
-                            <div class="bg-red-50 border border-red-200 p-3.5 rounded-xl text-sm">
-                                <p class="text-red-700 font-black uppercase text-xs">Motivo Encerramento:</p>
-                                <p class="text-gray-800 font-bold mt-1">${item.motivo_arquivamento || 'Não detalhado'}</p>
+                        <!-- BARRA DE PROGRESSO DO CONTRATO -->
+                        <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                            <div class="flex justify-between items-center text-xs font-black text-gray-700 mb-1">
+                                <span>Semana ${semanasPagas} de ${semanasTotais}</span>
+                                <span>🪙 ${coins} Coins</span>
                             </div>
-                        ` : ''}
+                            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                <div class="bg-gradient-to-r from-orange-500 to-yellow-400 h-full rounded-full" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
 
-                        <!-- TELEMETRIA E DESGASTE DE PEÇAS DA OFICINA -->
-                        ${window.renderizarBarrasDesgasteMotos ? window.renderizarBarrasDesgasteMotos(item.km_atual || 0, item.componentes, item.placa) : ''}
+                        <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 text-xs">
+                            <p class="text-orange-900 font-bold uppercase">Hodômetro Atual</p>
+                            <p class="font-black text-gray-900 text-base mt-0.5">${Number(locatario.km_atual || 0).toLocaleString('pt-BR')} km</p>
+                        </div>
+
+                        <!-- BARRAS DE DESGASTE DE PEÇAS / OFICINA -->
+                        ${window.renderizarBarrasDesgasteMotos ? window.renderizarBarrasDesgasteMotos(locatario.km_atual || 0, locatario.componentes, locatario.placa) : ''}
                     </div>
                 </div>
 
-                <!-- BOTÕES DE AÇÃO -->
-                <div class="p-5 pt-0 space-y-2.5">
+                <!-- BOTEIS DE AÇÃO DO RODAPÉ -->
+                <div class="p-5 pt-0 space-y-2">
                     ${botaoAcaoPrincipal}
 
-                    <div class="flex gap-2.5">
-                        <button type="button" onclick="abrirModalEditar(${jsonSanitizado})" class="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-3 rounded-xl text-sm uppercase transition">
+                    <div class="flex gap-2">
+                        ${!isArquivado ? `
+                        <button type="button" onclick='abrirSimuladorDevolucao(${jsonFormatado})' class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-black py-3 rounded-xl text-xs uppercase transition shadow flex items-center justify-center gap-1" title="Simular ou efetivar rescisão">
+                            🔍 Simular Devolução
+                        </button>
+                        ` : ''}
+
+                        <button type="button" onclick='abrirModalEditar(${jsonFormatado})' class="bg-gray-900 hover:bg-black text-white font-bold px-4 py-3 rounded-xl text-xs uppercase transition">
                             ✏️ Editar
                         </button>
+
                         ${!isArquivado ? `
-                            <button type="button" onclick="arquivarLocatario('${item.id}', '${nomeSanitizado}', '${item.placa || ''}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-black px-4 py-3 rounded-xl text-sm uppercase transition" title="Arquivar contrato">
-                                📦 Arquivar
-                            </button>
+                        <button type="button" onclick="arquivarLocatario('${locatario.id}', '${nomeSanitizado}', '${locatario.placa || ''}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-black px-4 py-3 rounded-xl text-xs uppercase transition" title="Arquivar contrato">
+                            📦 Arquivar
+                        </button>
                         ` : ''}
                     </div>
                 </div>

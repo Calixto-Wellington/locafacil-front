@@ -1,11 +1,11 @@
 // ======================================================
-// MÓDULO DE PLANOS, PREÇOS E LOJA DE COINS — js/admin-planos.js
+// MÓDULO DE PLANOS E LOJA DE COINS — js/admin-planos.js
 // ======================================================
 
 import { API_BASE } from './api.js';
 import { fetchComAuth } from './auth.js';
 
-// Auxiliar: Formatação de Moeda em Reais (R$)
+// Auxiliar: Formatação de Moeda (R$)
 function formatarMoeda(valor) {
     return Number(valor || 0).toLocaleString('pt-BR', {
         style: 'currency',
@@ -14,7 +14,7 @@ function formatarMoeda(valor) {
 }
 
 // ======================================================
-// 1. GESTÃO DE PLANOS DE ALUGUEL E PREÇOS POR MODELO
+// 1. GESTÃO DE PLANOS DE ALUGUEL E PREÇOS
 // ======================================================
 
 export async function carregarPlanosAdmin() {
@@ -303,7 +303,7 @@ export async function excluirItemLoja(id, titulo) {
 }
 
 // ======================================================
-// VÍNCULO GLOBAL NO OBJETO WINDOW PARA EVENTOS HTML
+// VÍNCULOS GLOBAIS NO WINDOW
 // ======================================================
 window.carregarPlanosAdmin = carregarPlanosAdmin;
 window.abrirModalEditarPlano = abrirModalEditarPlano;
@@ -317,18 +317,3 @@ window.salvarConfigCoinsPix = salvarConfigCoinsPix;
 window.carregarItensLojaAdmin = carregarItensLojaAdmin;
 window.adicionarItemLoja = adicionarItemLoja;
 window.excluirItemLoja = excluirItemLoja;
-// 3. Como Importar no js/admin-main.js
-// Garante que no js/admin-main.js os dois grupos de funções venham do admin-planos.js:
-import { 
-    carregarPlanosAdmin, 
-    salvarNovoPlano, 
-    excluirPlano, 
-    abrirModalEditarPlano, 
-    fecharModalPlano, 
-    salvarEdicaoPlano, 
-    carregarConfiguracaoCoinsPix, 
-    salvarConfigCoinsPix, 
-    carregarItensLojaAdmin,
-    adicionarItemLoja,
-    excluirItemLoja
-} from './admin-planos.js';

@@ -9,13 +9,13 @@ import {
     realizarLogout 
 } from './auth.js';
 
-// 2. MESA DE APROVAÇÃO (LEADS & FICHAS DE CLIENTES)
+// 2. MESA DE APROVAÇÃO (LEADS & FICHAS)
 import { 
     carregarLeads, 
     realizarBuscaLeads 
 } from './admin-leads.js';
 
-// 3. GESTÃO DE FROTA, LOCATÁRIOS E TELEMETRIA CSV (MOBILTRACKER)
+// 3. GESTÃO DE FROTA, LOCATÁRIOS E TELEMETRIA CSV
 import { 
     carregarLocatarios, 
     buscarLocatario, 
@@ -31,7 +31,7 @@ import {
     confirmarImportacaoCSV
 } from './admin-locatarios.js';
 
-// 4. PÁTIO, MOTOS FÍSICAS E PEÇAS DE MANUTENÇÃO (OFICINA)
+// 4. PÁTIO, MOTOS E OFICINA/MANUTENÇÃO DE PEÇAS
 import { 
     carregarMotosFrota, 
     salvarNovaMoto, 
@@ -49,7 +49,7 @@ import {
     resetarContadorPeca
 } from './admin-motos.js';
 
-// 5. GESTÃO DE PLANOS, REGRAS DE COINS E LOJA DE BRINDES
+// 5. PLANOS & LOJA DE COINS
 import { 
     carregarPlanosAdmin, 
     salvarNovoPlano, 
@@ -64,16 +64,18 @@ import {
     excluirItemLoja
 } from './admin-planos.js';
 
-// 6. GESTÃO DE USUÁRIOS E PERMISSÕES (ADMIN / OPERADOR)
+// 6. USUÁRIOS E PERMISSÕES
 import { 
     carregarUsuarios, 
     cadastrarNovoUsuario, 
     excluirUsuario 
 } from './admin-usuarios.js';
 
-// 7. GESTÃO FINANCEIRA E CAIXA / DRE
+// 7. GESTÃO FINANCEIRA E DRE
 import { 
     salvarTransacao, 
+    carregarResumoDRE,
+    calcularSimulacaoExpansao,
     initFinanceiro 
 } from './admin-financeiro.js';
 
@@ -143,11 +145,13 @@ window.excluirUsuario = excluirUsuario;
 
 // Financeiro
 window.salvarTransacao = salvarTransacao;
+window.carregarResumoDRE = carregarResumoDRE;
+window.calcularSimulacaoExpansao = calcularSimulacaoExpansao;
 window.initFinanceiro = initFinanceiro;
 
 
 // ======================================================
-// NAVEGAÇÃO ENTRE ABAS DO PAINEL
+// GERENCIADOR DE NAVEGAÇÃO ENTRE ABAS
 // ======================================================
 window.alternarAba = function(aba) {
     const secoes = { 
@@ -170,7 +174,6 @@ window.alternarAba = function(aba) {
         financeiro: document.getElementById('btn-aba-financeiro')
     };
 
-    // Oculta todas as seções e reseta o destaque visual dos botões
     Object.keys(secoes).forEach(k => { 
         if (secoes[k]) secoes[k].classList.add('hidden'); 
         if (botoes[k]) { 
@@ -179,7 +182,6 @@ window.alternarAba = function(aba) {
         } 
     });
 
-    // Exibe a seção ativa e destaca o botão correspondente
     if (secoes[aba]) secoes[aba].classList.remove('hidden');
     if (botoes[aba]) {
         botoes[aba].classList.remove('text-gray-400', 'hover:text-white');
@@ -189,7 +191,7 @@ window.alternarAba = function(aba) {
 
 
 // ======================================================
-// CHECAGEM DE PERMISSÕES JWT E CARREGAMENTO
+// PERMISSÕES E CARREGAMENTO
 // ======================================================
 function verificarPermissoesAdmin() {
     const token = localStorage.getItem('lf_admin_token');
@@ -204,7 +206,7 @@ function verificarPermissoesAdmin() {
             if (btnUsuarios) btnUsuarios.classList.remove('hidden');
         }
     } catch (e) { 
-        console.error('Erro ao decodificar token de permissão:', e); 
+        console.error('Erro ao verificar permissão:', e); 
     }
 }
 

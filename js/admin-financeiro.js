@@ -1,29 +1,38 @@
-import { fetchComAuth } from './auth.js';
-import { API_BASE } from './api.js';
+// ======================================================
+// MÓDULO FINANCEIRO, DRE E SIMULADOR — js/admin-financeiro.js
+// ======================================================
 
-// Função para formatar valores no padrão R$ 0,00
+import { API_BASE } from './api.js';
+import { fetchComAuth } from './auth.js';
+
+// Auxiliar: Formatação de Valores em Reais (R$)
 function formatarMoeda(valor) {
-    return (valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return Number(valor || 0).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    });
 }
 
-// 1. REGISTRAR NOVA TRANSAÇÃO NO CAIXA
+// 1. REGISTRAR NOVA TRANSAÇÃO NO CAIXA (ENTRADA / SAÍDA)
 export async function salvarTransacao(e) {
-    if (e) e.preventDefault(); // 🛑 Impede o recarregamento da página!
+    if (e) e.preventDefault();
 
     const inputData = document.getElementById('trans-data');
     const inputTipo = document.getElementById('trans-tipo');
     const inputCat = document.getElementById('trans-categoria');
+    const inputDesc = document.getElementById('trans-descricao');
     const inputValor = document.getElementById('trans-valor');
 
     if (!inputValor || !inputValor.value || parseFloat(inputValor.value) <= 0) {
-        alert('Por favor, informe um valor válido.');
+        alert('⚠️ Por favor, informe um valor válido para o lançamento.');
         return;
     }
 
     const payload = {
-        data_transacao: inputData && inputData.value ? inputData.value : new Date().toISOString().split('T'),
-        tipo: inputTipo ? inputTipo.value : 'ENTRADA',
-        categoria: inputCat ? inputCat.value : 'Receita - Semanalidade',
+        data_transacao: inputData?.value || new Date().toISOString().split('T'),
+        tipo: inputTipo?.value || 'ENTRADA',
+        categoria: inputCat?.value || 'Receita - Semanalidade',
+        descricao: inputDesc?.value?.trim() || 'Lançamento de Caixa',
         valor: parseFloat(inputValor.value)
     };
 
@@ -33,50 +42,50 @@ export async function salvarTransacao(e) {
             body: JSON.stringify(payload)
         });
 
-        const result = await response.json();
-
         if (!response.ok) {
-            throw new Error(result.error || 'Erro ao gravar transação no banco');
+            const errData = await response.json();
+            throw new Error(errData.error || 'Erro ao gravar transação.');
         }
 
-        alert('✅ Lançamento registrado no caixa com sucesso!');
-        inputValor.value = '';
+        alert('✅ Lançamento financeiro registrado com sucesso!');
+        if (inputValor) inputValor.value = '';
+        if (inputDesc) inputDesc.value = '';
 
-        // Recarrega a DRE atualizada na hora após salvar
+        // Recarrega os indicadores da DRE em tempo real
         await carregarResumoDRE();
-
     } catch (err) {
         console.error('❌ Erro no salvamento financeiro:', err);
         alert(`❌ Erro: ${err.message}`);
     }
 }
 
-// 2. BUSCA OS DADOS DA DRE E ATUALIZA O CARD NA TELA
+// 2. BUSCAR DADOS DA DRE E ATUALIZAR OS CARDS DA TELA
 export async function carregarResumoDRE() {
     try {
         const response = await fetchComAuth(`${API_BASE}/admin/financeiro/resumo-dre`);
-        const data = await response.json();
+        if (!response.ok) return;
 
-        if (!response.ok) throw new Error(data.error);
+        const data = await response.json();
 
         const elFat = document.getElementById('dre-faturamento');
         const elOpex = document.getElementById('dre-opex');
-        const elDividas = document.getElementById('dre-dividas');
-        const elProlabore = document.getElementById('dre-prolabore');
-        const elReserva = document.getElementById('dre-reserva-pj');
+        const elPro = document.getElementById('dre-prolabore');
+        const elDiv = document.getElementById('dre-dividas');
+        const elSobra = document.getElementById('dre-sobra');
+        const elReserva = document.getElementById('dre-reserva');
 
         if (elFat) elFat.innerText = formatarMoeda(data.faturamentoBruto);
         if (elOpex) elOpex.innerText = formatarMoeda(data.opexTotal);
-        if (elDividas) elDividas.innerText = formatarMoeda(data.dividasCapital);
-        if (elProlabore) elProlabore.innerText = formatarMoeda(data.proLabore);
-        if (elReserva) elReserva.innerText = `${formatarMoeda(data.reservaLiquidaPJ)} /mês`;
-
+        if (elPro) elPro.innerText = formatarMoeda(data.proLabore);
+        if (elDiv) elDiv.innerText = formatarMoeda(data.dividas);
+        if (elSobra) elSobra.innerText = formatarMoeda(data.sobraLiquida);
+        if (elReserva) elReserva.innerText = formatarMoeda(data.reservaLiquidaPJ);
     } catch (err) {
         console.error('Erro ao carregar resumo DRE:', err);
     }
 }
 
-// 3. SIMULADOR DE EXPANSÃO DE FROTA (PASSO 4)
+// 3. SIMULADOR DE EXPANSÃO DE FROTA E CÁLCULO DE PAYBACK
 export function calcularSimulacaoExpansao() {
     const precoMoto = parseFloat(document.getElementById('sim-preco-moto')?.value) || 0;
     const aporteSocio = parseFloat(document.getElementById('sim-aporte-socio')?.value) || 0;
@@ -95,28 +104,41 @@ export function calcularSimulacaoExpansao() {
     const elSobra = document.getElementById('sim-res-sobra');
     const elPayback = document.getElementById('sim-res-payback');
 
-    if (elReceita) elReceita.innerText = receitaMensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + ' /mês';
-    if (elSobra) elSobra.innerText = sobraLiquidaMensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) + ' /mês';
-    if (elPayback) elPayback.innerText = paybackMeses > 0 ? `${paybackMeses.toFixed(1)} Meses (${Math.ceil(paybackMeses * 4.333)} semanas)` : '0 Meses';
+    if (elReceita) elReceita.innerText = formatarMoeda(receitaMensal) + ' /mês';
+    if (elSobra) elSobra.innerText = formatarMoeda(sobraLiquidaMensal) + ' /mês';
+    if (elPayback) {
+        elPayback.innerText = paybackMeses > 0 
+            ? `${paybackMeses.toFixed(1)} Meses (${Math.ceil(paybackMeses * 4.333)} semanas)`
+            : '0 Meses';
+    }
 }
 
-// 4. INICIALIZADOR ÚNICO DO MÓDULO FINANCEIRO
+// 4. INICIALIZAÇÃO ÚNICA DO MÓDULO FINANCEIRO
 export function initFinanceiro() {
-    // Data de hoje por padrão
     const inputData = document.getElementById('trans-data');
     if (inputData && !inputData.value) {
         inputData.value = new Date().toISOString().split('T');
     }
 
-    // Vincula a função ao formulário
     const formTransacao = document.getElementById('form-nova-transacao');
     if (formTransacao) {
         formTransacao.onsubmit = salvarTransacao;
     }
 
-    // Carrega o resumo dinâmico da DRE
-    carregarResumoDRE();
+    // Registra os eventos em tempo real do simulador de expansão
+    ['sim-preco-moto', 'sim-aporte-socio', 'sim-semanalidade', 'sim-opex-moto'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.oninput = calcularSimulacaoExpansao;
+        }
+    });
 
-    // Roda o cálculo inicial do simulador se ele existir na tela
+    carregarResumoDRE();
     calcularSimulacaoExpansao();
 }
+
+// EXPOSIÇÃO GLOBAL NO WINDOW PARA SUPORTE AO HTML
+window.salvarTransacao = salvarTransacao;
+window.carregarResumoDRE = carregarResumoDRE;
+window.calcularSimulacaoExpansao = calcularSimulacaoExpansao;
+window.initFinanceiro = initFinanceiro;

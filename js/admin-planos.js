@@ -1,11 +1,11 @@
 // ======================================================
-// MÓDULO DE PLANOS E LOJA DE COINS — js/admin-planos.js
+// MÓDULO DE PLANOS, PREÇOS E LOJA DE COINS — js/admin-planos.js
 // ======================================================
 
 import { API_BASE } from './api.js';
 import { fetchComAuth } from './auth.js';
 
-// Auxiliar: Formatação de Moeda (R$)
+// Auxiliar: Formatação de Moeda em Reais (R$)
 function formatarMoeda(valor) {
     return Number(valor || 0).toLocaleString('pt-BR', {
         style: 'currency',
@@ -14,7 +14,7 @@ function formatarMoeda(valor) {
 }
 
 // ======================================================
-// 1. GESTÃO DE PLANOS DE ALUGUEL E PREÇOS
+// 1. GESTÃO DE PLANOS DE ALUGUEL E PREÇOS POR MODELO
 // ======================================================
 
 export async function carregarPlanosAdmin() {
@@ -303,7 +303,7 @@ export async function excluirItemLoja(id, titulo) {
 }
 
 // ======================================================
-// VÍNCULOS GLOBAIS NO WINDOW
+// VÍNCULOS GLOBAIS ÚNICOS NO WINDOW
 // ======================================================
 window.carregarPlanosAdmin = carregarPlanosAdmin;
 window.abrirModalEditarPlano = abrirModalEditarPlano;

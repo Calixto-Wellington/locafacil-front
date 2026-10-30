@@ -245,7 +245,7 @@ export async function salvarEdicaoCard(event) {
 }
 
 // ======================================================
-// 8. IMPORTAÇÃO DE TELEMETRIA CSV DA MOBILTRACKER
+// 8. IMPORTAÇÃO DE TELEMETRIA CSV DA MOBILTRACKER (CORRIGIDO)
 // ======================================================
 
 export function abrirModalImportarCSV() {
@@ -254,14 +254,16 @@ export function abrirModalImportarCSV() {
     const tbody = document.getElementById('tbody-preview-csv');
     const inputFile = document.getElementById('input-file-csv');
     const qtdVeiculos = document.getElementById('qtd-veiculos-csv');
+    const elPeriodo = document.getElementById('periodo-csv-mobiltracker');
 
     window.dadosCSVImportacao = [];
     
     if (inputFile) inputFile.value = '';
     if (tbody) tbody.innerHTML = '';
     if (qtdVeiculos) qtdVeiculos.innerText = '0 veículos identificados';
+    if (elPeriodo) elPeriodo.innerText = 'Selecione o arquivo baixado do portal';
     
-    // Oculta a área de pré-visualização até que um arquivo válido seja selecionado
+    // Mantém oculto até a leitura do arquivo
     if (containerPreview) {
         containerPreview.classList.add('hidden');
         containerPreview.style.display = 'none';
@@ -296,71 +298,88 @@ export function fecharModalImportarCSV() {
 
 export function processarArquivoCSV(event) {
     let file = null;
-    if (event && event.target && event.target.files) {
-        file = event.target.files[0] || event.target.files;
+    if (event && event.target && event.target.files && event.target.files[0]) {
+        file = event.target.files[0];
     } else if (event instanceof File) {
         file = event;
     }
 
     if (!file) {
-        alert('⚠️ Selecione um arquivo CSV válido para importar.');
+        alert('⚠️ Selecione um arquivo CSV válido da Mobiltracker.');
         return;
     }
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        const conteudo = e.target.result;
-        const linhas = conteudo.split(/\r\n|\n/);
+        const conteudo = e.target.result.replace(/^\uFEFF/, ''); // Remove caractere invisível BOM
+        const linhas = conteudo.split(/\r\n|\n/).filter(l => l.trim().length > 0);
         
         if (linhas.length < 2) {
             alert('⚠️ O arquivo CSV selecionado está vazio ou inválido.');
             return;
         }
 
-        // Mapeia colunas do cabeçalho Mobiltracker
-        const cabecalho = linhas[0].split(';').map(c => c.replace(/"/g, '').trim().toLowerCase());
+        // Cabeçalho Mobiltracker (id;nome;26/10/2026;...;total)
+        const cabecalho = linhas[0].split(';').map(c => c.replace(/"/g, '').trim());
         
-        let colPlaca = cabecalho.findIndex(c => c.includes('nome') || c.includes('veículo') || c.includes('veiculo') || c.includes('placa'));
-        if (colPlaca === -1) colPlaca = 1; // Padrão Mobiltracker: Coluna 'nome' (índice 1)
+        // Localiza a coluna da Placa/Nome
+        let colPlaca = cabecalho.findIndex(c => {
+            const h = c.toLowerCase();
+            return h.includes('nome') || h.includes('veiculo') || h.includes('veículo') || h.includes('placa');
+        });
+        if (colPlaca === -1) colPlaca = 1; // Padrão Mobiltracker: Coluna 'nome'
 
-        let colDistancia = cabecalho.findIndex(c => c.includes('total') || c.includes('distância') || c.includes('distancia') || c.includes('km') || c.includes('percorrida'));
-        if (colDistancia === -1) colDistancia = cabecalho.length - 1; // Padrão Mobiltracker: Coluna 'total' (última)
+        // Localiza a coluna do Total de KM
+        let colTotal = cabecalho.findIndex(c => c.toLowerCase().includes('total'));
+        if (colTotal === -1) colTotal = cabecalho.length - 1; // Padrão Mobiltracker: Última coluna
+
+        // Extrai o período das colunas de data (DD/MM/YYYY)
+        const datasCabecalho = cabecalho.filter(c => /^\d{2}\/\d{2}\/\d{4}$/.test(c.trim()));
+        let textoPeriodo = 'Relatório de Telemetria';
+        if (datasCabecalho.length > 0) {
+            textoPeriodo = `📅 Período: de ${datasCabecalho[0]} até ${datasCabecalho[datasCabecalho.length - 1]}`;
+        }
 
         const dadosValidos = [];
         const tbody = document.getElementById('tbody-preview-csv');
         if (tbody) tbody.innerHTML = '';
 
         for (let i = 1; i < linhas.length; i++) {
-            if (!linhas[i].trim()) continue;
-
             const colunas = linhas[i].split(';').map(c => c.replace(/"/g, '').trim());
-            
-            // Extrai e normaliza a placa/nome do veículo
-            const placaBruta = colunas[colPlaca] || colunas[1] || colunas[0] || '';
-            const placaNorm = placaBruta.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            if (colunas.length <= colPlaca) continue;
 
-            // Trata valores decimais com vírgula (ex: "1233,36" -> 1233)
-            const distStr = colunas[colDistancia] || colunas[colunas.length - 1] || '0';
-            const distTratada = distStr.replace(/\./g, '').replace(',', '.');
-            const kmRodados = Math.round(parseFloat(distTratada)) || 0;
+            const placaOriginal = colunas[colPlaca] || '';
+            const placaNorm = placaOriginal.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+
+            // Trata valores com vírgula (ex: "331,92" -> 332 km)
+            const rawTotal = colunas[colTotal] || '0';
+            const distTratada = rawTotal.replace(/\./g, '').replace(',', '.');
+            const kmDecimal = parseFloat(distTratada) || 0;
+            const kmRodados = Math.round(kmDecimal);
 
             if (placaNorm && kmRodados > 0) {
-                dadosValidos.push({ 
-                    placa: placaNorm, 
-                    placaExibicao: placaBruta.toUpperCase(),
-                    km_rodados: kmRodados 
+                dadosValidos.push({
+                    placa: placaNorm,
+                    placaExibicao: placaOriginal.trim().toUpperCase(),
+                    km_rodados: kmRodados,
+                    km_decimal: kmDecimal
                 });
 
                 if (tbody) {
                     tbody.innerHTML += `
-                        <tr class="border-b border-gray-100 text-xs hover:bg-orange-50/40 transition">
-                            <td class="p-2.5 font-black text-gray-900 flex items-center gap-2">
-                                <span class="bg-orange-100 text-orange-950 border border-orange-200 px-2.5 py-1 rounded-lg font-black text-xs">
-                                    ${placaBruta.toUpperCase()}
+                        <tr class="border-b border-gray-100 hover:bg-orange-50/50 transition text-xs">
+                            <td class="p-3 font-black text-gray-900">
+                                <span class="bg-orange-100 text-orange-950 border border-orange-200 px-3 py-1 rounded-xl text-xs font-black shadow-sm">
+                                    ${placaOriginal.trim().toUpperCase()}
                                 </span>
                             </td>
-                            <td class="p-2.5 text-right font-black text-green-600 text-sm">
+                            <td class="p-3 text-right font-black text-green-600 text-sm">
                                 +${kmRodados.toLocaleString('pt-BR')} km
+                            </td>
+                            <td class="p-3 text-center">
+                                <span class="bg-green-100 text-green-800 text-[10px] font-black uppercase px-2.5 py-1 rounded-full">
+                                    ✓ Capturado
+                                </span>
                             </td>
                         </tr>`;
                 }
@@ -369,21 +388,22 @@ export function processarArquivoCSV(event) {
 
         window.dadosCSVImportacao = dadosValidos;
 
-        // Exibe o painel de pré-visualização da tabela
+        // Atualiza os cabeçalhos do modal
+        const elPeriodo = document.getElementById('periodo-csv-mobiltracker');
+        if (elPeriodo) elPeriodo.innerText = textoPeriodo;
+
+        const qtdVeiculos = document.getElementById('qtd-veiculos-csv');
+        if (qtdVeiculos) qtdVeiculos.innerText = `${dadosValidos.length} veículos identificados`;
+
+        // REVELA O PAINEL DE TABELA NA TELA
         const containerPreview = document.getElementById('container-preview-csv');
         if (containerPreview) {
             containerPreview.classList.remove('hidden');
             containerPreview.style.display = 'block';
         }
 
-        // Atualiza a contagem de veículos identificados
-        const qtdVeiculos = document.getElementById('qtd-veiculos-csv');
-        if (qtdVeiculos) {
-            qtdVeiculos.innerText = `${dadosValidos.length} veículos identificados`;
-        }
-
         if (dadosValidos.length === 0) {
-            alert('⚠️ Nenhum veículo com rodagem positiva foi identificado neste arquivo CSV.');
+            alert('⚠️ Nenhum veículo com rodagem positiva foi encontrado neste arquivo.');
         }
     };
 
@@ -393,11 +413,11 @@ export function processarArquivoCSV(event) {
 export async function confirmarImportacaoCSV() {
     const lista = window.dadosCSVImportacao || [];
     if (!lista || lista.length === 0) {
-        alert('⚠️ Nenhum dado de CSV foi carregado para importação.');
+        alert('⚠️ Nenhum dado do CSV foi carregado para importação.');
         return;
     }
 
-    if (!confirm(`Confirmar atualização de quilometragem para os ${lista.length} veículos identificados no CSV?`)) return;
+    if (!confirm(`Confirmar atualização de quilometragem para os ${lista.length} veículos identificados?`)) return;
 
     let sucessos = 0;
     const dataHoje = new Date().toISOString().split('T')[0];
@@ -415,7 +435,7 @@ export async function confirmarImportacaoCSV() {
                     const kmAnterior = piloto.km_atual || 0;
                     const novoKmTotal = kmAnterior + item.km_rodados;
 
-                    // Log de telemetria no servidor
+                    // Grava histórico de rastreador no backend
                     await fetchComAuth(`${API_BASE}/admin/rastreador`, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -431,7 +451,7 @@ export async function confirmarImportacaoCSV() {
                         })
                     });
 
-                    // Atualização do hodômetro do piloto
+                    // Atualiza o hodômetro do piloto
                     await fetchComAuth(`${API_BASE}/admin/locatarios/${piloto.id}`, {
                         method: 'PUT',
                         body: JSON.stringify({ km_atual: novoKmTotal })
@@ -445,11 +465,10 @@ export async function confirmarImportacaoCSV() {
         }
     }
 
-    alert(`✅ Importação concluída com sucesso!\n\n📊 Total de ${sucessos} piloto(s) e moto(s) atualizados.`);
+    alert(`✅ Importação concluída com sucesso!\n\n📊 Total de ${sucessos} piloto(s) e moto(s) atualizados no sistema.`);
     fecharModalImportarCSV();
     if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
 }
-
 // 9. RENDERIZAÇÃO DOS CARDS DA FROTA (CORRIGIDO)
 function renderizarFrota(lista) {
     const grid = document.getElementById('grid-frota');

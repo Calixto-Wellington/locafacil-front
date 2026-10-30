@@ -138,7 +138,7 @@ export function enviarSimulacaoWhatsApp() {
         textoResumoSaldo = `Como a multa contratual dá ${res.multaRescisao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} e você tem ${valorCaucao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} de caução conosco, a gente faz a retenção do caução para cobrir a rescisão e zera a diferença, sem você precisar pagar nada a mais de multa no encerramento! 👍`;
     }
 
-    const msg = `Fala ${primeiroNome}, beleza cara?\n\n` +
+    const msg = `Olá ${primeiroNome}, tudo bem?\n\n` +
     `Sobre a sua solicitação para devolver a moto (Placa: ${placa}), fiz a simulação dos valores de encerramento contratual para você avaliar com calma:\n\n` +
     `🗓️ *Período de Uso:*\n` +
     `• Data de Início: ${dataInicioFmt}\n` +

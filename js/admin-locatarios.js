@@ -245,7 +245,7 @@ export async function salvarEdicaoCard(event) {
 }
 
 // ======================================================
-// 8. IMPORTAÇÃO DE TELEMETRIA CSV MOBILTRACKER COM SELEÇÃO (CORRIGIDO)
+// 8. IMPORTAÇÃO DE TELEMETRIA CSV MOBILTRACKER (CORRIGIDO FINAL)
 // ======================================================
 
 export function abrirModalImportarCSV() {
@@ -316,7 +316,7 @@ export function atualizarContagemSelecionadosCSV() {
 export function processarArquivoCSV(event) {
     let file = null;
     if (event && event.target && event.target.files) {
-        file = event.target.files[0];
+        file = event.target.files[0] || event.target.files;
     } else if (event instanceof File) {
         file = event;
     }
@@ -396,7 +396,7 @@ export function processarArquivoCSV(event) {
         }
 
         window.dadosCSVImportacao = dadosValidos;
-        
+
         const elPeriodo = document.getElementById('periodo-csv-mobiltracker');
         if (elPeriodo) elPeriodo.innerText = textoPeriodo;
 
@@ -428,25 +428,62 @@ export async function confirmarImportacaoCSV() {
     const dataHoje = new Date().toISOString().split('T')[0];
 
     try {
-        // 1. Busca TODOS os locatários/pilotos de uma só vez
-        const resAll = await fetchComAuth(`${API_BASE}/admin/locatarios?status=ALL&_t=${Date.now()}`);
-        if (!resAll.ok) throw new Error(`Erro ao buscar lista de locatários: HTTP ${resAll.status}`);
-        
-        const responseData = await resAll.json();
-        const todosLocatarios = Array.isArray(responseData) ? responseData : (responseData.data || []);
+        // 1. Carrega lista de locatários via endpoint padrão
+        let todosLocatarios = [];
+        try {
+            const res = await fetchComAuth(`${API_BASE}/admin/locatarios?_t=${Date.now()}`);
+            if (res.ok) {
+                const responseData = await res.json();
+                todosLocatarios = Array.isArray(responseData) ? responseData : (responseData.data || []);
+            }
+        } catch (e) {
+            console.warn('Erro ao carregar lista de locatários:', e);
+        }
 
-        // 2. Processa cada item selecionado do CSV comparando a placa normalizada (sem hífen)
+        // Se veio vazio, tenta a busca explícita por ATIVO
+        if (todosLocatarios.length === 0) {
+            try {
+                const resAtivos = await fetchComAuth(`${API_BASE}/admin/locatarios?status=ATIVO&_t=${Date.now()}`);
+                if (resAtivos.ok) {
+                    const responseData = await resAtivos.json();
+                    todosLocatarios = Array.isArray(responseData) ? responseData : (responseData.data || []);
+                }
+            } catch (e) {}
+        }
+
+        // 2. Atualiza cada moto selecionada
         for (const item of listaFiltrada) {
-            const piloto = todosLocatarios.find(l => {
+            const placaCsvNorm = item.placa; // Placa tratada (ex: FYF1F84, URX7J14, FDZ2I75)
+
+            // Busca na lista em memória normalizando a placa do banco (FYF-1F84 -> FYF1F84)
+            let piloto = todosLocatarios.find(l => {
                 const placaBancoNorm = (l.placa || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-                return placaBancoNorm === item.placa;
+                return placaBancoNorm === placaCsvNorm;
             });
+
+            // Fallback: Busca via API com o prefixo da placa (ex: "FYF", "FDZ", "URX")
+            if (!piloto && placaCsvNorm.length >= 3) {
+                try {
+                    const prefixo = placaCsvNorm.substring(0, 3);
+                    const resBusca = await fetchComAuth(`${API_BASE}/admin/locatarios?busca=${encodeURIComponent(prefixo)}&_t=${Date.now()}`);
+                    if (resBusca.ok) {
+                        const responseData = await resBusca.json();
+                        const arrBusca = Array.isArray(responseData) ? responseData : (responseData.data || []);
+                        piloto = arrBusca.find(l => {
+                            const placaBancoNorm = (l.placa || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                            return placaBancoNorm === placaCsvNorm;
+                        });
+                    }
+                } catch (errBusca) {
+                    console.warn(`Erro no fallback de busca para ${placaCsvNorm}:`, errBusca);
+                }
+            }
 
             if (piloto) {
                 const kmAnterior = piloto.km_atual || 0;
                 const novoKmTotal = kmAnterior + item.km_rodados;
 
-                // Registra histórico no rastreador
+                // Salva histórico no rastreador
                 await fetchComAuth(`${API_BASE}/admin/rastreador`, {
                     method: 'POST',
                     body: JSON.stringify({
@@ -462,7 +499,7 @@ export async function confirmarImportacaoCSV() {
                     })
                 });
 
-                // Atualiza o hodômetro do piloto no cadastro
+                // Atualiza hodômetro do piloto
                 await fetchComAuth(`${API_BASE}/admin/locatarios/${piloto.id}`, {
                     method: 'PUT',
                     body: JSON.stringify({ km_atual: novoKmTotal })
@@ -479,11 +516,10 @@ export async function confirmarImportacaoCSV() {
         if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
 
     } catch (err) {
-        console.error('❌ Erro na importação do CSV:', err);
+        console.error('❌ Erro na importação:', err);
         alert(`❌ Erro ao processar importação: ${err.message}`);
     }
 }
-
 
 // 9. RENDERIZAÇÃO DOS CARDS DA FROTA (CORRIGIDO)
 function renderizarFrota(lista) {

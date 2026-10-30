@@ -1,11 +1,28 @@
 // ======================================================
-// SIMULADOR DE RESCISÃO & PRÉ-ENCERRAMENTO — js/admin-devolucao.js
+// SIMULADOR DE RESCISÃO & DEVOLUÇÃO — js/admin-devolucao.js
 // ======================================================
 
 import { API_BASE } from './api.js';
 import { fetchComAuth } from './auth.js';
 
-// 1. MOTOR DE CÁLCULO
+// AUXILIAR: Parse de data no fuso local (evita recuar 1 dia por causa do UTC)
+export function parseDataLocal(dataStr) {
+    if (!dataStr) return new Date();
+    const [ano, mes, dia] = dataStr.split('-').map(Number);
+    return new Date(ano, mes - 1, dia); // Meia-noite no fuso local
+}
+
+// AUXILIAR: Formata YYYY-MM-DD para DD/MM/YYYY sem deslocamento de fuso
+export function formatarDataBR(dataStr) {
+    if (!dataStr) return '';
+    const partes = dataStr.split('-');
+    if (partes.length === 3) {
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+    return dataStr;
+}
+
+// 1. MOTOR DE CÁLCULO DE RESCISÃO REVISADO
 export function calcularRescisaoDevolucao(
     dataInicioStr, 
     dataDevolucaoStr, 
@@ -15,20 +32,22 @@ export function calcularRescisaoDevolucao(
     valorMultas = 0, 
     taxaMulta = 0.30
 ) {
-    const dataInicio = new Date(dataInicioStr);
-    const dataDevolucao = new Date(dataDevolucaoStr);
+    const dataInicio = parseDataLocal(dataInicioStr);
+    const dataDevolucao = parseDataLocal(dataDevolucaoStr);
 
+    // Mínimo contratual de 3 meses a partir do início
     const dataFimMinimo = new Date(dataInicio);
     dataFimMinimo.setMonth(dataFimMinimo.getMonth() + 3);
 
     const msPorDia = 1000 * 60 * 60 * 24;
-    const diasDecorridos = Math.max(0, Math.floor((dataDevolucao - dataInicio) / msPorDia));
-    const diasRemanescentes = Math.max(0, Math.ceil((dataFimMinimo - dataDevolucao) / msPorDia));
+    const diasDecorridos = Math.max(0, Math.round((dataDevolucao - dataInicio) / msPorDia));
+    const diasRemanescentes = Math.max(0, Math.round((dataFimMinimo - dataDevolucao) / msPorDia));
 
-    const semanasRemanescentes = diasRemanescentes / 7;
-    const valorRemanescenteTotal = semanasRemanescentes * valorSemanal;
+    const valorDiaria = valorSemanal / 7;
+    const valorRemanescenteTotal = diasRemanescentes * valorDiaria;
+    const semanasRemanescentes = (diasRemanescentes / 7).toFixed(1);
 
-    // Multa de 30% sobre o período restante do contrato mínimo
+    // Multa de 30% sobre o saldo remanescente do contrato
     const multaRescisao = diasRemanescentes > 0 ? (valorRemanescenteTotal * taxaMulta) : 0;
 
     const totalCreditos = valorCaucao;
@@ -38,7 +57,7 @@ export function calcularRescisaoDevolucao(
     return {
         diasDecorridos,
         diasRemanescentes,
-        semanasRemanescentes: semanasRemanescentes.toFixed(1),
+        semanasRemanescentes,
         valorRemanescenteTotal,
         multaRescisao,
         totalCreditos,
@@ -48,10 +67,13 @@ export function calcularRescisaoDevolucao(
     };
 }
 
-// 2. ABRIR MODAL EM MODO SIMULAÇÃO
+// 2. ABRIR MODAL COM DATA ATUAL DO FUSO LOCAL
 export function abrirSimuladorDevolucao(locatario = {}) {
     const modal = document.getElementById('modal-devolucao-moto');
     if (!modal) return;
+
+    // Data de hoje em YYYY-MM-DD no fuso local
+    const hojeLocal = new Date().toLocaleDateString('sv-SE');
 
     document.getElementById('dev-locatario-id').value = locatario.id || '';
     document.getElementById('dev-piloto-nome').innerText = locatario.nome || 'Piloto';
@@ -60,8 +82,8 @@ export function abrirSimuladorDevolucao(locatario = {}) {
     document.getElementById('dev-input-cpf').value = locatario.cpf || '';
     document.getElementById('dev-input-telefone').value = locatario.telefone || '';
     
-    document.getElementById('dev-data-inicio').value = locatario.data_inicio || '2026-09-21';
-    document.getElementById('dev-data-devolucao').value = new Date().toISOString().split('T')[0];
+    document.getElementById('dev-data-inicio').value = locatario.data_inicio || '2026-09-20';
+    document.getElementById('dev-data-devolucao').value = hojeLocal;
     document.getElementById('dev-valor-semanal').value = locatario.valor_semanal || 250;
     document.getElementById('dev-valor-caucao').value = locatario.valor_caucao || 550;
     document.getElementById('dev-avarias').value = 0;
@@ -81,7 +103,7 @@ export function fecharModalDevolucao() {
     }
 }
 
-// 3. RECALCULAR EM TEMPO REAL NA TELA
+// 3. RECALCULAR EM TEMPO REAL
 export function executarCalculoModalDevolucao() {
     const dataInicio = document.getElementById('dev-data-inicio').value;
     const dataDevolucao = document.getElementById('dev-data-devolucao').value;
@@ -111,7 +133,7 @@ export function executarCalculoModalDevolucao() {
     }
 }
 
-// 4. DISPARAR MENSAGEM DE SIMULAÇÃO INFORMAL NO WHATSAPP (SEM ALTERAR O BANCO)
+// 4. DISPARAR MENSAGEM NO WHATSAPP FORMATADA COM QUEBRAS DE LINHA E DATAS CORRETAS
 export function enviarSimulacaoWhatsApp() {
     const nome = document.getElementById('dev-input-nome').value;
     const telefone = document.getElementById('dev-input-telefone').value;
@@ -126,38 +148,39 @@ export function enviarSimulacaoWhatsApp() {
 
     const res = calcularRescisaoDevolucao(dataInicio, dataDevolucao, valorSemanal, valorCaucao, valorAvarias, valorMultas);
     const numLimpo = telefone.replace(/\D/g, '');
-    const primeiroNome = (nome || '').split(' ')[0];
+    const primeiroNome = (nome || '').split(' ')[0].toUpperCase();
 
-    const dataInicioFmt = new Date(dataInicio).toLocaleDateString('pt-BR');
-    const dataDevolucaoFmt = new Date(dataDevolucao).toLocaleDateString('pt-BR');
+    const dataInicioFmt = formatarDataBR(dataInicio);
+    const dataDevolucaoFmt = formatarDataBR(dataDevolucao);
 
     let textoResumoSaldo = '';
-    if (res.saldoFinal >= 0) {
+    if (res.saldoFinal > 10) {
         textoResumoSaldo = `Como a multa dá ${res.multaRescisao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} e seu caução é de ${valorCaucao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}, você tem um saldo a receber de ${res.saldoFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} (devolvido em até 60 dias via PIX após vistoria final).`;
     } else {
         textoResumoSaldo = `Como a multa contratual dá ${res.multaRescisao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} e você tem ${valorCaucao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} de caução conosco, a gente faz a retenção do caução para cobrir a rescisão e zera a diferença, sem você precisar pagar nada a mais de multa no encerramento! 👍`;
     }
 
-    const msg = `Olá ${primeiroNome}, tudo bem?\n\n` +
-    `Sobre a sua solicitação para devolver a moto (Placa: ${placa}), fiz a simulação dos valores de encerramento contratual para você avaliar com calma:\n\n` +
-    `🗓️ *Período de Uso:*\n` +
-    `• Data de Início: ${dataInicioFmt}\n` +
-    `• Data Pretendida de Devolução: ${dataDevolucaoFmt}\n` +
-    `• Dias Restantes para completar os 3 meses mínimos: ${res.diasRemanescentes} dias (~${res.semanasRemanescentes} semanas)\n\n` +
-    `📊 *Cálculo da Simulação:*\n` +
-    `• Saldo restante das semanas: ${res.valorRemanescenteTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n` +
-    `• Multa de encerramento antecipado (30% das semanas restantes): ${res.multaRescisao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n` +
-    `• Caução depositado na entrada: ${valorCaucao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n\n` +
-    `💡 *Como fica o acerto final:*\n` +
-    `${textoResumoSaldo}\n\n` +
-    `⚠️ *Multas de Trânsito Retroativas:*\n` +
-    `Vale lembrar que, se chegar alguma infração referente ao período em que esteve com a moto (a partir de ${dataInicioFmt}), o pagamento e a indicação do condutor continuam sob sua responsabilidade.\n\n` +
-    `Dá uma olhada nos números e me avisa se prefere agendar a devolução na base em Santo André ou se quer continuar rodando mais um pouco até fechar os 3 meses! 👍`;
+    const msg = `Fala ${primeiroNome}, beleza cara?\n\n` +
+        `Sobre a sua solicitação para devolver a moto (Placa: ${placa}), fiz a simulação dos valores de encerramento contratual para você avaliar com calma:\n\n` +
+        `🗓️ *Período de Uso:*\n` +
+        `• Data de Início: ${dataInicioFmt}\n` +
+        `• Data Pretendida de Devolução: ${dataDevolucaoFmt}\n` +
+        `• Dias Rodados: ${res.diasDecorridos} dias\n` +
+        `• Dias Restantes para completar os 3 meses mínimos: ${res.diasRemanescentes} dias (~${res.semanasRemanescentes} semanas)\n\n` +
+        `📊 *Cálculo da Simulação:*\n` +
+        `• Saldo restante das semanas: ${res.valorRemanescenteTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n` +
+        `• Multa de encerramento antecipado (30% das semanas restantes): ${res.multaRescisao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n` +
+        `• Caução depositado na entrada: ${valorCaucao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n\n` +
+        `💡 *Como fica o acerto final:*\n` +
+        `${textoResumoSaldo}\n\n` +
+        `⚠️ *Multas de Trânsito Retroativas:*\n` +
+        `Vale lembrar que, se chegar alguma infração referente ao período em que esteve com a moto (a partir de ${dataInicioFmt}), o pagamento e a indicação do condutor continuam sob sua responsabilidade.\n\n` +
+        `Dá uma olhada nos números e me avisa se prefere agendar a devolução na base em Santo André ou se quer continuar rodando mais um pouco até fechar os 3 meses! 👍`;
 
-window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
+    window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// 5. EFETIVAR ENCERRAMENTO DEFINITIVO (SÓ QUANDO O CLIENTE CONFIRMAR A ENTREGA DA MOTO)
+// 5. EFETIVAR ENCERRAMENTO DEFINITIVO
 export async function efetivarEncerramentoDefinitivo() {
     const id = document.getElementById('dev-locatario-id').value;
     const nome = document.getElementById('dev-piloto-nome').innerText;
@@ -181,7 +204,7 @@ export async function efetivarEncerramentoDefinitivo() {
     }
 }
 
-// EXPOSIÇÃO GLOBAL NO WINDOW
+// VÍNCULOS GLOBAIS
 window.abrirSimuladorDevolucao = abrirSimuladorDevolucao;
 window.fecharModalDevolucao = fecharModalDevolucao;
 window.executarCalculoModalDevolucao = executarCalculoModalDevolucao;

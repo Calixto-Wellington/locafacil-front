@@ -139,22 +139,22 @@ export function enviarSimulacaoWhatsApp() {
     }
 
     const msg = `Fala ${primeiroNome}, beleza cara?\n\n` +
-        `Sobre a sua solicitação para devolver a moto (Placa: ${placa}), fiz a simulação dos valores de encerramento contratual para você avaliar com calma:\n\n` +
-        `🗓️ *Período de Uso:*\n` +
-        `• Data de Início: ${dataInicioFmt}\n` +
-        `• Data Pretendida de Devolução: ${dataDevolucaoFmt}\n` +
-        `• Dias Restantes para completar os 3 meses mínimos: ${res.diasRemanescentes} dias (~${res.semanasRemanescentes} semanas)\n\n` +
-        `📊 *Cálculo da Simulação:*\n` +
-        `• Saldo restante das semanas: ${res.valorRemanescenteTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n` +
-        `• Multa de encerramento antecipado (30% das semanas restantes): ${res.multaRescisao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n` +
-        `• Caução depositado na entrada: ${valorCaucao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n\n` +
-        `💡 *Como fica o acerto final:*\n` +
-        `${textoResumoSaldo}\n\n` +
-        `⚠️ *Multas de Trânsito Retroativas:*\n` +
-        `Vale lembrar que, se chegar alguma infração referente ao período em que esteve com a moto (a partir de ${dataInicioFmt}), o pagamento e a indicação do condutor continuam sob sua responsabilidade.\n\n` +
-        `Dá uma olhada nos números e me avisa se prefere agendar a devolução na base em Santo André ou se quer continuar rodando mais um pouco até fechar os 3 meses! 👍`;
+    `Sobre a sua solicitação para devolver a moto (Placa: ${placa}), fiz a simulação dos valores de encerramento contratual para você avaliar com calma:\n\n` +
+    `🗓️ *Período de Uso:*\n` +
+    `• Data de Início: ${dataInicioFmt}\n` +
+    `• Data Pretendida de Devolução: ${dataDevolucaoFmt}\n` +
+    `• Dias Restantes para completar os 3 meses mínimos: ${res.diasRemanescentes} dias (~${res.semanasRemanescentes} semanas)\n\n` +
+    `📊 *Cálculo da Simulação:*\n` +
+    `• Saldo restante das semanas: ${res.valorRemanescenteTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n` +
+    `• Multa de encerramento antecipado (30% das semanas restantes): ${res.multaRescisao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n` +
+    `• Caução depositado na entrada: ${valorCaucao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n\n` +
+    `💡 *Como fica o acerto final:*\n` +
+    `${textoResumoSaldo}\n\n` +
+    `⚠️ *Multas de Trânsito Retroativas:*\n` +
+    `Vale lembrar que, se chegar alguma infração referente ao período em que esteve com a moto (a partir de ${dataInicioFmt}), o pagamento e a indicação do condutor continuam sob sua responsabilidade.\n\n` +
+    `Dá uma olhada nos números e me avisa se prefere agendar a devolução na base em Santo André ou se quer continuar rodando mais um pouco até fechar os 3 meses! 👍`;
 
-    window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
+window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 // 5. EFETIVAR ENCERRAMENTO DEFINITIVO (SÓ QUANDO O CLIENTE CONFIRMAR A ENTREGA DA MOTO)

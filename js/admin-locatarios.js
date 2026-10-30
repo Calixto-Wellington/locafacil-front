@@ -473,10 +473,10 @@ function renderizarFrota(lista) {
             </button>
 
             <div class="flex gap-2">
-        <!-- 🔘 NOVO BOTÃO DE SIMULAÇÃO -->
-        <button onclick='abrirSimuladorDevolucao(...)'>
-            🔍 Simular Devolução
-        </button>
+        <!-- 🔘 BOTÃO DE SIMULAÇÃO DEVOLUCAO -->
+        <button type="button" onclick='abrirSimuladorDevolucao(${JSON.stringify(locatario).replace(/'/g, "&#39;").replace(/"/g, "&quot;")})' class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-3 py-2.5 rounded-xl text-xs uppercase transition shadow">
+    🔍 Simular Devolução
+</button>
         `;
 
         grid.innerHTML += `

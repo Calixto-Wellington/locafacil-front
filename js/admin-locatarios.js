@@ -613,6 +613,8 @@ function renderizarFrota(lista) {
     window.fecharModal = fecharModal;
     window.salvarEdicaoCard = salvarEdicaoCard;
     window.abrirModalImportarCSV = abrirModalImportarCSV;
-    window.fecharModalImportarCSV = fecharModalImportarCSV;
-    window.processarArquivoCSV = processarArquivoCSV;
-    window.confirmarImportacaoCSV = confirmarImportacaoCSV;
+window.fecharModalImportarCSV = fecharModalImportarCSV;
+window.processarArquivoCSV = processarArquivoCSV;
+window.confirmarImportacaoCSV = confirmarImportacaoCSV;
+window.marcarDesmarcarTodosCSV = marcarDesmarcarTodosCSV;
+window.atualizarContagemSelecionadosCSV = atualizarContagemSelecionadosCSV;

@@ -471,6 +471,12 @@ function renderizarFrota(lista) {
             <button type="button" onclick="adicionarUmaSemana('${item.id}', '${item.placa || ''}', '${item.telefone || ''}', '${nomeSanitizado}', ${semanasPagas}, '${tipoContrato}', ${semanasTotais}, '${item.cpf || ''}')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 rounded-xl transition uppercase text-sm shadow-md">
                 💵 +1 Semana (Baixar Pix)
             </button>
+
+            <div class="flex gap-2">
+        <!-- 🔘 NOVO BOTÃO DE SIMULAÇÃO -->
+        <button onclick='abrirSimuladorDevolucao(...)'>
+            🔍 Simular Devolução
+        </button>
         `;
 
         grid.innerHTML += `

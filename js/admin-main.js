@@ -79,6 +79,12 @@ import {
     initFinanceiro 
 } from './admin-financeiro.js';
 
+//Devoçução
+
+import { 
+    abrirSimuladorDevolucao 
+} from './admin-devolucao.js';
+
 
 // ======================================================
 // EXPOSIÇÃO GLOBAL NO WINDOW PARA SUPORTE AOS EVENTOS HTML

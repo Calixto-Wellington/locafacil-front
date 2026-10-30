@@ -651,6 +651,92 @@ border-color: #f97316;
         </div>
     </div>
 
+    <!-- MODAL 8 DE SIMULAÇÃO & RESCISÃO DE CONTRATO -->
+<div id="modal-devolucao-moto" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 border border-gray-200 max-h-[90vh] overflow-y-auto">
+        <input type="hidden" id="dev-locatario-id">
+        <input type="hidden" id="dev-input-nome">
+        <input type="hidden" id="dev-input-cpf">
+        <input type="hidden" id="dev-input-telefone">
+
+        <div class="border-b border-gray-100 pb-3 flex justify-between items-center">
+            <div>
+                <span class="bg-orange-100 text-orange-800 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">Ferramenta de Negociação</span>
+                <h3 class="text-lg font-black uppercase text-gray-900 mt-1">📊 Simulador de Rescisão & Devolução</h3>
+                <p class="text-xs text-gray-500 font-bold uppercase"><span id="dev-piloto-nome" class="text-gray-900"></span> — Placa: <span id="dev-placa" class="text-orange-600"></span></p>
+            </div>
+            <button type="button" onclick="fecharModalDevolucao()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Data Início do Contrato</label>
+                <input type="date" id="dev-data-inicio" onchange="executarCalculoModalDevolucao()" class="w-full p-2.5 border rounded-xl text-xs font-bold bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Data Prevista de Devolução</label>
+                <input type="date" id="dev-data-devolucao" onchange="executarCalculoModalDevolucao()" class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Semanalidade (R$)</label>
+                <input type="number" id="dev-valor-semanal" oninput="executarCalculoModalDevolucao()" class="w-full p-2.5 border rounded-xl text-xs font-bold bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Caução Pago (R$)</label>
+                <input type="number" id="dev-valor-caucao" oninput="executarCalculoModalDevolucao()" class="w-full p-2.5 border rounded-xl text-xs font-bold bg-gray-50">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Avarias Estimadas (R$)</label>
+                <input type="number" id="dev-avarias" value="0" oninput="executarCalculoModalDevolucao()" class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Multas de Trânsito (R$)</label>
+                <input type="number" id="dev-multas" value="0" oninput="executarCalculoModalDevolucao()" class="w-full p-2.5 border rounded-xl text-xs font-bold bg-white">
+            </div>
+        </div>
+
+        <!-- QUADRO DE RESULTADOS DA SIMULAÇÃO -->
+        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-2 text-xs">
+            <div class="flex justify-between">
+                <span class="font-bold text-gray-600">Tempo Rodado:</span>
+                <span id="dev-res-decorrido" class="font-black text-gray-900">0 dias</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="font-bold text-gray-600">Tempo Faltante (3 Meses Mínimos):</span>
+                <span id="dev-res-remanescente" class="font-black text-gray-900">0 dias</span>
+            </div>
+            <div class="flex justify-between border-t border-gray-200 pt-2">
+                <span class="font-bold text-gray-600">Multa Rescisória (30% do saldo restante):</span>
+                <span id="dev-res-multa" class="font-black text-red-600">R$ 0,00</span>
+            </div>
+            <div class="border-t-2 border-gray-300 pt-2 flex justify-between items-center">
+                <span class="font-black uppercase text-gray-900">Balanço do Caução:</span>
+                <span id="dev-res-saldo" class="text-base font-black">R$ 0,00</span>
+            </div>
+        </div>
+
+        <!-- BOTÕES DE AÇÃO -->
+        <div class="space-y-2 pt-2">
+            <button type="button" onclick="enviarSimulacaoWhatsApp()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl text-xs uppercase shadow transition flex items-center justify-center gap-2">
+                💬 1. Enviar Simulação via WhatsApp (Não altera o contrato)
+            </button>
+
+            <div class="flex gap-2 border-t border-gray-100 pt-2">
+                <button type="button" onclick="fecharModalDevolucao()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-3 rounded-xl text-xs uppercase">Fechar Janela</button>
+                <button type="button" onclick="efetivarEncerramentoDefinitivo()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-xl text-xs uppercase shadow">2. Efetivar Devolução Real</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
     <!-- CARREGAMENTO DO SCRIPT PRINCIPAL MÓDULO JS -->
     <script type="module" src="./js/admin-main.js"></script>
 </body>

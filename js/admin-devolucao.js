@@ -160,7 +160,7 @@ export function enviarSimulacaoWhatsApp() {
         textoResumoSaldo = `Como a multa contratual dá ${res.multaRescisao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} e você tem ${valorCaucao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} de caução conosco, a gente faz a retenção do caução para cobrir a rescisão e zera a diferença, sem você precisar pagar nada a mais de multa no encerramento! 👍`;
     }
 
-    const msg = `Fala ${primeiroNome}, beleza cara?\n\n` +
+    const msg = `Olá ${primeiroNome}, tudo bem?\n\n` +
         `Sobre a sua solicitação para devolver a moto (Placa: ${placa}), fiz a simulação dos valores de encerramento contratual para você avaliar com calma:\n\n` +
         `🗓️ *Período de Uso:*\n` +
         `• Data de Início: ${dataInicioFmt}\n` +
@@ -175,7 +175,7 @@ export function enviarSimulacaoWhatsApp() {
         `${textoResumoSaldo}\n\n` +
         `⚠️ *Multas de Trânsito Retroativas:*\n` +
         `Vale lembrar que, se chegar alguma infração referente ao período em que esteve com a moto (a partir de ${dataInicioFmt}), o pagamento e a indicação do condutor continuam sob sua responsabilidade.\n\n` +
-        `Dá uma olhada nos números e me avisa se prefere agendar a devolução na base em Santo André ou se quer continuar rodando mais um pouco até fechar os 3 meses! 👍`;
+        `Dá uma olhada nos números e me avisa se prefere agendar a devolução ou se quer continuar rodando mais um pouco até fechar os 3 meses! 👍`;
 
     window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
 }

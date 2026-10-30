@@ -415,23 +415,7 @@ border-color: #f97316;
         </div>
     </div>
 
-    <!-- MODAL 3: IMPORTAR CSV MOBILTRACKER -->
-    <div id="modal-importar-csv" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4">
-            <h3 class="text-lg font-black uppercase text-gray-900">📊 Importar Telemetria CSV Mobiltracker</h3>
-            
-            <input type="file" id="input-csv-mobiltracker" accept=".csv" onchange="processarArquivoCSV(event)" class="block w-full text-xs font-bold border rounded-xl p-2.5">
-            
-            <div id="preview-csv-container" class="max-h-60 overflow-y-auto hidden border rounded-xl p-2 text-xs"></div>
-
-            <div class="flex gap-2 pt-2">
-                <button type="button" onclick="fecharModalImportarCSV()" class="flex-1 bg-gray-200 text-gray-800 font-bold py-2.5 rounded-xl text-xs uppercase">Cancelar</button>
-                <button type="button" onclick="confirmarImportacaoCSV()" class="flex-1 bg-orange-600 text-white font-black py-2.5 rounded-xl text-xs uppercase shadow">Confirmar Importação</button>
-            </div>
-        </div>
-    </div>
-
-<!-- MODAL DE IMPORTAÇÃO DE TELEMETRIA MOBILTRACKER -->
+<!-- MODAL DE IMPORTAÇÃO DE TELEMETRIA MOBILTRACKER COM SELEÇÃO POR CHECKBOX -->
 <div id="modal-importar-csv" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-gray-200 max-h-[90vh] overflow-y-auto">
         
@@ -448,33 +432,47 @@ border-color: #f97316;
         <!-- CAMPO DE UPLOAD DE ARQUIVO -->
         <div class="space-y-2">
             <label class="block text-xs font-bold uppercase text-gray-700">Arquivo CSV do Relatório (.csv)</label>
-            <input type="file" id="input-file-csv" accept=".csv" onchange="processarArquivoCSV(event)" class="w-full p-3 border rounded-xl text-xs font-bold bg-gray-50 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-orange-600 file:text-white hover:file:bg-orange-700">
+            <input type="file" id="input-file-csv" accept=".csv" onchange="processarArquivoCSV(event)" class="w-full p-3 border rounded-xl text-xs font-bold bg-gray-50 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-orange-600 file:text-white hover:file:bg-orange-700 cursor-pointer">
         </div>
 
-        <!-- CONTAINER DA TABELA DE PREVIEW (REVELADO AUTOMATICAMENTE APÓS SELECIONAR O CSV) -->
+        <!-- PREVIEW COM SELEÇÃO POR CHECKBOX -->
         <div id="container-preview-csv" class="hidden space-y-3 pt-2">
             <div class="flex justify-between items-center bg-orange-50 p-3 rounded-xl border border-orange-100">
-                <span class="text-xs font-black uppercase text-orange-900">Motos Identificadas no Arquivo:</span>
-                <span id="qtd-veiculos-csv" class="text-xs font-black bg-orange-600 text-white px-3 py-1 rounded-full uppercase shadow-sm">0 veículos</span>
+                <span class="text-xs font-black uppercase text-orange-900">Motos Selecionadas:</span>
+                <span id="qtd-veiculos-csv" class="text-xs font-black bg-orange-600 text-white px-3 py-1 rounded-full uppercase shadow-sm">0 selecionadas</span>
             </div>
 
-            <!-- TABELA DE PLACAS E KILOMETRAGEM -->
-            <div class="border border-gray-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
+            <!-- TABELA COM MARCAÇÃO POR CAIXINHA -->
+            <div class="border border-gray-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto shadow-inner">
                 <table class="w-full text-left border-collapse">
-                    <thead class="bg-gray-900 text-white text-[10px] uppercase font-black sticky top-0">
+                    <thead class="bg-gray-900 text-white text-[10px] uppercase font-black sticky top-0 z-10">
                         <tr>
+                            <th class="p-3 text-center w-10">
+                                <input type="checkbox" id="check-todos-csv" onchange="marcarDesmarcarTodosCSV(this)" checked class="w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500 cursor-pointer">
+                            </th>
                             <th class="p-3">Veículo / Placa</th>
                             <th class="p-3 text-right">KM Rodados (Período)</th>
-                            <th class="p-3 text-center">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="tbody-preview-csv" class="divide-y divide-gray-100">
-                        <!-- As linhas com as placas e os KMs serão inseridas aqui via JS -->
+                    <tbody id="tbody-preview-csv" class="divide-y divide-gray-100 bg-white">
+                        <!-- Linhas geradas via JavaScript -->
                     </tbody>
                 </table>
             </div>
         </div>
 
+        <!-- BOTÕES DE AÇÃO -->
+        <div class="flex gap-2 pt-3 border-t border-gray-100">
+            <button type="button" onclick="fecharModalImportarCSV()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl text-xs uppercase transition">
+                Cancelar
+            </button>
+            <button type="button" onclick="confirmarImportacaoCSV()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl text-xs uppercase transition shadow-md flex items-center justify-center gap-1">
+                🚀 Importar Selecionadas
+            </button>
+        </div>
+
+    </div>
+</div>
         <!-- BOTÕES DE AÇÃO -->
         <div class="flex gap-2 pt-3 border-t border-gray-100">
             <button type="button" onclick="fecharModalImportarCSV()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl text-xs uppercase transition">

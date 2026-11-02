@@ -481,9 +481,8 @@ export async function confirmarImportacaoCSV() {
 
             if (piloto) {
                 const kmAnterior = piloto.km_atual || 0;
-                const novoKmTotal = kmAnterior + item.km_rodados;
 
-                // Salva histórico no rastreador
+                // Apenas registra o log no rastreador (histórico de telemetria)
                 await fetchComAuth(`${API_BASE}/admin/rastreador`, {
                     method: 'POST',
                     body: JSON.stringify({
@@ -493,16 +492,10 @@ export async function confirmarImportacaoCSV() {
                         data_inicio: dataHoje,
                         data_fim: dataHoje,
                         km_anterior: kmAnterior,
-                        km_atual: novoKmTotal,
+                        km_atual: kmAnterior,
                         km_rodados: item.km_rodados,
-                        observacao: 'Importação CSV Mobiltracker (Seleção Manual)'
+                        observacao: 'Importação CSV Mobiltracker (Telemetria)'
                     })
-                });
-
-                // Atualiza hodômetro do piloto
-                await fetchComAuth(`${API_BASE}/admin/locatarios/${piloto.id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ km_atual: novoKmTotal })
                 });
 
                 sucessos++;

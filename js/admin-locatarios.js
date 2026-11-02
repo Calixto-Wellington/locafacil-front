@@ -1,38 +1,45 @@
 // ======================================================
-// MÓDULO DE LOCATÁRIOS / FROTA - js/admin-locatarios.js
+// MÓDULO DE LOCATÁRIOS / FROTA — js/admin-locatarios.js
 // ======================================================
 
 import { API_BASE } from './api.js';
 import { fetchComAuth } from './auth.js';
 
-// Variável temporária para guardar os dados do CSV processado
 window.dadosCSVImportacao = [];
 
-// 1. CARREGAR LOCATÁRIOS COM FILTRO DE STATUS (ATIVO / ARQUIVADO / TODOS)
+// ======================================================
+// 1. CARREGAR LOCATÁRIOS COM FILTRO DE STATUS
+// ======================================================
 export async function carregarLocatarios() {
     const loading = document.getElementById('loading-frota');
     const grid = document.getElementById('grid-frota');
-    const filtroStatus = document.getElementById('filtro-status-frota')?.value || 'ATIVO';
+    const selectStatus = document.getElementById('filtro-status-frota');
+    const filtroStatus = selectStatus ? selectStatus.value : 'ATIVO';
 
     if (loading) loading.style.display = 'block';
     if (grid) grid.innerHTML = '';
 
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/locatarios?status=${filtroStatus}&_t=${Date.now()}`, {
-            cache: 'no-store'
-        });
-        if (!res.ok) return;
-        const lista = await res.json();
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios?status=${filtroStatus}&_t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const responseData = await res.json();
+        const lista = Array.isArray(responseData) ? responseData : (responseData.data || []);
 
         if (loading) loading.style.display = 'none';
-        renderizarFrota(lista || []);
+        renderizarFrota(lista);
     } catch (err) {
         console.error('Erro ao carregar locatários:', err);
         if (loading) loading.style.display = 'none';
+        if (grid) {
+            grid.innerHTML = `<div class="col-span-full bg-red-50 p-6 rounded-2xl text-center text-red-600 font-bold uppercase text-xs">Erro ao carregar lista de pilotos: ${err.message}</div>`;
+        }
     }
 }
 
-// 2. BUSCA POR NOME / PLACA / CPF
+// ======================================================
+// 2. BUSCA RÁPIDA DE PILOTOS
+// ======================================================
 export async function buscarLocatario() {
     const termo = document.getElementById('input-busca-frota')?.value?.trim() || '';
     if (!termo) return carregarLocatarios();
@@ -45,207 +52,205 @@ export async function buscarLocatario() {
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/locatarios?busca=${encodeURIComponent(termo)}&_t=${Date.now()}`);
-        if (!res.ok) return;
-        const lista = await res.json();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const responseData = await res.json();
+        const lista = Array.isArray(responseData) ? responseData : (responseData.data || []);
 
         if (loading) loading.style.display = 'none';
-        renderizarFrota(lista || []);
+        renderizarFrota(lista);
     } catch (err) {
-        console.error('Erro na busca de locatários:', err);
+        console.error('Erro na busca de locatário:', err);
         if (loading) loading.style.display = 'none';
     }
 }
 
-// 3. ARQUIVAR LOCATÁRIO (LIBERA A MOTO AUTOMATICAMENTE NO PÁTIO)
+// ======================================================
+// 3. ARQUIVAR CONTRATO
+// ======================================================
 export async function arquivarLocatario(id, nome, placa) {
-    const motivo = prompt(`Deseja arquivar o contrato de ${nome} (Placa: ${placa})?\n\nDigite o motivo (a moto será liberada no pátio automaticamente):`, 'Devolução de veículo / Encerramento de contrato');
+    const motivo = prompt(`Digite o motivo do arquivamento/encerramento do contrato de ${nome} (${placa}):`, "Devolução amigável");
     if (motivo === null) return;
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/arquivar`, {
             method: 'PATCH',
-            body: JSON.stringify({ motivo })
+            body: JSON.stringify({ status: 'ARQUIVADO', motivo_recusa: motivo })
         });
 
         if (res.ok) {
-            alert(`📦 Piloto ${nome} arquivado com sucesso e moto ${placa} liberada no pátio!`);
+            alert(`📦 Contrato de ${nome} arquivado com sucesso! A moto foi liberada para o pátio.`);
             carregarLocatarios();
             if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
         } else {
             const errData = await res.json();
-            alert(`❌ Erro ao arquivar: ${errData.error || 'Erro interno'}`);
+            alert(`❌ Erro ao arquivar: ${errData.error || 'Falha no servidor'}`);
         }
     } catch (err) {
-        console.error('Erro ao arquivar locatário:', err);
-        alert('❌ Erro de conexão.');
+        console.error('Erro ao arquivar:', err);
+        alert(`❌ Erro inesperado: ${err.message}`);
     }
 }
 
-// 4. REATIVAR LOCATÁRIO
+// ======================================================
+// 4. REATIVAR CONTRATO
+// ======================================================
 export async function reativarLocatario(id, nome) {
-    if (!confirm(`Deseja reativar o contrato de ${nome}?`)) return;
+    if (!confirm(`Deseja REATIVAR o contrato de ${nome} na frota ativa?`)) return;
 
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/reativar`, {
-            method: 'PATCH'
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/arquivar`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: 'ATIVO' })
         });
 
         if (res.ok) {
-            alert(`✅ Contrato de ${nome} reativado!`);
+            alert(`🔄 Contrato de ${nome} reativado com sucesso!`);
             carregarLocatarios();
         } else {
             const errData = await res.json();
-            alert(`❌ Erro ao reativar: ${errData.error || 'Erro interno'}`);
+            alert(`❌ Erro ao reativar: ${errData.error || 'Falha no servidor'}`);
         }
     } catch (err) {
-        console.error('Erro ao reativar locatário:', err);
+        console.error('Erro ao reativar:', err);
+        alert(`❌ Erro inesperado: ${err.message}`);
     }
 }
 
-// 5. BAIXAR +1 SEMANA (PIX) + MENSAGEM DINÂMICA DE WHATSAPP
-export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais, tipoContrato = 'OPCAO_COMPRA', semanasTotais = 182, cpf = '') {
-    if (!confirm(`Confirmar baixa de +1 semana paga para ${nome} (Placa: ${placa})?`)) return;
+// ======================================================
+// 5. BAIXA DE PAGAMENTO PIX (+1 SEMANA & +10 COINS)
+// ======================================================
+export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais, tipoContrato, semanasTotais, cpf) {
+    const novasSemanas = semanasAtuais + 1;
+    const primeiroNome = (nome || '').split(' ').toUpperCase();
+    const numLimpo = (telefone || '').replace(/\D/g, '');
+    const cpfLimpo = (cpf || '').replace(/\D/g, '');
 
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/pagamento`, {
+        const resConfig = await fetchComAuth(`${API_BASE}/admin/config/coins_por_pix`);
+        let incCoins = 10;
+        if (resConfig.ok) {
+            const cfg = await resConfig.json();
+            incCoins = parseInt(cfg.valor) || 10;
+        }
+
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/pagar-semana`, {
             method: 'POST',
-            body: JSON.stringify({ semanas: 1 })
+            body: JSON.stringify({
+                semanas_pagas: novasSemanas,
+                incremento_coins: incCoins
+            })
         });
 
-        if (res.ok) {
-            const data = await res.json();
-            const novaSemana = data.semanas_pagas || (parseInt(semanasAtuais, 10) + 1);
-            
-            const primeiroNome = ((nome || '').trim().split(' ')[0] || '').toUpperCase();
-            const numLimpo = (telefone || '').replace(/\D/g, '');
-            const cpfLimpo = (cpf || '').replace(/\D/g, '');
-            const totalSem = parseInt(semanasTotais || 182, 10);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-            const dominio = 'cashback.locafacilmotos.com.br';
-            const linkCashback = cpfLimpo 
-                ? 'https://' + dominio + '/?cpf=' + cpfLimpo
-                : 'https://' + dominio;
+        const responseData = await res.json();
+        const saldoCoinsNovo = responseData.locafacil_coins || 0;
+        const totalSem = semanasTotais || 182;
+        const pct = Math.min(100, Math.round((novasSemanas / totalSem) * 100));
 
-            let mensagem = '';
+        const linkCliente = `[suspicious link removed]{cpfLimpo}`;
 
-            if (tipoContrato === 'CONVENCIONAL') {
-                mensagem = `🟢 *PIX CONFIRMADO — ALUGUEL EM DIA!*\n\n` +
-                    `Fala ${primeiroNome}! Confirmamos o recebimento do seu Pix referente à *Semana ${novaSemana}* de aluguel! ✅\n\n` +
-                    `🏍️ *Moto:* Placa ${(placa || '').toUpperCase()}\n` +
-                    `📅 *Total de semanas pagas:* ${novaSemana} semanas\n\n` +
-                    `🎁 *Acesse seu Painel de Cashback & Coins:*\n${linkCashback}\n\n` +
-                    `Agradecemos pela parceria e por manter o seu pagamento em dia. Tenha uma excelente semana de trabalho! 👊💨\n\n` +
-                    `*LOCAFACILMOTOS — Acelerando com você!*`;
-            } else {
-                const pct = Math.min(100, Math.round((novaSemana / totalSem) * 100));
-                const faltam = totalSem - novaSemana;
-
-                mensagem = `🚀 *PIX CONFIRMADO! MAIS UM PASSO RUMO À SUA MOTO!*\n\n` +
-                    `Fala ${primeiroNome}! Confirmamos o recebimento do seu Pix da *Semana ${novaSemana} de ${totalSem}*! 🟢\n\n` +
-                    `📊 *SEU PROGRESSO:* Você já conquistou *${pct}%* da sua moto!\n` +
-                    `🏆 *Status:* Semana ${novaSemana} / ${totalSem} concluída com sucesso.\n` +
-                    `🏁 *Faltam:* Apenas ${faltam} semanas para a transferência do documento no DETRAN!\n\n` +
-                    `🎁 *Acompanhe seus Coins & Resgate Prêmios:*\n${linkCashback}\n\n` +
-                    `*LOCAFACILMOTOS — Acelerando junto com você!* 👊💨`;
-            }
-
-            if (numLimpo) {
-                window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(mensagem)}`, '_blank');
-            }
-
-            carregarLocatarios();
-        } else {
-            const errData = await res.json();
-            alert(`❌ Erro ao registrar pagamento: ${errData.error || 'Erro interno'}`);
+        let textoProgresso = `🎉 *PARABÉNS! VOCÊ COMPLETOU ${novasSemanas} SEMANAS COM SUCESSO!* 🟢`;
+        if (pct >= 50) {
+            textoProgresso = `🚀 *MAIS DA METADE DA MOTO JÁ É SUA! (${pct}% QUITADO — SEMANA ${novasSemanas} DE ${totalSem})* 🟢`;
         }
+
+        const msg = `🚀 *PIX CONFIRMADO! MAIS UM PASSO RUMO À SUA MOTO!*\n\n` +
+            `Fala ${primeiroNome}! Seu pagamento da semana foi confirmado! 🟢\n` +
+            `${textoProgresso}\n` +
+            `🪙 *Bônus:* +${incCoins} Locafacil Coins creditados! (Saldo Atual: ${saldoCoinsNovo} Coins)\n\n` +
+            `Acompanhe seu progresso e resgate prêmios no seu painel:\n👉 ${linkCliente}\n\n` +
+            `*LOCAFACILMOTOS — Parceria de verdade.* 👊`;
+
+        window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
+        carregarLocatarios();
     } catch (err) {
-        console.error('Erro ao adicionar semana:', err);
-        alert('❌ Erro de conexão ao registrar pagamento.');
+        console.error('Erro ao dar baixa na semana:', err);
+        alert(`❌ Erro ao dar baixa no Pix: ${err.message}`);
     }
 }
 
-// 6. MODAL EDITAR LOCATÁRIO (PREENCHIMENTO)
+// ======================================================
+// 6. MODAL DE EDIÇÃO DE CARD DE PILOTO (EDITION MANUAL)
+// ======================================================
 export function abrirModalEditar(locatario) {
-    const modal = document.getElementById('modal-locatario');
+    const modal = document.getElementById('modal-locatario') || document.getElementById('modal-editar');
     if (!modal) return;
 
-    document.getElementById('edit-id').value = locatario.id || '';
-    document.getElementById('edit-nome').value = locatario.nome || '';
-    document.getElementById('edit-cpf').value = locatario.cpf || '';
-    document.getElementById('edit-telefone').value = locatario.telefone || '';
-    document.getElementById('edit-placa').value = locatario.placa || '';
-    document.getElementById('edit-modelo').value = locatario.modelo || '';
-    document.getElementById('edit-semanas').value = locatario.semanas_pagas || 0;
-    document.getElementById('edit-km').value = locatario.km_atual || 0;
-
-    if (document.getElementById('edit-semanas-totais')) {
-        document.getElementById('edit-semanas-totais').value = locatario.semanas_totais || 182;
-    }
-
+    if (document.getElementById('edit-id')) document.getElementById('edit-id').value = locatario.id || '';
+    if (document.getElementById('edit-nome')) document.getElementById('edit-nome').value = locatario.nome || '';
+    if (document.getElementById('edit-placa')) document.getElementById('edit-placa').value = locatario.placa || '';
+    if (document.getElementById('edit-modelo')) document.getElementById('edit-modelo').value = locatario.modelo || '';
+    if (document.getElementById('edit-telefone')) document.getElementById('edit-telefone').value = locatario.telefone || '';
+    if (document.getElementById('edit-cpf')) document.getElementById('edit-cpf').value = locatario.cpf || '';
+    if (document.getElementById('edit-semanas')) document.getElementById('edit-semanas').value = locatario.semanas_pagas || 0;
+    if (document.getElementById('edit-semanas-totais')) document.getElementById('edit-semanas-totais').value = locatario.semanas_totais || 182;
+    if (document.getElementById('edit-coins')) document.getElementById('edit-coins').value = locatario.locafacil_coins || 0;
+    
+    // O KM Atual só é alterado aqui de forma explicitamente manual pelo usuário
+    if (document.getElementById('edit-km-atual')) document.getElementById('edit-km-atual').value = locatario.km_atual || 0;
+    
     if (document.getElementById('edit-tipo-contrato')) {
         document.getElementById('edit-tipo-contrato').value = locatario.tipo_contrato || 'OPCAO_COMPRA';
     }
 
     modal.classList.remove('hidden');
-    modal.style.display = 'flex';
+    modal.classList.add('flex');
 }
 
 export function fecharModal() {
-    const modal = document.getElementById('modal-locatario');
+    const modal = document.getElementById('modal-locatario') || document.getElementById('modal-editar');
     if (modal) {
         modal.classList.add('hidden');
-        modal.style.display = 'none';
+        modal.classList.remove('flex');
     }
 }
 
-// 7. SALVAR EDIÇÃO DO CARD DO PILOTO
-export async function salvarEdicaoCard(event) {
-    if (event) event.preventDefault();
+export async function salvarLocatario(e) {
+    if (e && e.preventDefault) e.preventDefault();
 
-    const id = document.getElementById('edit-id').value;
-    const nome = document.getElementById('edit-nome').value;
-    const placa = document.getElementById('edit-placa').value;
-    const modelo = document.getElementById('edit-modelo').value;
-    const telefone = document.getElementById('edit-telefone').value;
-    const cpf = document.getElementById('edit-cpf').value;
-    const semanas = document.getElementById('edit-semanas').value;
-    const km = document.getElementById('edit-km').value;
+    const id = document.getElementById('edit-id')?.value;
+    if (!id) return;
 
-    const semanasTotais = document.getElementById('edit-semanas-totais')?.value || 182;
-    const tipoContrato = document.getElementById('edit-tipo-contrato')?.value || 'OPCAO_COMPRA';
+    const payload = {
+        nome: document.getElementById('edit-nome')?.value?.trim(),
+        placa: document.getElementById('edit-placa')?.value?.trim()?.toUpperCase(),
+        modelo: document.getElementById('edit-modelo')?.value?.trim(),
+        telefone: document.getElementById('edit-telefone')?.value?.trim(),
+        cpf: document.getElementById('edit-cpf')?.value?.trim(),
+        semanas_pagas: parseInt(document.getElementById('edit-semanas')?.value) || 0,
+        semanas_totais: parseInt(document.getElementById('edit-semanas-totais')?.value) || 182,
+        locafacil_coins: parseInt(document.getElementById('edit-coins')?.value) || 0,
+        
+        // Atualização manual do KM Total pelo modal
+        km_atual: parseInt(document.getElementById('edit-km-atual')?.value) || 0,
+        
+        tipo_contrato: document.getElementById('edit-tipo-contrato')?.value || 'OPCAO_COMPRA'
+    };
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}`, {
             method: 'PUT',
-            body: JSON.stringify({
-                nome,
-                placa: placa.toUpperCase().trim(),
-                modelo,
-                telefone,
-                cpf,
-                semanas_pagas: parseInt(semanas, 10),
-                semanas_totais: parseInt(semanasTotais, 10),
-                km_atual: parseInt(km, 10),
-                tipo_contrato: tipoContrato
-            })
+            body: JSON.stringify(payload)
         });
 
         if (res.ok) {
-            alert('✅ Dados do piloto e contrato salvos com sucesso!');
+            alert('✅ Cadastro e KM Total salvos com sucesso!');
             fecharModal();
             carregarLocatarios();
         } else {
             const errData = await res.json();
-            alert(`❌ Erro ao salvar: ${errData.error || 'Erro interno'}`);
+            alert(`❌ Erro ao salvar: ${errData.error || 'Falha no servidor'}`);
         }
     } catch (err) {
-        console.error('Erro ao salvar edição do piloto:', err);
-        alert('❌ Erro de conexão.');
+        console.error('Erro ao salvar locatário:', err);
+        alert(`❌ Erro ao salvar: ${err.message}`);
     }
 }
 
 // ======================================================
-// 8. IMPORTAÇÃO DE TELEMETRIA CSV MOBILTRACKER (CORRIGIDO FINAL)
+// 7. TELEMETRIA CSV MOBILTRACKER (KM TOTAL MANTIDO MANUAL)
 // ======================================================
 
 export function abrirModalImportarCSV() {
@@ -315,8 +320,8 @@ export function atualizarContagemSelecionadosCSV() {
 
 export function processarArquivoCSV(event) {
     let file = null;
-    if (event && event.target && event.target.files) {
-        file = event.target.files[0] || event.target.files;
+    if (event && event.target && event.target.files && event.target.files) {
+        file = event.target.files;
     } else if (event instanceof File) {
         file = event;
     }
@@ -333,7 +338,7 @@ export function processarArquivoCSV(event) {
             return;
         }
 
-        const cabecalho = linhas[0].split(';').map(c => c.replace(/"/g, '').trim());
+        const cabecalho = linhas.split(';').map(c => c.replace(/"/g, '').trim());
         
         let colPlaca = cabecalho.findIndex(c => {
             const h = c.toLowerCase();
@@ -347,7 +352,7 @@ export function processarArquivoCSV(event) {
         const datasCabecalho = cabecalho.filter(c => /^\d{2}\/\d{2}\/\d{4}$/.test(c.trim()));
         let textoPeriodo = 'Relatório de Telemetria';
         if (datasCabecalho.length > 0) {
-            textoPeriodo = `📅 Período: ${datasCabecalho[0]} até ${datasCabecalho[datasCabecalho.length - 1]}`;
+            textoPeriodo = `📅 Período: ${datasCabecalho} até ${datasCabecalho[datasCabecalho.length - 1]}`;
         }
 
         const dadosValidos = [];
@@ -422,13 +427,12 @@ export async function confirmarImportacaoCSV() {
     const placasPermitidas = Array.from(checkboxesMarcados).map(cb => cb.getAttribute('data-placa'));
     const listaFiltrada = (window.dadosCSVImportacao || []).filter(item => placasPermitidas.includes(item.placa));
 
-    if (!confirm(`Confirmar atualização de KM para as ${listaFiltrada.length} motos selecionadas?`)) return;
+    if (!confirm(`Confirmar registro de telemetria para as ${listaFiltrada.length} motos selecionadas?\n\n(Nota: O KM Total dos cards NÃO será alterado).`)) return;
 
     let sucessos = 0;
-    const dataHoje = new Date().toISOString().split('T')[0];
+    const dataHoje = new Date().toISOString().split('T');
 
     try {
-        // 1. Carrega lista de locatários via endpoint padrão
         let todosLocatarios = [];
         try {
             const res = await fetchComAuth(`${API_BASE}/admin/locatarios?_t=${Date.now()}`);
@@ -440,28 +444,14 @@ export async function confirmarImportacaoCSV() {
             console.warn('Erro ao carregar lista de locatários:', e);
         }
 
-        // Se veio vazio, tenta a busca explícita por ATIVO
-        if (todosLocatarios.length === 0) {
-            try {
-                const resAtivos = await fetchComAuth(`${API_BASE}/admin/locatarios?status=ATIVO&_t=${Date.now()}`);
-                if (resAtivos.ok) {
-                    const responseData = await resAtivos.json();
-                    todosLocatarios = Array.isArray(responseData) ? responseData : (responseData.data || []);
-                }
-            } catch (e) {}
-        }
-
-        // 2. Atualiza cada moto selecionada
         for (const item of listaFiltrada) {
-            const placaCsvNorm = item.placa; // Placa tratada (ex: FYF1F84, URX7J14, FDZ2I75)
+            const placaCsvNorm = item.placa;
 
-            // Busca na lista em memória normalizando a placa do banco (FYF-1F84 -> FYF1F84)
             let piloto = todosLocatarios.find(l => {
                 const placaBancoNorm = (l.placa || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
                 return placaBancoNorm === placaCsvNorm;
             });
 
-            // Fallback: Busca via API com o prefixo da placa (ex: "FYF", "FDZ", "URX")
             if (!piloto && placaCsvNorm.length >= 3) {
                 try {
                     const prefixo = placaCsvNorm.substring(0, 3);
@@ -480,9 +470,9 @@ export async function confirmarImportacaoCSV() {
             }
 
             if (piloto) {
-                const kmAnterior = piloto.km_atual || 0;
+                const kmAtualNoCard = piloto.km_atual || 0;
 
-                // Apenas registra o log no rastreador (histórico de telemetria)
+                // Registra apenas o histórico no rastreador
                 await fetchComAuth(`${API_BASE}/admin/rastreador`, {
                     method: 'POST',
                     body: JSON.stringify({
@@ -491,12 +481,14 @@ export async function confirmarImportacaoCSV() {
                         semana: piloto.semanas_pagas || 0,
                         data_inicio: dataHoje,
                         data_fim: dataHoje,
-                        km_anterior: kmAnterior,
-                        km_atual: kmAnterior,
+                        km_anterior: kmAtualNoCard,
+                        km_atual: kmAtualNoCard, // Mantém o KM atual intacto
                         km_rodados: item.km_rodados,
-                        observacao: 'Importação CSV Mobiltracker (Telemetria)'
+                        observacao: 'Telemetria CSV Mobiltracker (KM Total Mantido Manual)'
                     })
                 });
+
+                // SEM CHAMADA PUT PARA /admin/locatarios/:id -> O KM Total permanece 100% manual!
 
                 sucessos++;
             } else {
@@ -504,32 +496,31 @@ export async function confirmarImportacaoCSV() {
             }
         }
 
-        alert(`✅ Importação concluída com sucesso!\n\n📊 Total de ${sucessos} de ${listaFiltrada.length} moto(s) atualizada(s) no sistema.`);
+        alert(`✅ Registros de telemetria salvos com sucesso!\n\n📊 Total de ${sucessos} de ${listaFiltrada.length} moto(s) registradas no histórico.\n(O KM Total do card permaneceu inalterado).`);
         fecharModalImportarCSV();
         if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
 
     } catch (err) {
-        console.error('❌ Erro na importação:', err);
-        alert(`❌ Erro ao processar importação: ${err.message}`);
+        console.error('❌ Erro no registro da telemetria CSV:', err);
+        alert(`❌ Erro ao processar registro: ${err.message}`);
     }
 }
 
-// 9. RENDERIZAÇÃO DOS CARDS DA FROTA (CORRIGIDO)
+// ======================================================
+// 8. RENDERIZAÇÃO DOS CARDS DA FROTA
+// ======================================================
 function renderizarFrota(lista) {
     const grid = document.getElementById('grid-frota');
     if (!grid) return;
 
     if (!lista || lista.length === 0) {
-        grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center shadow-sm text-gray-500 font-bold text-base uppercase">Nenhum piloto/moto cadastrado nesta visualização.</div>`;
+        grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center shadow-sm text-gray-500 font-bold text-base uppercase">Nenhum piloto/moto encontrado nesta visualização.</div>`;
         return;
     }
 
     grid.innerHTML = '';
 
-    lista.forEach(item => {
-        // Alias de segurança: Garante que tanto 'item' quanto 'locatario' funcionem no código
-        const locatario = item; 
-
+    lista.forEach(locatario => {
         const isArquivado = locatario.status === 'ARQUIVADO' || locatario.status === 'ENCERRADO';
         const tipoContrato = locatario.tipo_contrato || 'OPCAO_COMPRA';
         const semanasTotais = locatario.semanas_totais || 182;
@@ -595,7 +586,7 @@ function renderizarFrota(lista) {
                         </div>
 
                         <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 text-xs">
-                            <p class="text-orange-900 font-bold uppercase">Hodômetro Atual</p>
+                            <p class="text-orange-900 font-bold uppercase">Hodômetro Atual (Manual)</p>
                             <p class="font-black text-gray-900 text-base mt-0.5">${Number(locatario.km_atual || 0).toLocaleString('pt-BR')} km</p>
                         </div>
 
@@ -604,7 +595,7 @@ function renderizarFrota(lista) {
                     </div>
                 </div>
 
-                <!-- BOTEIS DE AÇÃO DO RODAPÉ -->
+                <!-- BOTÕES DE AÇÃO DO RODAPÉ -->
                 <div class="p-5 pt-0 space-y-2">
                     ${botaoAcaoPrincipal}
 
@@ -631,19 +622,22 @@ function renderizarFrota(lista) {
     });
 }
 
-
-    // VINCULAÇÃO GLOBAL NO WINDOW PARA SUPORTE AOS EVENTOS HTML
-    window.carregarLocatarios = carregarLocatarios;
-    window.buscarLocatario = buscarLocatario;
-    window.arquivarLocatario = arquivarLocatario;
-    window.reativarLocatario = reativarLocatario;
-    window.adicionarUmaSemana = adicionarUmaSemana;
-    window.abrirModalEditar = abrirModalEditar;
-    window.fecharModal = fecharModal;
-    window.salvarEdicaoCard = salvarEdicaoCard;
-    window.abrirModalImportarCSV = abrirModalImportarCSV;
+// ======================================================
+// EXPOSIÇÃO GLOBAL NO ESCOPO WINDOW
+// ======================================================
+window.carregarLocatarios = carregarLocatarios;
+window.buscarLocatario = buscarLocatario;
+window.arquivarLocatario = arquivarLocatario;
+window.reativarLocatario = reativarLocatario;
+window.adicionarUmaSemana = adicionarUmaSemana;
+window.abrirModalEditar = abrirModalEditar;
+window.fecharModal = fecharModal;
+window.salvarLocatario = salvarLocatario;
+window.salvarEdicaoCard = salvarLocatario;
+window.abrirModalImportarCSV = abrirModalImportarCSV;
 window.fecharModalImportarCSV = fecharModalImportarCSV;
-window.processarArquivoCSV = processarArquivoCSV;
-window.confirmarImportacaoCSV = confirmarImportacaoCSV;
 window.marcarDesmarcarTodosCSV = marcarDesmarcarTodosCSV;
 window.atualizarContagemSelecionadosCSV = atualizarContagemSelecionadosCSV;
+window.processarArquivoCSV = processarArquivoCSV;
+window.confirmarImportacaoCSV = confirmarImportacaoCSV;
+window.renderizarFrota = renderizarFrota;

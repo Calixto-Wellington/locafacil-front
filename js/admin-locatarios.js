@@ -249,6 +249,8 @@ export async function salvarLocatario(e) {
     }
 }
 
+export const salvarEdicaoCard = salvarLocatario;
+
 // ======================================================
 // 7. TELEMETRIA CSV MOBILTRACKER (KM TOTAL MANTIDO MANUAL)
 // ======================================================

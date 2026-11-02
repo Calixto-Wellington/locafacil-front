@@ -134,7 +134,7 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
             incCoins = parseInt(cfg.valor) || 10;
         }
 
-        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/pagar-semana`, {
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/pagamento`, {
             method: 'POST',
             body: JSON.stringify({
                 semanas_pagas: novasSemanas,

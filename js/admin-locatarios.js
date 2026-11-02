@@ -122,7 +122,7 @@ export async function reativarLocatario(id, nome) {
 // ======================================================
 export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais, tipoContrato, semanasTotais, cpf) {
     const novasSemanas = semanasAtuais + 1;
-    const primeiroNome = (nome || '').split(' ').toUpperCase();
+    const primeiroNome = ((nome || '').split(' ')[0] || 'PILOTO').toUpperCase();
     const numLimpo = (telefone || '').replace(/\D/g, '');
     const cpfLimpo = (cpf || '').replace(/\D/g, '');
 

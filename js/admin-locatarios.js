@@ -507,7 +507,7 @@ export async function confirmarImportacaoCSV() {
 }
 
 // ======================================================
-// 8. RENDERIZAÇÃO DOS CARDS DA FROTA
+// 8. RENDERIZAÇÃO DOS CARDS DA FROTA (COM LINK DE CASHBACK)
 // ======================================================
 function renderizarFrota(lista) {
     const grid = document.getElementById('grid-frota');
@@ -527,6 +527,10 @@ function renderizarFrota(lista) {
         const semanasPagas = locatario.semanas_pagas || 0;
         const pct = Math.min(100, Math.round((semanasPagas / semanasTotais) * 100));
         const coins = locatario.locafacil_coins !== undefined ? locatario.locafacil_coins : (semanasPagas * 10);
+
+        // 🔗 GERAÇÃO DO LINK INDIVIDUAL DE CASHBACK PELO CPF
+        const cpfLimpo = (locatario.cpf || '').replace(/\D/g, '');
+        const linkCashback = cpfLimpo ? `[suspicious link removed]{cpfLimpo}` : '#';
 
         const jsonFormatado = JSON.stringify(locatario)
             .replace(/'/g, "&#39;")
@@ -574,11 +578,15 @@ function renderizarFrota(lista) {
                             <div><p class="text-gray-400 font-bold uppercase text-xs">WhatsApp</p><p class="font-bold text-gray-800">${locatario.telefone || 'N/I'}</p></div>
                         </div>
 
-                        <!-- BARRA DE PROGRESSO DO CONTRATO -->
+                        <!-- BARRA DE PROGRESSO DO CONTRATO COM LINK CLICÁVEL DE CASHBACK -->
                         <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
                             <div class="flex justify-between items-center text-xs font-black text-gray-700 mb-1">
                                 <span>Semana ${semanasPagas} de ${semanasTotais}</span>
-                                <span>🪙 ${coins} Coins</span>
+                                ${cpfLimpo ? `
+                                <a href="${linkCashback}" target="_blank" rel="noopener noreferrer" class="text-orange-600 hover:text-orange-700 font-black underline flex items-center gap-1 transition" title="Abrir painel de cashback do piloto">
+                                    🪙 ${coins} Coins ↗️
+                                </a>
+                                ` : `<span class="text-gray-500">🪙 ${coins} Coins</span>`}
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                                 <div class="bg-gradient-to-r from-orange-500 to-yellow-400 h-full rounded-full" style="width: ${pct}%"></div>

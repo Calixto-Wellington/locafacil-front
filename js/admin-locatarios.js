@@ -532,7 +532,7 @@ function renderizarFrota(lista) {
 
         // 🔗 GERAÇÃO DO LINK INDIVIDUAL DE CASHBACK PELO CPF
         const cpfLimpo = (locatario.cpf || '').replace(/\D/g, '');
-        const linkCashback = cpfLimpo ? `https://cashback.locafacilmotos.com.br/{cpfLimpo}` : '#';
+        const linkCashback = cpfLimpo ? `https://cashback.locafacilmotos.com.br/?cpf=${cpfLimpo}` : '#';
 
         const jsonFormatado = JSON.stringify(locatario)
             .replace(/'/g, "&#39;")

@@ -574,16 +574,20 @@ function renderizarFrota(lista) {
                             <div><p class="text-gray-400 font-bold uppercase text-xs">WhatsApp</p><p class="font-bold text-gray-800">${locatario.telefone || 'N/I'}</p></div>
                         </div>
 
-                        <!-- BARRA DE PROGRESSO DO CONTRATO -->
-                        <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
-                            <div class="flex justify-between items-center text-xs font-black text-gray-700 mb-1">
-                                <span>Semana ${semanasPagas} de ${semanasTotais}</span>
-                                <span>🪙 ${coins} Coins</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                                <div class="bg-gradient-to-r from-orange-500 to-yellow-400 h-full rounded-full" style="width: ${pct}%"></div>
-                            </div>
-                        </div>
+<!-- BARRA DE PROGRESSO E LINK DIRETO DE CASHBACK -->
+<div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+    <div class="flex justify-between items-center text-xs font-black text-gray-700 mb-1">
+        <span>Semana ${semanasPagas} de ${semanasTotais}</span>
+        ${cpfLimpo ? `
+        <a href="${linkCashback}" target="_blank" rel="noopener noreferrer" class="text-orange-600 hover:text-orange-700 font-black underline flex items-center gap-1 transition" title="Abrir painel de cashback do piloto">
+            🪙 ${coins} Coins ↗️
+        </a>
+        ` : `<span class="text-gray-500">🪙 ${coins} Coins</span>`}
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+        <div class="bg-gradient-to-r from-orange-500 to-yellow-400 h-full rounded-full" style="width: ${pct}%"></div>
+    </div>
+</div>
 
                         <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 text-xs">
                             <p class="text-orange-900 font-bold uppercase">Hodômetro Atual (Manual)</p>

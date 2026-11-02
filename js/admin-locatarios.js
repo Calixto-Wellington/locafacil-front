@@ -163,8 +163,16 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
             `Acompanhe seu progresso e resgate prêmios no seu painel:\n👉 ${linkCliente}\n\n` +
             `*LOCAFACILMOTOS — Parceria de verdade.* 👊`;
 
-        window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
+        // 🟢 POP-UP DE CONFIRMAÇÃO NA TELA
+        alert(`✅ Pagamento baixado com sucesso!\n\nSemana ${semanasPagasAtualizadas} de ${totalSem} registrada para ${primeiroNome}.`);
+
+        // ABRIR WHATSAPP
+        if (numLimpo) {
+            window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
         carregarLocatarios();
+
     } catch (err) {
         console.error('Erro ao dar baixa na semana:', err);
         alert(`❌ Erro ao dar baixa no Pix: ${err.message}`);

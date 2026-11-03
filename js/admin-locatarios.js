@@ -124,10 +124,12 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
     const semAtual = parseInt(semanasAtuais, 10) || 0;
     const novasSemanas = semAtual + 1;
     
-    // Extrai o primeiro nome sem erro de array
-    const primeiroNome = (nome || 'PILOTO').trim().split(' ')[0].toUpperCase();
-    const numLimpo = (telefone || '').replace(/\D/g, '');
-    const cpfLimpo = (cpf || '').replace(/\D/g, '');
+    // 🟢 Trata o primeiro nome pegando o índice [0] do array
+    const nomeStr = String(nome || 'PILOTO').trim();
+    const primeiroNome = (nomeStr.split(' ')[0] || 'PILOTO').toUpperCase();
+
+    const numLimpo = String(telefone || '').replace(/\D/g, '');
+    const cpfLimpo = String(cpf || '').replace(/\D/g, '');
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/pagamento`, {
@@ -142,8 +144,8 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
 
         const data = await res.json().catch(() => ({}));
         
-        // Declaração garantida da variável de semanas atualizadas
-        const semanasPagasAtualizadas = data.semanas_pagas || data.semanas || novasSemanas;
+        // 🟢 Declaração explícita da variável com fallback de segurança
+        const semanasPagasAtualizadas = Number(data.semanas_pagas || data.semanas || novasSemanas);
         const totalSem = parseInt(semanasTotais, 10) || 182;
         const pct = Math.min(100, Math.round((semanasPagasAtualizadas / totalSem) * 100));
 
@@ -161,10 +163,10 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
             `Acompanhe seu progresso e resgate prêmios em:\n👉 ${linkCliente}\n\n` +
             `*LOCAFACILMOTOS — Parceria de verdade.* 👊`;
 
-        // Pop-up de confirmação em tela
+        // 🔔 Pop-up de confirmação na tela
         alert(`✅ Pagamento baixado com sucesso!\n\nSemana ${semanasPagasAtualizadas} de ${totalSem} registrada para ${primeiroNome}.`);
 
-        // Abertura do WhatsApp
+        // 💬 Abertura do WhatsApp
         if (numLimpo) {
             window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
         }
@@ -176,7 +178,6 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
         alert(`❌ Erro ao dar baixa no Pix: ${err.message}`);
     }
 }
-
 // ======================================================
 // 6. MODAL DE EDIÇÃO DE CARD DE PILOTO (EDITION MANUAL)
 // ======================================================

@@ -120,53 +120,51 @@ export async function reativarLocatario(id, nome) {
 // ======================================================
 // 5. BAIXA DE PAGAMENTO PIX (+1 SEMANA & +10 COINS)
 // ======================================================
-export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais, tipoContrato, semanasTotais, cpf) {
-    const novasSemanas = semanasAtuais + 1;
-    const primeiroNome = ((nome || '').split(' ')[0] || 'PILOTO').toUpperCase();
+export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuais, tipoContrato = 'OPCAO_COMPRA', semanasTotais = 182, cpf = '') {
+    const semAtual = parseInt(semanasAtuais, 10) || 0;
+    const novasSemanas = semAtual + 1;
+    
+    // Extrai o primeiro nome sem erro de array
+    const primeiroNome = (nome || 'PILOTO').trim().split(' ')[0].toUpperCase();
     const numLimpo = (telefone || '').replace(/\D/g, '');
     const cpfLimpo = (cpf || '').replace(/\D/g, '');
 
     try {
-        const resConfig = await fetchComAuth(`${API_BASE}/admin/config/coins_por_pix`);
-        let incCoins = 10;
-        if (resConfig.ok) {
-            const cfg = await resConfig.json();
-            incCoins = parseInt(cfg.valor) || 10;
-        }
-
         const res = await fetchComAuth(`${API_BASE}/admin/locatarios/${id}/pagamento`, {
             method: 'POST',
-            body: JSON.stringify({
-                semanas_pagas: novasSemanas,
-                incremento_coins: incCoins
-            })
+            body: JSON.stringify({ semanas: 1 })
         });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `HTTP ${res.status}`);
+        }
 
-        const responseData = await res.json();
-        const saldoCoinsNovo = responseData.locafacil_coins || 0;
-        const totalSem = semanasTotais || 182;
-        const pct = Math.min(100, Math.round((novasSemanas / totalSem) * 100));
+        const data = await res.json().catch(() => ({}));
+        
+        // Declaração garantida da variável de semanas atualizadas
+        const semanasPagasAtualizadas = data.semanas_pagas || data.semanas || novasSemanas;
+        const totalSem = parseInt(semanasTotais, 10) || 182;
+        const pct = Math.min(100, Math.round((semanasPagasAtualizadas / totalSem) * 100));
 
-        const linkCliente = ` https://cashback.locafacilmotos.com.br/?cpf=${cpfLimpo}`;
+        const linkCliente = `[suspicious link removed]{cpfLimpo}`;
 
-        let textoProgresso = `🎉 *PARABÉNS! VOCÊ COMPLETOU ${novasSemanas} SEMANAS COM SUCESSO!* 🟢`;
+        let textoProgresso = `🎉 *PARABÉNS! VOCÊ COMPLETOU ${semanasPagasAtualizadas} SEMANAS COM SUCESSO!* 🟢`;
         if (pct >= 50) {
-            textoProgresso = `🚀 *MAIS DA METADE DA MOTO JÁ É SUA! (${pct}% QUITADO — SEMANA ${novasSemanas} DE ${totalSem})* 🟢`;
+            textoProgresso = `🚀 *MAIS DA METADE DA MOTO JÁ É SUA! (${pct}% QUITADO — SEMANA ${semanasPagasAtualizadas} DE ${totalSem})* 🟢`;
         }
 
         const msg = `🚀 *PIX CONFIRMADO! MAIS UM PASSO RUMO À SUA MOTO!*\n\n` +
             `Fala ${primeiroNome}! Seu pagamento da semana foi confirmado! 🟢\n` +
             `${textoProgresso}\n` +
-            `🪙 *Bônus:* +${incCoins} Locafacil Coins creditados! (Saldo Atual: ${saldoCoinsNovo} Coins)\n\n` +
-            `Acompanhe seu progresso e resgate prêmios no seu painel:\n👉 ${linkCliente}\n\n` +
+            `🪙 *Bônus:* +10 Locafacil Coins creditados!\n\n` +
+            `Acompanhe seu progresso e resgate prêmios em:\n👉 ${linkCliente}\n\n` +
             `*LOCAFACILMOTOS — Parceria de verdade.* 👊`;
 
-        // 🟢 POP-UP DE CONFIRMAÇÃO NA TELA
+        // Pop-up de confirmação em tela
         alert(`✅ Pagamento baixado com sucesso!\n\nSemana ${semanasPagasAtualizadas} de ${totalSem} registrada para ${primeiroNome}.`);
 
-        // ABRIR WHATSAPP
+        // Abertura do WhatsApp
         if (numLimpo) {
             window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
         }

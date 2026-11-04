@@ -168,7 +168,7 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
                 `🔑 *Plano Aluguel Convencional — Semana ${semanasPagasAtualizadas} ativa com sucesso.*\n` +
                 `🪙 *Bônus:* +10 Locafacil Coins creditados!\n\n` +
                 `Mantenha suas vistorias em dia e acompanhe seus benefícios em:\n👉 ${linkCliente}\n\n` +
-                `*LOCAFACILMOTOS — Sua moto rodando sem dor de cabeça.* 👊`;
+                `*LOCAFACILMOTOS — Rodando com tranquilidade e parceria.* 👊`;
         }
 
         alert(`✅ Pagamento baixado com sucesso!\n\nSemana ${semanasPagasAtualizadas} registrada para ${primeiroNome} (${tipoContrato === 'OPCAO_COMPRA' ? 'Opção de Compra' : 'Aluguel Convencional'}).`);

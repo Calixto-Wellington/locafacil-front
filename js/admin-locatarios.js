@@ -147,7 +147,7 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
         const totalSem = parseInt(semanasTotais, 10) || 182;
         const pct = Math.min(100, Math.round((semanasPagasAtualizadas / totalSem) * 100));
 
-        const linkCliente = `https://cashback.locafacilmotos.com.br/${cpfLimpo}`;
+        const linkCliente = `https://cashback.locafacilmotos.com.br/?cpf=${cpfLimpo}`;
 
         let msg = '';
         if (tipoContrato === 'OPCAO_COMPRA') {

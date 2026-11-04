@@ -124,7 +124,6 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
     const semAtual = parseInt(semanasAtuais, 10) || 0;
     const novasSemanas = semAtual + 1;
     
-    // 🟢 Trata o primeiro nome pegando o índice [0] do array
     const nomeStr = String(nome || 'PILOTO').trim();
     const primeiroNome = (nomeStr.split(' ')[0] || 'PILOTO').toUpperCase();
 
@@ -144,29 +143,36 @@ export async function adicionarUmaSemana(id, placa, telefone, nome, semanasAtuai
 
         const data = await res.json().catch(() => ({}));
         
-        // 🟢 Declaração explícita da variável com fallback de segurança
         const semanasPagasAtualizadas = Number(data.semanas_pagas || data.semanas || novasSemanas);
         const totalSem = parseInt(semanasTotais, 10) || 182;
         const pct = Math.min(100, Math.round((semanasPagasAtualizadas / totalSem) * 100));
 
-        const linkCliente = `https://cashback.locafacilmotos.com.br/?cpf=${cpfLimpo}`;
+        const linkCliente = `[suspicious link removed]{cpfLimpo}`;
 
-        let textoProgresso = `🎉 *PARABÉNS! VOCÊ COMPLETOU ${semanasPagasAtualizadas} SEMANAS COM SUCESSO!* 🟢`;
-        if (pct >= 50) {
-            textoProgresso = `🚀 *MAIS DA METADE DA MOTO JÁ É SUA! (${pct}% QUITADO — SEMANA ${semanasPagasAtualizadas} DE ${totalSem})* 🟢`;
+        let msg = '';
+        if (tipoContrato === 'OPCAO_COMPRA') {
+            let textoProgresso = `🎉 *PARABÉNS! VOCÊ COMPLETOU ${semanasPagasAtualizadas} SEMANAS COM SUCESSO!* 🟢`;
+            if (pct >= 50) {
+                textoProgresso = `🚀 *MAIS DA METADE DA MOTO JÁ É SUA! (${pct}% QUITADO — SEMANA ${semanasPagasAtualizadas} DE ${totalSem})* 🟢`;
+            }
+
+            msg = `🚀 *PIX CONFIRMADO! MAIS UM PASSO RUMO À SUA MOTO!*\n\n` +
+                `Fala ${primeiroNome}! Seu pagamento da semana foi confirmado! 🟢\n` +
+                `${textoProgresso}\n` +
+                `🪙 *Bônus:* +10 Locafacil Coins creditados!\n\n` +
+                `Acompanhe seu progresso e resgate prêmios em:\n👉 ${linkCliente}\n\n` +
+                `*LOCAFACILMOTOS — Parceria de verdade.* 👊`;
+        } else {
+            msg = `✅ *PIX CONFIRMADO! SEMANA PAGA COM SUCESSO!* 🟢\n\n` +
+                `Fala ${primeiroNome}! Seu pagamento do aluguel semanal foi confirmado!\n` +
+                `🔑 *Plano Aluguel Convencional — Semana ${semanasPagasAtualizadas} ativa com sucesso.*\n` +
+                `🪙 *Bônus:* +10 Locafacil Coins creditados!\n\n` +
+                `Mantenha suas vistorias em dia e acompanhe seus benefícios em:\n👉 ${linkCliente}\n\n` +
+                `*LOCAFACILMOTOS — Sua moto rodando sem dor de cabeça.* 👊`;
         }
 
-        const msg = `🚀 *PIX CONFIRMADO! MAIS UM PASSO RUMO À SUA MOTO!*\n\n` +
-            `Fala ${primeiroNome}! Seu pagamento da semana foi confirmado! 🟢\n` +
-            `${textoProgresso}\n` +
-            `🪙 *Bônus:* +10 Locafacil Coins creditados!\n\n` +
-            `Acompanhe seu progresso e resgate prêmios em:\n👉 ${linkCliente}\n\n` +
-            `*LOCAFACILMOTOS — Parceria de verdade.* 👊`;
+        alert(`✅ Pagamento baixado com sucesso!\n\nSemana ${semanasPagasAtualizadas} registrada para ${primeiroNome} (${tipoContrato === 'OPCAO_COMPRA' ? 'Opção de Compra' : 'Aluguel Convencional'}).`);
 
-        // 🔔 Pop-up de confirmação na tela
-        alert(`✅ Pagamento baixado com sucesso!\n\nSemana ${semanasPagasAtualizadas} de ${totalSem} registrada para ${primeiroNome}.`);
-
-        // 💬 Abertura do WhatsApp
         if (numLimpo) {
             window.open(`https://wa.me/55${numLimpo}?text=${encodeURIComponent(msg)}`, '_blank');
         }

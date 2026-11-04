@@ -8,7 +8,7 @@ import { fetchComAuth } from './auth.js';
 window.dadosCSVImportacao = [];
 
 // ======================================================
-// 1. CARREGAR LOCATÁRIOS COM FILTRO DE STATUS
+// 1. CARREGAR LOCATÁRIOS COM TRATAMENTO DE TIMEOUT/ERRO
 // ======================================================
 export async function carregarLocatarios() {
     const loading = document.getElementById('loading-frota');
@@ -20,20 +20,33 @@ export async function carregarLocatarios() {
     if (grid) grid.innerHTML = '';
 
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/locatarios?status=${filtroStatus}&_t=${Date.now()}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const res = await fetchComAuth(`${API_BASE}/admin/locatarios?status=${filtroStatus}&_t=${Date.now()}`, {
+            cache: 'no-store'
+        });
 
-        const responseData = await res.json();
-        const lista = Array.isArray(responseData) ? responseData : (responseData.data || []);
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `Servidor respondeu com status ${res.status}`);
+        }
 
-        if (loading) loading.style.display = 'none';
-        renderizarFrota(lista);
+        const lista = await res.json();
+        renderizarFrota(Array.isArray(lista) ? lista : (lista.data || []));
+
     } catch (err) {
         console.error('Erro ao carregar locatários:', err);
-        if (loading) loading.style.display = 'none';
         if (grid) {
-            grid.innerHTML = `<div class="col-span-full bg-red-50 p-6 rounded-2xl text-center text-red-600 font-bold uppercase text-xs">Erro ao carregar lista de pilotos: ${err.message}</div>`;
+            grid.innerHTML = `
+                <div class="col-span-full bg-red-50 border border-red-200 p-8 rounded-2xl text-center">
+                    <p class="text-red-700 font-black text-sm uppercase">⚠️ Erro ou demora ao carregar pilotos</p>
+                    <p class="text-xs text-red-600 font-bold mt-1">${err.message}</p>
+                    <button onclick="carregarLocatarios()" class="mt-4 bg-red-600 hover:bg-red-700 text-white font-black px-4 py-2 rounded-xl text-xs uppercase shadow transition">
+                        🔄 Tentar Novamente
+                    </button>
+                </div>`;
         }
+    } finally {
+        // Garantia absoluta de que o indicador de carregamento sempre será ocultado
+        if (loading) loading.style.display = 'none';
     }
 }
 

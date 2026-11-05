@@ -1,55 +1,66 @@
 // ======================================================
-// ORQUESTRADOR CENTRAL DO PAINEL ADMIN — js/admin-main.js
+// LOCAFACILMOTOS LTDA — PAINEL CENTRAL DE OPERAÇÕES
+// ORQUESTRADOR CENTRALIZADOR DA APLICAÇÃO (js/admin-main.js)
 // ======================================================
 
-// 1. AUTENTICAÇÃO E SESSÃO
+// ------------------------------------------------------
+// 1. MÓDULO DE AUTENTICAÇÃO E SESSÃO SEGURA (JWT)
+// ------------------------------------------------------
 import { 
     exibirModalLogin, 
     realizarLoginAdmin, 
-    realizarLogout 
+    realizarLogout, 
+    fetchComAuth 
 } from './auth.js';
 
-// 2. MESA DE APROVAÇÃO (LEADS & FICHAS)
+// ------------------------------------------------------
+// 2. MÓDULO DE MESA DE APROVAÇÃO E LEADS (FICHAS)
+// ------------------------------------------------------
 import { 
     carregarLeads, 
-    realizarBuscaLeads 
+    realizarBuscaLeads,
+    validarCaucao,
+    aprovarLead,
+    efetivarLocacao,
+    rejeitarLead
 } from './admin-leads.js';
 
-// 3. GESTÃO DE FROTA, LOCATÁRIOS E TELEMETRIA CSV
+// ------------------------------------------------------
+// 3. MÓDULO DE FROTA, LOCATÁRIOS E TELEMETRIA (CSV)
+// ------------------------------------------------------
 import { 
     carregarLocatarios, 
     buscarLocatario, 
     abrirModalEditar, 
-    fecharModal,
-    salvarEdicaoCard,
-    arquivarLocatario,
-    reativarLocatario,
-    adicionarUmaSemana,
-    abrirModalImportarCSV,
-    fecharModalImportarCSV,
-    processarArquivoCSV,
-    confirmarImportacaoCSV
+    fecharModal, 
+    salvarEdicaoCard, 
+    arquivarLocatario, 
+    reativarLocatario, 
+    adicionarUmaSemana, 
+    atualizarKmESelos, 
+    abrirModalImportarCSV, 
+    fecharModalImportarCSV, 
+    processarArquivoCSV, 
+    confirmarImportacaoCSV,
+    marcarDesmarcarTodosCSV
 } from './admin-locatarios.js';
 
-// 4. PÁTIO, MOTOS E OFICINA/MANUTENÇÃO DE PEÇAS
+// ------------------------------------------------------
+// 4. MÓDULO DE PÁTIO DE MOTOS E INVENTÁRIO
+// ------------------------------------------------------
 import { 
     carregarMotosFrota, 
     salvarNovaMoto, 
     mudarStatusMoto, 
     excluirMoto, 
     abrirModalEditarMoto, 
-    fecharModalMoto,
-    salvarEdicaoMoto,
-    renderizarBarrasDesgasteMotos,
-    abrirModalNovaPeca,
-    abrirModalEditarPeca,
-    fecharModalPeca,
-    salvarModalPeca,
-    excluirPeca,
-    resetarContadorPeca
+    fecharModalMoto, 
+    salvarEdicaoMoto 
 } from './admin-motos.js';
 
-// 5. PLANOS & LOJA DE COINS
+// ------------------------------------------------------
+// 5. MÓDULO DE PLANOS DE CONTRATO E LOJA DE COINS
+// ------------------------------------------------------
 import { 
     carregarPlanosAdmin, 
     salvarNovoPlano, 
@@ -64,42 +75,52 @@ import {
     excluirItemLoja
 } from './admin-planos.js';
 
-// 6. USUÁRIOS E PERMISSÕES
+// ------------------------------------------------------
+// 6. MÓDULO DE GESTÃO DE USUÁRIOS E PERMISSÕES
+// ------------------------------------------------------
 import { 
     carregarUsuarios, 
     cadastrarNovoUsuario, 
     excluirUsuario 
 } from './admin-usuarios.js';
 
-// 7. GESTÃO FINANCEIRA E DRE
+// ------------------------------------------------------
+// 7. MÓDULO DE GESTÃO FINANCEIRA E DRE
+// ------------------------------------------------------
 import { 
-    salvarTransacao, 
-    carregarResumoDRE,
-    calcularSimulacaoExpansao,
-    initFinanceiro 
+    initFinanceiro, 
+    salvarTransacao 
 } from './admin-financeiro.js';
 
-//Devoçução
-
+// ------------------------------------------------------
+// 8. MÓDULO SIMULADOR DE DEVOLUÇÃO / RESCISÃO
+// ------------------------------------------------------
 import { 
     abrirSimuladorDevolucao 
 } from './admin-devolucao.js';
 
+// ======================================================
+// REGISTRO DE FUNÇÕES GLOBAIS NO OBJETO WINDOW
+// (Garante acesso via onclick e onsubmit nos arquivos HTML)
+// ======================================================
 
-// ======================================================
-// EXPOSIÇÃO GLOBAL NO WINDOW PARA SUPORTE AOS EVENTOS HTML
-// ======================================================
+// Helper HTTP
+window.fetchComAuth = fetchComAuth;
 
 // Autenticação
 window.exibirModalLogin = exibirModalLogin;
 window.realizarLoginAdmin = realizarLoginAdmin;
 window.realizarLogout = realizarLogout;
 
-// Mesa de Aprovação
+// Mesa de Aprovação / Leads
 window.carregarLeads = carregarLeads;
 window.realizarBuscaLeads = realizarBuscaLeads;
+window.validarCaucao = validarCaucao;
+window.aprovarLead = aprovarLead;
+window.efetivarLocacao = efetivarLocacao;
+window.rejeitarLead = rejeitarLead;
 
-// Frota & Contratos
+// Frota & Locatários
 window.carregarLocatarios = carregarLocatarios;
 window.buscarLocatario = buscarLocatario;
 window.abrirModalEditar = abrirModalEditar;
@@ -108,14 +129,14 @@ window.salvarEdicaoCard = salvarEdicaoCard;
 window.arquivarLocatario = arquivarLocatario;
 window.reativarLocatario = reativarLocatario;
 window.adicionarUmaSemana = adicionarUmaSemana;
-
-// Telemetria CSV Mobiltracker
+window.atualizarKmESelos = atualizarKmESelos;
 window.abrirModalImportarCSV = abrirModalImportarCSV;
 window.fecharModalImportarCSV = fecharModalImportarCSV;
 window.processarArquivoCSV = processarArquivoCSV;
 window.confirmarImportacaoCSV = confirmarImportacaoCSV;
+window.marcarDesmarcarTodosCSV = marcarDesmarcarTodosCSV;
 
-// Motos & Oficina
+// Pátio de Motos
 window.carregarMotosFrota = carregarMotosFrota;
 window.salvarNovaMoto = salvarNovaMoto;
 window.mudarStatusMoto = mudarStatusMoto;
@@ -123,15 +144,8 @@ window.excluirMoto = excluirMoto;
 window.abrirModalEditarMoto = abrirModalEditarMoto;
 window.fecharModalMoto = fecharModalMoto;
 window.salvarEdicaoMoto = salvarEdicaoMoto;
-window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;
-window.abrirModalNovaPeca = abrirModalNovaPeca;
-window.abrirModalEditarPeca = abrirModalEditarPeca;
-window.fecharModalPeca = fecharModalPeca;
-window.salvarModalPeca = salvarModalPeca;
-window.excluirPeca = excluirPeca;
-window.resetarContadorPeca = resetarContadorPeca;
 
-// Planos & Loja de Coins
+// Planos & Loja
 window.carregarPlanosAdmin = carregarPlanosAdmin;
 window.salvarNovoPlano = salvarNovoPlano;
 window.excluirPlano = excluirPlano;
@@ -149,55 +163,76 @@ window.carregarUsuarios = carregarUsuarios;
 window.cadastrarNovoUsuario = cadastrarNovoUsuario;
 window.excluirUsuario = excluirUsuario;
 
-// Financeiro
-window.salvarTransacao = salvarTransacao;
-window.carregarResumoDRE = carregarResumoDRE;
-window.calcularSimulacaoExpansao = calcularSimulacaoExpansao;
+// Financeiro & Devolução
 window.initFinanceiro = initFinanceiro;
-
+window.salvarTransacao = salvarTransacao;
+window.abrirSimuladorDevolucao = abrirSimuladorDevolucao;
 
 // ======================================================
-// GERENCIADOR DE NAVEGAÇÃO ENTRE ABAS
+// SISTEMA DE NAVEGAÇÃO ENTRE ABAS DO PAINEL
+// (Com chamada automática de busca de dados na API)
 // ======================================================
 window.alternarAba = function(aba) {
-    const secoes = { 
-        mesa: document.getElementById('secao-mesa'), 
-        frota: document.getElementById('secao-frota'), 
-        motos: document.getElementById('secao-motos'), 
-        loja: document.getElementById('secao-loja'), 
-        planos: document.getElementById('secao-planos'),
-        usuarios: document.getElementById('secao-usuarios'),
-        financeiro: document.getElementById('secao-financeiro')
-    };
+    const chaves = [
+        'mesa', 
+        'frota', 
+        'motos', 
+        'loja', 
+        'planos', 
+        'usuarios', 
+        'financeiro', 
+        'devolucao'
+    ];
 
-    const botoes = { 
-        mesa: document.getElementById('btn-aba-mesa'), 
-        frota: document.getElementById('btn-aba-frota'), 
-        motos: document.getElementById('btn-aba-motos'), 
-        loja: document.getElementById('btn-aba-loja'), 
-        planos: document.getElementById('btn-aba-planos'),
-        usuarios: document.getElementById('btn-aba-usuarios'),
-        financeiro: document.getElementById('btn-aba-financeiro')
-    };
+    // 1. Oculta todas as seções e reseta o destaque dos botões
+    chaves.forEach(k => { 
+        const secao = document.getElementById(`secao-${k}`) || document.getElementById(`aba-${k}`);
+        const btn = document.getElementById(`btn-aba-${k}`);
 
-    Object.keys(secoes).forEach(k => { 
-        if (secoes[k]) secoes[k].classList.add('hidden'); 
-        if (botoes[k]) { 
-            botoes[k].classList.remove('ativa', 'bg-orange-600', 'text-white'); 
-            botoes[k].classList.add('text-gray-400', 'hover:text-white'); 
+        if (secao) {
+            secao.classList.add('hidden');
+        }
+        if (btn) { 
+            btn.classList.remove('ativa', 'bg-orange-600', 'text-white'); 
+            btn.classList.add('text-gray-400', 'hover:text-white'); 
         } 
     });
+    
+    // 2. Torna visível a seção ativa e aplica estilo visual no botão
+    const secaoAlvo = document.getElementById(`secao-${aba}`) || document.getElementById(`aba-${aba}`);
+    const btnAtivo = document.getElementById(`btn-aba-${aba}`);
 
-    if (secoes[aba]) secoes[aba].classList.remove('hidden');
-    if (botoes[aba]) {
-        botoes[aba].classList.remove('text-gray-400', 'hover:text-white');
-        botoes[aba].classList.add('ativa', 'bg-orange-600', 'text-white');
+    if (secaoAlvo) {
+        secaoAlvo.classList.remove('hidden');
+    }
+    if (btnAtivo) {
+        btnAtivo.classList.remove('text-gray-400', 'hover:text-white');
+        btnAtivo.classList.add('ativa', 'bg-orange-600', 'text-white');
+    }
+
+    // 3. Dispara a requisição HTTP automaticamente ao selecionar a aba
+    if (aba === 'frota' && typeof window.carregarLocatarios === 'function') {
+        window.carregarLocatarios();
+    } else if (aba === 'motos' && typeof window.carregarMotosFrota === 'function') {
+        window.carregarMotosFrota();
+    } else if (aba === 'mesa' && typeof window.carregarLeads === 'function') {
+        window.carregarLeads();
+    } else if (aba === 'planos' && typeof window.carregarPlanosAdmin === 'function') {
+        window.carregarPlanosAdmin();
+    } else if (aba === 'loja' && typeof window.carregarItensLojaAdmin === 'function') {
+        window.carregarItensLojaAdmin();
+        if (typeof window.carregarConfiguracaoCoinsPix === 'function') {
+            window.carregarConfiguracaoCoinsPix();
+        }
+    } else if (aba === 'usuarios' && typeof window.carregarUsuarios === 'function') {
+        window.carregarUsuarios();
+    } else if (aba === 'financeiro' && typeof window.initFinanceiro === 'function') {
+        window.initFinanceiro();
     }
 };
 
-
 // ======================================================
-// PERMISSÕES E CARREGAMENTO
+// VERIFICAÇÃO DE PERMISSÕES E INICIALIZAÇÃO DE SESSÃO
 // ======================================================
 function verificarPermissoesAdmin() {
     const token = localStorage.getItem('lf_admin_token');
@@ -209,36 +244,41 @@ function verificarPermissoesAdmin() {
 
         if (payload && payload.role === 'ADMIN') {
             const btnUsuarios = document.getElementById('btn-aba-usuarios');
-            if (btnUsuarios) btnUsuarios.classList.remove('hidden');
+            if (btnUsuarios) {
+                btnUsuarios.classList.remove('hidden');
+            }
         }
-    } catch (e) { 
-        console.error('Erro ao verificar permissão:', e); 
+    } catch (e) {
+        console.error('Erro ao verificar permissão de admin:', e);
     }
 }
 
 window.carregarDadosPainel = function() {
     verificarPermissoesAdmin();
-    if (typeof window.carregarLeads === 'function') window.carregarLeads();
-    if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
-    if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
-    if (typeof window.carregarPlanosAdmin === 'function') window.carregarPlanosAdmin();
-    if (typeof window.carregarItensLojaAdmin === 'function') window.carregarItensLojaAdmin();
-    if (typeof window.carregarConfiguracaoCoinsPix === 'function') window.carregarConfiguracaoCoinsPix();
-    if (typeof window.carregarUsuarios === 'function') window.carregarUsuarios();
-    if (typeof window.initFinanceiro === 'function') window.initFinanceiro();
+    // Carrega a aba padrão inicial da frota
+    if (typeof window.carregarLocatarios === 'function') {
+        window.carregarLocatarios();
+    }
 };
 
+// ======================================================
+// CICLO DE VIDA AO CARREGAR A PÁGINA (ONLOAD)
+// ======================================================
 window.onload = async () => {
     const token = localStorage.getItem('lf_admin_token');
     if (!token) {
-        exibirModalLogin();
+        if (typeof window.exibirModalLogin === 'function') {
+            window.exibirModalLogin();
+        }
         return;
     }
     try {
         window.carregarDadosPainel();
     } catch (err) {
-        console.error('Erro ao inicializar o painel:', err);
+        console.error('Erro na inicialização do painel:', err);
         localStorage.removeItem('lf_admin_token');
-        exibirModalLogin();
+        if (typeof window.exibirModalLogin === 'function') {
+            window.exibirModalLogin();
+        }
     }
 };

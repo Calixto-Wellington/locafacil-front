@@ -36,8 +36,7 @@ import {
     salvarEdicaoCard, 
     arquivarLocatario, 
     reativarLocatario, 
-    adicionarUmaSemana, 
-    atualizarKmESelos, 
+    adicionarUmaSemana,
     abrirModalImportarCSV, 
     fecharModalImportarCSV, 
     processarArquivoCSV, 
@@ -129,7 +128,6 @@ window.salvarEdicaoCard = salvarEdicaoCard;
 window.arquivarLocatario = arquivarLocatario;
 window.reativarLocatario = reativarLocatario;
 window.adicionarUmaSemana = adicionarUmaSemana;
-window.atualizarKmESelos = atualizarKmESelos;
 window.abrirModalImportarCSV = abrirModalImportarCSV;
 window.fecharModalImportarCSV = fecharModalImportarCSV;
 window.processarArquivoCSV = processarArquivoCSV;

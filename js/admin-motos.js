@@ -73,8 +73,6 @@ export async function carregarMotosFrota() {
                 ? `<img src="${imgUrl}" class="w-full h-44 object-cover rounded-xl mb-3 border">`
                 : `<div class="w-full h-44 bg-gray-100 rounded-xl mb-3 flex items-center justify-center text-gray-400 text-3xl">🏍️</div>`;
 
-            // Sanitiza JSON para injeção segura no evento inline
-            const jsonSanitizado = JSON.stringify(item).replace(/'/g, "&apos;");
             const placaSanitizada = (placa || '').replace(/'/g, "\\'");
 
             grid.innerHTML += `
@@ -102,7 +100,7 @@ export async function carregarMotosFrota() {
                     <div class="space-y-2 pt-3 border-t mt-3">
                         ${botoesAcao}
                         <div class="flex gap-2">
-                            <button type="button" onclick='abrirModalEditarMoto(${jsonSanitizado})' class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 rounded-lg text-xs uppercase font-bold transition">✏️ Editar Moto</button>
+                            <button type="button" onclick="abrirModalEditarMoto('${id}')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 rounded-lg text-xs uppercase font-bold transition">✏️ Editar Moto</button>
                             <button type="button" onclick="excluirMoto('${id}', '${placaSanitizada}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-xs uppercase font-bold transition" title="Excluir moto">🗑️</button>
                         </div>
                     </div>
@@ -115,7 +113,7 @@ export async function carregarMotosFrota() {
 }
 
 // ======================================================
-// 2. CADASTRAR NOVA MOTO NO PÁTIO
+// 2. CADASTRAR NOVA MOTO NO PÁTIO (FORMULÁRIO INLINE)
 // ======================================================
 export async function salvarNovaMoto(e) {
     if (e) e.preventDefault();
@@ -226,36 +224,45 @@ export async function excluirMoto(id, placa) {
 }
 
 // ======================================================
-// 5. MODAL DE EDIÇÃO DE MOTO
+// 5. MODAL DE EDIÇÃO E NOVO CADASTRO DE MOTO
 // ======================================================
 export function abrirModalEditarMoto(motoIdOuObjeto) {
     const modal = document.getElementById('modal-editar-moto');
     if (!modal) return;
 
     let id = '';
-    let item = {};
+    let item = null;
 
-    if (typeof motoIdOuObjeto === 'string') {
-        id = motoIdOuObjeto;
-        item = (window.listaMotosGlobal || []).find(m => (m.id || m.id_moto) === id) || {};
+    if (typeof motoIdOuObjeto === 'string' && motoIdOuObjeto.trim() !== '') {
+        id = motoIdOuObjeto.trim();
+        item = (window.listaMotosGlobal || []).find(m => (m.id || m.id_moto) === id || m.placa === id) || null;
     } else if (typeof motoIdOuObjeto === 'object' && motoIdOuObjeto !== null) {
+        id = motoIdOuObjeto.id || motoIdOuObjeto.id_moto || '';
         item = motoIdOuObjeto;
-        id = item.id || item.id_moto || '';
     }
 
+    // Se não houver ID (ex: ao clicar no botão "Cadastrar Nova Moto" enviando `{}`), prepara os campos limpos para criar uma nova moto
     if (!id || id === 'undefined') {
-        alert("❌ Erro: Não foi possível identificar o ID desta moto para edição.");
-        return;
+        document.getElementById('edit-moto-id').value = '';
+        document.getElementById('edit-moto-marca').value = '';
+        document.getElementById('edit-moto-modelo').value = '';
+        document.getElementById('edit-moto-cor').value = '';
+        document.getElementById('edit-moto-ano').value = 2025;
+        document.getElementById('edit-moto-placa').value = '';
+        document.getElementById('edit-moto-km').value = 0;
+        document.getElementById('edit-moto-status').value = 'DISPONIVEL';
+    } else {
+        // Preenche os campos com os dados da moto selecionada
+        const dados = item || {};
+        document.getElementById('edit-moto-id').value = id;
+        document.getElementById('edit-moto-marca').value = dados.marca || dados.marca_nome || '';
+        document.getElementById('edit-moto-modelo').value = dados.modelo || dados.modelo_nome || '';
+        document.getElementById('edit-moto-cor').value = dados.cor || '';
+        document.getElementById('edit-moto-ano').value = dados.ano || 2025;
+        document.getElementById('edit-moto-placa').value = (dados.placa || dados.placa_veiculo || '').toUpperCase();
+        document.getElementById('edit-moto-km').value = dados.km_atual ?? dados.km ?? 0;
+        document.getElementById('edit-moto-status').value = dados.status || 'DISPONIVEL';
     }
-
-    document.getElementById('edit-moto-id').value = id;
-    document.getElementById('edit-moto-marca').value = item.marca || item.marca_nome || '';
-    document.getElementById('edit-moto-modelo').value = item.modelo || item.modelo_nome || '';
-    document.getElementById('edit-moto-cor').value = item.cor || '';
-    document.getElementById('edit-moto-ano').value = item.ano || 2025;
-    document.getElementById('edit-moto-placa').value = (item.placa || item.placa_veiculo || '').toUpperCase();
-    document.getElementById('edit-moto-km').value = item.km_atual ?? item.km ?? 0;
-    document.getElementById('edit-moto-status').value = item.status || 'DISPONIVEL';
 
     modal.classList.remove('hidden');
     if (modal.style.display === 'none') modal.style.display = 'flex';
@@ -275,31 +282,41 @@ export async function salvarEdicaoMoto(e) {
     const idInput = document.getElementById('edit-moto-id');
     const id = idInput ? idInput.value.trim() : '';
 
-    if (!id || id === 'undefined') {
-        alert("❌ Erro: O ID da moto está ausente. Feche e abra o modal de edição novamente.");
+    const marca = document.getElementById('edit-moto-marca')?.value?.trim();
+    const modelo = document.getElementById('edit-moto-modelo')?.value?.trim();
+    const cor = document.getElementById('edit-moto-cor')?.value?.trim();
+    const ano = parseInt(document.getElementById('edit-moto-ano')?.value, 10) || 2025;
+    const placa = document.getElementById('edit-moto-placa')?.value?.trim()?.toUpperCase();
+    const km_atual = parseInt(document.getElementById('edit-moto-km')?.value, 10) || 0;
+    const status = document.getElementById('edit-moto-status')?.value || 'DISPONIVEL';
+
+    if (!marca || !modelo || !placa) {
+        alert("⚠️ Marca, Modelo e Placa são campos obrigatórios!");
         return;
     }
 
-    const payload = {
-        marca: document.getElementById('edit-moto-marca').value.trim(),
-        modelo: document.getElementById('edit-moto-modelo').value.trim(),
-        cor: document.getElementById('edit-moto-cor').value.trim(),
-        ano: parseInt(document.getElementById('edit-moto-ano').value, 10) || 2025,
-        placa: document.getElementById('edit-moto-placa').value.trim().toUpperCase(),
-        km_atual: parseInt(document.getElementById('edit-moto-km').value, 10) || 0,
-        status: document.getElementById('edit-moto-status').value
-    };
+    const payload = { marca, modelo, cor, ano, placa, km_atual, status };
 
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/motos/${encodeURIComponent(id)}`, {
-            method: 'PUT',
-            body: JSON.stringify(payload)
-        });
+        let res;
+        if (id && id !== 'undefined') {
+            // Edição de moto existente (PUT)
+            res = await fetchComAuth(`${API_BASE}/admin/motos/${encodeURIComponent(id)}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+        } else {
+            // Cadastro de nova moto via modal (POST)
+            res = await fetchComAuth(`${API_BASE}/admin/motos`, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+        }
 
         if (res.ok) {
-            alert('✅ Dados da moto atualizados com sucesso!');
+            alert(id ? '✅ Dados da moto atualizados com sucesso!' : '✅ Nova moto cadastrada no pátio com sucesso!');
             fecharModalMoto();
-            carregarMotosFrota();
+            if (typeof carregarMotosFrota === 'function') carregarMotosFrota();
         } else {
             let errorMsg = `Erro HTTP ${res.status}`;
             try {
@@ -311,7 +328,7 @@ export async function salvarEdicaoMoto(e) {
             alert(`❌ Erro ao salvar moto: ${errorMsg}`);
         }
     } catch (err) {
-        console.error('Erro ao salvar edição da moto:', err);
+        console.error('Erro ao salvar moto:', err);
         alert(`❌ Falha na conexão: ${err.message}`);
     }
 }

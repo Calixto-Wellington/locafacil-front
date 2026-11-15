@@ -42,7 +42,6 @@ export async function carregarMotosFrota() {
             const cor = item.cor || 'Preta';
             const km = item.km_atual ?? item.km ?? 0;
             const status = (item.status || 'DISPONIVEL').toUpperCase();
-            const componentes = item.componentes || item.manutencoes || [];
 
             let badgeStatus = status === 'DISPONIVEL'
                 ? '<span class="bg-green-100 text-green-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🟢 Disponível</span>'
@@ -92,9 +91,6 @@ export async function carregarMotosFrota() {
                             <div>Cor<br><b>${cor}</b></div>
                             <div>KM<br><b>${Number(km).toLocaleString('pt-BR')}</b></div>
                         </div>
-
-                        <!-- TELEMETRIA DE DESGASTE DE COMPONENTES -->
-                        ${renderizarBarrasDesgasteMotos(km, componentes, placa)}
                     </div>
 
                     <div class="space-y-2 pt-3 border-t mt-3">
@@ -241,7 +237,6 @@ export function abrirModalEditarMoto(motoIdOuObjeto) {
         item = motoIdOuObjeto;
     }
 
-    // Se não houver ID (ex: ao clicar no botão "Cadastrar Nova Moto" enviando `{}`), prepara os campos limpos para criar uma nova moto
     if (!id || id === 'undefined') {
         document.getElementById('edit-moto-id').value = '';
         document.getElementById('edit-moto-marca').value = '';
@@ -252,7 +247,6 @@ export function abrirModalEditarMoto(motoIdOuObjeto) {
         document.getElementById('edit-moto-km').value = 0;
         document.getElementById('edit-moto-status').value = 'DISPONIVEL';
     } else {
-        // Preenche os campos com os dados da moto selecionada
         const dados = item || {};
         document.getElementById('edit-moto-id').value = id;
         document.getElementById('edit-moto-marca').value = dados.marca || dados.marca_nome || '';
@@ -300,13 +294,11 @@ export async function salvarEdicaoMoto(e) {
     try {
         let res;
         if (id && id !== 'undefined') {
-            // Edição de moto existente (PUT)
             res = await fetchComAuth(`${API_BASE}/admin/motos/${encodeURIComponent(id)}`, {
                 method: 'PUT',
                 body: JSON.stringify(payload)
             });
         } else {
-            // Cadastro de nova moto via modal (POST)
             res = await fetchComAuth(`${API_BASE}/admin/motos`, {
                 method: 'POST',
                 body: JSON.stringify(payload)

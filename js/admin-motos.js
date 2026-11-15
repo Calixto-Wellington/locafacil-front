@@ -120,6 +120,7 @@ export async function carregarMotosFrota() {
 export async function salvarNovaMoto(e) {
     if (e) e.preventDefault();
 
+    // Captura os campos do formulário de NOVO CADASTRO
     const marca = document.getElementById('novo-moto-marca')?.value?.trim();
     const modelo = document.getElementById('novo-moto-modelo')?.value?.trim();
     const cor = document.getElementById('novo-moto-cor')?.value?.trim();
@@ -130,30 +131,25 @@ export async function salvarNovaMoto(e) {
     const imagem = document.getElementById('novo-moto-imagem')?.value?.trim() || '';
 
     if (!marca || !modelo || !placa) {
-        alert('⚠️ Marca, Modelo e Placa são campos obrigatórios!');
+        alert('⚠️ Marca, Modelo e Placa são obrigatórios para cadastrar uma nova moto!');
         return;
     }
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/motos`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ marca, modelo, cor, ano, placa, km_atual, status, imagem })
         });
 
         if (res.ok) {
             alert('✅ Moto cadastrada no pátio com sucesso!');
-            const form = e?.target || document.querySelector('form[onsubmit*="salvarNovaMoto"]');
+            const form = document.getElementById('form-nova-moto') || e?.target;
             if (form && typeof form.reset === 'function') form.reset();
             carregarMotosFrota();
         } else {
-            let errorMsg = `Erro HTTP ${res.status}`;
-            try {
-                const errData = await res.json();
-                errorMsg = errData.error || errorMsg;
-            } catch (_) {
-                errorMsg = `Falha no servidor (${res.status})`;
-            }
-            alert(`❌ Erro ao cadastrar moto: ${errorMsg}`);
+            const errData = await res.json().catch(() => ({}));
+            alert(`❌ Erro ao cadastrar moto: ${errData.error || 'Erro no servidor'}`);
         }
     } catch (err) {
         console.error('Erro de conexão ao cadastrar moto:', err);
@@ -272,43 +268,39 @@ export function fecharModalMoto() {
 export async function salvarEdicaoMoto(e) {
     if (e) e.preventDefault();
 
+    // Captura os campos do formulário de EDIÇÃO
     const idInput = document.getElementById('edit-moto-id');
     const id = idInput ? idInput.value.trim() : '';
 
     if (!id || id === 'undefined') {
-        alert("❌ Erro: O ID da moto está ausente. Feche e abra o modal de edição novamente.");
+        alert("❌ Erro: O ID da moto está ausente. Reabra o modal de edição.");
         return;
     }
 
     const payload = {
-        marca: document.getElementById('edit-moto-marca').value.trim(),
-        modelo: document.getElementById('edit-moto-modelo').value.trim(),
-        cor: document.getElementById('edit-moto-cor').value.trim(),
-        ano: parseInt(document.getElementById('edit-moto-ano').value, 10) || 2025,
-        placa: document.getElementById('edit-moto-placa').value.trim().toUpperCase(),
-        km_atual: parseInt(document.getElementById('edit-moto-km').value, 10) || 0,
-        status: document.getElementById('edit-moto-status').value
+        marca: document.getElementById('edit-moto-marca')?.value?.trim(),
+        modelo: document.getElementById('edit-moto-modelo')?.value?.trim(),
+        cor: document.getElementById('edit-moto-cor')?.value?.trim(),
+        ano: parseInt(document.getElementById('edit-moto-ano')?.value, 10) || 2025,
+        placa: document.getElementById('edit-moto-placa')?.value?.trim()?.toUpperCase(),
+        km_atual: parseInt(document.getElementById('edit-moto-km')?.value, 10) || 0,
+        status: document.getElementById('edit-moto-status')?.value || 'DISPONIVEL'
     };
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/motos/${encodeURIComponent(id)}`, {
             method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
         if (res.ok) {
-            alert('✅ Dados da moto atualizados com sucesso!');
+            alert('✅ Edição salva com sucesso!');
             fecharModalMoto();
             carregarMotosFrota();
         } else {
-            let errorMsg = `Erro HTTP ${res.status}`;
-            try {
-                const errData = await res.json();
-                errorMsg = errData.error || errorMsg;
-            } catch (_) {
-                errorMsg = `Erro no servidor (${res.status})`;
-            }
-            alert(`❌ Erro ao salvar moto: ${errorMsg}`);
+            const errData = await res.json().catch(() => ({}));
+            alert(`❌ Erro ao salvar edição: ${errData.error || 'Erro no servidor'}`);
         }
     } catch (err) {
         console.error('Erro ao salvar edição da moto:', err);

@@ -126,10 +126,10 @@ export async function salvarNovaMoto(e) {
     const placa = document.getElementById('novo-moto-placa')?.value?.trim()?.toUpperCase();
     const km_atual = parseInt(document.getElementById('novo-moto-km')?.value, 10) || 0;
     const status = document.getElementById('novo-moto-status')?.value || 'DISPONIVEL';
-    const imagem = document.getElementById('novo-moto-imagem')?.value?.trim();
+    const imagem = document.getElementById('novo-moto-imagem')?.value?.trim() || '';
 
     if (!marca || !modelo || !placa) {
-        alert('⚠️ Preencha os campos obrigatórios (Marca, Modelo e Placa).');
+        alert('⚠️ Marca, Modelo e Placa são campos obrigatórios!');
         return;
     }
 
@@ -141,15 +141,26 @@ export async function salvarNovaMoto(e) {
 
         if (res.ok) {
             alert('✅ Moto cadastrada no pátio com sucesso!');
-            if (e && e.target) e.target.reset();
-            carregarMotosFrota();
+            const form = e?.target || document.querySelector('form[onsubmit*="salvarNovaMoto"]');
+            if (form && typeof form.reset === 'function') {
+                form.reset();
+            }
+            if (typeof carregarMotosFrota === 'function') {
+                carregarMotosFrota();
+            }
         } else {
-            const errData = await res.json();
-            alert(`❌ Erro ao cadastrar moto: ${errData.error || 'Erro interno'}`);
+            let errorMsg = `Erro HTTP ${res.status}`;
+            try {
+                const errData = await res.json();
+                errorMsg = errData.error || errorMsg;
+            } catch (_) {
+                errorMsg = `Falha no servidor ao processar o cadastro (${res.status})`;
+            }
+            alert(`❌ Erro ao cadastrar moto: ${errorMsg}`);
         }
     } catch (err) {
-        console.error('Erro ao salvar nova moto:', err);
-        alert('❌ Erro de conexão.');
+        console.error('Erro de conexão ao salvar moto:', err);
+        alert(`❌ Falha de conexão: ${err.message}`);
     }
 }
 

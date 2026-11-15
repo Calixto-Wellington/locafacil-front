@@ -1,6 +1,5 @@
 // ======================================================
-// MÓDULO DE MOTOS, PÁTIO E TELEMETRIA DE MANUTENÇÃO
-// js/admin-motos.js
+// MÓDULO DE MOTOS, PÁTIO E OFICINA — js/admin-motos.js
 // ======================================================
 
 import { API_BASE } from './api.js';
@@ -20,90 +19,90 @@ export async function carregarMotosFrota() {
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/motos?_t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) {
-            throw new Error(`Erro HTTP ${res.status}`);
-        }
-        const data = await res.json();
-
-        if (loading) loading.style.display = 'none';
-
-        if (!data || data.length === 0) {
-            grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center text-gray-500 font-bold text-sm uppercase">Nenhuma moto cadastrada no pátio.</div>`;
+            if (loading) loading.style.display = 'none';
+            grid.innerHTML = `<div class="col-span-full bg-red-50 p-6 rounded-2xl text-center text-red-600 font-bold text-sm uppercase">Erro ao carregar lista de motos do servidor.</div>`;
             return;
         }
 
-        // Armazena no escopo global para permitir busca por ID no modal de edição
-        window.listaMotosGlobal = data;
+        const data = await res.json();
+        if (loading) loading.style.display = 'none';
+
+        if (!data || data.length === 0) {
+            grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center text-gray-500 font-bold text-sm uppercase shadow-sm">Nenhuma moto cadastrada no pátio.</div>`;
+            return;
+        }
 
         data.forEach(item => {
-            const id = item.id || item.id_moto || item.uuid || '';
             const marca = item.marca || item.marca_nome || 'N/A';
             const modelo = item.modelo || item.modelo_nome || 'SEM MODELO';
-            const placa = item.placa || item.placa_veiculo || 'S/ PLACA';
+            const placa = (item.placa || item.placa_veiculo || 'S/ PLACA').toUpperCase();
             const cor = item.cor || 'Preta';
+            const ano = item.ano || 2025;
             const km = item.km_atual ?? item.km ?? 0;
             const status = (item.status || 'DISPONIVEL').toUpperCase();
-            const componentes = item.componentes || item.manutencoes || [];
 
-            let badgeStatus = status === 'DISPONIVEL'
-                ? '<span class="bg-green-100 text-green-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🟢 Disponível</span>'
-                : status === 'ALUGADA'
-                ? '<span class="bg-blue-100 text-blue-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🔵 Alugada</span>'
-                : '<span class="bg-yellow-100 text-yellow-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase">🟡 Manutenção</span>';
+            const jsonSanitizado = JSON.stringify(item).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+            const placaSanitizada = placa.replace(/'/g, "\\'");
+
+            let badgeStatus = '';
+            if (status === 'DISPONIVEL') {
+                badgeStatus = '<span class="bg-green-100 text-green-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase border border-green-200">🟢 Disponível</span>';
+            } else if (status === 'ALUGADA') {
+                badgeStatus = '<span class="bg-blue-100 text-blue-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase border border-blue-200">🔵 Alugada</span>';
+            } else {
+                badgeStatus = '<span class="bg-yellow-100 text-yellow-800 text-[11px] font-black px-2.5 py-1 rounded-full uppercase border border-yellow-200">🟡 Manutenção</span>';
+            }
 
             let botoesAcao = '';
             if (status === 'DISPONIVEL') {
                 botoesAcao = `
                     <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="mudarStatusMoto('${id}', 'ALUGADA')" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-2 rounded-xl text-xs uppercase shadow transition">Alugar</button>
-                        <button type="button" onclick="mudarStatusMoto('${id}', 'MANUTENCAO')" class="bg-yellow-500 hover:bg-yellow-600 text-black font-black py-2 rounded-xl text-xs uppercase shadow transition">Oficina</button>
+                        <button type="button" onclick="mudarStatusMoto('${item.id}', 'ALUGADA')" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-2 rounded-xl text-xs uppercase shadow transition">Alugar</button>
+                        <button type="button" onclick="mudarStatusMoto('${item.id}', 'MANUTENCAO')" class="bg-yellow-500 hover:bg-yellow-600 text-black font-black py-2 rounded-xl text-xs uppercase shadow transition">Oficina</button>
                     </div>`;
             } else if (status === 'ALUGADA') {
                 botoesAcao = `
                     <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="mudarStatusMoto('${id}', 'DISPONIVEL')" class="bg-green-600 hover:bg-green-700 text-white font-black py-2 rounded-xl text-xs uppercase shadow transition">Pátio</button>
-                        <button type="button" onclick="mudarStatusMoto('${id}', 'MANUTENCAO')" class="bg-yellow-500 hover:bg-yellow-600 text-black font-black py-2 rounded-xl text-xs uppercase shadow transition">Oficina</button>
+                        <button type="button" onclick="mudarStatusMoto('${item.id}', 'DISPONIVEL')" class="bg-green-600 hover:bg-green-700 text-white font-black py-2 rounded-xl text-xs uppercase shadow transition">Pátio</button>
+                        <button type="button" onclick="mudarStatusMoto('${item.id}', 'MANUTENCAO')" class="bg-yellow-500 hover:bg-yellow-600 text-black font-black py-2 rounded-xl text-xs uppercase shadow transition">Oficina</button>
                     </div>`;
             } else {
                 botoesAcao = `
-                    <button type="button" onclick="mudarStatusMoto('${id}', 'DISPONIVEL')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-2 rounded-xl text-xs uppercase shadow transition">Liberar p/ Pátio</button>`;
+                    <button type="button" onclick="mudarStatusMoto('${item.id}', 'DISPONIVEL')" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-2 rounded-xl text-xs uppercase shadow transition">Liberar p/ Pátio</button>`;
             }
 
             const imgUrl = item.imagem_url || item.imagem || item.modelos_catalogo?.imagem_url;
             const imgHtml = imgUrl
-                ? `<img src="${imgUrl}" class="w-full h-44 object-cover rounded-xl mb-3 border">`
-                : `<div class="w-full h-44 bg-gray-100 rounded-xl mb-3 flex items-center justify-center text-gray-400 text-3xl">🏍️</div>`;
-
-            // Sanitiza JSON para injeção segura no evento inline
-            const jsonSanitizado = JSON.stringify(item).replace(/'/g, "&apos;");
-            const placaSanitizada = (placa || '').replace(/'/g, "\\'");
+                ? `<img src="${imgUrl}" class="w-full h-44 object-cover rounded-xl mb-3 border border-gray-200 shadow-inner">`
+                : `<div class="w-full h-44 bg-gray-100 rounded-xl mb-3 flex flex-col items-center justify-center text-gray-400 border border-dashed border-gray-300">
+                    <span class="text-3xl">🏍️</span>
+                    <span class="text-[10px] font-bold uppercase mt-1">Sem Imagem</span>
+                   </div>`;
 
             grid.innerHTML += `
-                <div class="bg-white rounded-2xl shadow-md border p-4 flex flex-col justify-between">
+                <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-4 flex flex-col justify-between hover:shadow-lg transition">
                     <div>
                         ${imgHtml}
                         <div class="flex justify-between items-start mb-2">
                             <div>
-                                <span class="text-[10px] font-black uppercase text-orange-600">${marca}</span>
-                                <h4 class="font-black text-gray-900 text-base uppercase">${modelo}</h4>
+                                <span class="text-[10px] font-black uppercase text-orange-600 tracking-wider">${marca} (${ano})</span>
+                                <h4 class="font-black text-gray-900 text-base uppercase leading-tight">${modelo}</h4>
                             </div>
                             ${badgeStatus}
                         </div>
 
-                        <div class="grid grid-cols-3 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl border mb-3 font-bold text-center">
-                            <div>Placa<br><b>${placa}</b></div>
-                            <div>Cor<br><b>${cor}</b></div>
-                            <div>KM<br><b>${Number(km).toLocaleString('pt-BR')}</b></div>
+                        <div class="grid grid-cols-3 gap-2 text-xs bg-gray-50 p-2.5 rounded-xl border border-gray-200 mb-3 font-bold text-center">
+                            <div><span class="text-gray-400 block text-[9px] uppercase">Placa</span><b class="text-gray-800">${placa}</b></div>
+                            <div><span class="text-gray-400 block text-[9px] uppercase">Cor</span><b class="text-gray-800">${cor}</b></div>
+                            <div><span class="text-gray-400 block text-[9px] uppercase">KM Atual</span><b class="text-orange-600">${Number(km).toLocaleString('pt-BR')}</b></div>
                         </div>
-
-                        <!-- TELEMETRIA DE DESGASTE DE COMPONENTES -->
-                        ${renderizarBarrasDesgasteMotos(km, componentes, placa)}
                     </div>
 
-                    <div class="space-y-2 pt-3 border-t mt-3">
+                    <div class="space-y-2 pt-2 border-t border-gray-100">
                         ${botoesAcao}
                         <div class="flex gap-2">
-                            <button type="button" onclick='abrirModalEditarMoto(${jsonSanitizado})' class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 rounded-lg text-xs uppercase font-bold transition">✏️ Editar Moto</button>
-                            <button type="button" onclick="excluirMoto('${id}', '${placaSanitizada}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-xs uppercase font-bold transition" title="Excluir moto">🗑️</button>
+                            <button type="button" onclick='abrirModalEditarMoto(${jsonSanitizado})' class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 rounded-lg text-xs uppercase font-bold transition">✏️ Editar</button>
+                            <button type="button" onclick="excluirMoto('${item.id}', '${placaSanitizada}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-xs uppercase font-bold transition" title="Excluir moto">🗑️</button>
                         </div>
                     </div>
                 </div>`;
@@ -120,7 +119,6 @@ export async function carregarMotosFrota() {
 export async function salvarNovaMoto(e) {
     if (e) e.preventDefault();
 
-    // Captura os campos do formulário de NOVO CADASTRO
     const marca = document.getElementById('novo-moto-marca')?.value?.trim();
     const modelo = document.getElementById('novo-moto-modelo')?.value?.trim();
     const cor = document.getElementById('novo-moto-cor')?.value?.trim();
@@ -131,29 +129,38 @@ export async function salvarNovaMoto(e) {
     const imagem = document.getElementById('novo-moto-imagem')?.value?.trim() || '';
 
     if (!marca || !modelo || !placa) {
-        alert('⚠️ Marca, Modelo e Placa são obrigatórios para cadastrar uma nova moto!');
+        alert('⚠️ Marca, Modelo e Placa são campos obrigatórios!');
         return;
     }
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/motos`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ marca, modelo, cor, ano, placa, km_atual, status, imagem })
         });
 
         if (res.ok) {
             alert('✅ Moto cadastrada no pátio com sucesso!');
-            const form = document.getElementById('form-nova-moto') || e?.target;
-            if (form && typeof form.reset === 'function') form.reset();
-            carregarMotosFrota();
+            const form = e?.target || document.querySelector('form[onsubmit*="salvarNovaMoto"]');
+            if (form && typeof form.reset === 'function') {
+                form.reset();
+            }
+            if (typeof carregarMotosFrota === 'function') {
+                carregarMotosFrota();
+            }
         } else {
-            const errData = await res.json().catch(() => ({}));
-            alert(`❌ Erro ao cadastrar moto: ${errData.error || 'Erro no servidor'}`);
+            let errorMsg = `Erro HTTP ${res.status}`;
+            try {
+                const errData = await res.json();
+                errorMsg = errData.error || errorMsg;
+            } catch (_) {
+                errorMsg = `Falha no servidor ao processar o cadastro (${res.status})`;
+            }
+            alert(`❌ Erro ao cadastrar moto: ${errorMsg}`);
         }
     } catch (err) {
-        console.error('Erro de conexão ao cadastrar moto:', err);
-        alert(`❌ Falha na conexão: ${err.message}`);
+        console.error('Erro de conexão ao salvar moto:', err);
+        alert(`❌ Falha de conexão: ${err.message}`);
     }
 }
 
@@ -161,13 +168,8 @@ export async function salvarNovaMoto(e) {
 // 3. ALTERAR STATUS DA MOTO (DISPONÍVEL / ALUGADA / MANUTENÇÃO)
 // ======================================================
 export async function mudarStatusMoto(id, status) {
-    if (!id || id === 'undefined') {
-        alert('❌ Erro: ID da moto não identificado.');
-        return;
-    }
-
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/motos/${encodeURIComponent(id)}/status`, {
+        const res = await fetchComAuth(`${API_BASE}/admin/motos/${id}/status`, {
             method: 'PATCH',
             body: JSON.stringify({ status })
         });
@@ -175,16 +177,11 @@ export async function mudarStatusMoto(id, status) {
         if (res.ok) {
             carregarMotosFrota();
         } else {
-            let errorMsg = `Erro HTTP ${res.status}`;
-            try {
-                const errData = await res.json();
-                errorMsg = errData.error || errorMsg;
-            } catch (_) {}
-            alert(`❌ Erro ao alterar status: ${errorMsg}`);
+            const errData = await res.json();
+            alert(`❌ Não foi possível alterar o status: ${errData.error || 'Erro interno'}`);
         }
     } catch (err) {
         console.error('Erro ao mudar status da moto:', err);
-        alert(`❌ Falha na conexão: ${err.message}`);
     }
 }
 
@@ -192,59 +189,31 @@ export async function mudarStatusMoto(id, status) {
 // 4. EXCLUIR MOTO DO PÁTIO
 // ======================================================
 export async function excluirMoto(id, placa) {
-    if (!id || id === 'undefined') {
-        alert('❌ Erro: ID da moto não identificado.');
-        return;
-    }
-
     if (!confirm(`Tem certeza que deseja excluir a moto de placa ${placa} do inventário?`)) return;
 
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/motos/${encodeURIComponent(id)}`, {
-            method: 'DELETE'
-        });
-
+        const res = await fetchComAuth(`${API_BASE}/admin/motos/${id}`, { method: 'DELETE' });
         if (res.ok) {
             alert(`✅ Moto placa ${placa} removida do pátio.`);
             carregarMotosFrota();
         } else {
-            let errorMsg = `Erro HTTP ${res.status}`;
-            try {
-                const errData = await res.json();
-                errorMsg = errData.error || errorMsg;
-            } catch (_) {}
-            alert(`❌ Erro ao excluir moto: ${errorMsg}`);
+            const errData = await res.json();
+            alert(`❌ Erro ao excluir moto: ${errData.error || 'Erro interno'}`);
         }
     } catch (err) {
         console.error('Erro ao excluir moto:', err);
-        alert(`❌ Falha na conexão: ${err.message}`);
+        alert('❌ Erro de conexão.');
     }
 }
 
 // ======================================================
 // 5. MODAL DE EDIÇÃO DE MOTO
 // ======================================================
-export function abrirModalEditarMoto(motoIdOuObjeto) {
+export function abrirModalEditarMoto(item) {
     const modal = document.getElementById('modal-editar-moto');
     if (!modal) return;
 
-    let id = '';
-    let item = {};
-
-    if (typeof motoIdOuObjeto === 'string') {
-        id = motoIdOuObjeto;
-        item = (window.listaMotosGlobal || []).find(m => (m.id || m.id_moto) === id) || {};
-    } else if (typeof motoIdOuObjeto === 'object' && motoIdOuObjeto !== null) {
-        item = motoIdOuObjeto;
-        id = item.id || item.id_moto || '';
-    }
-
-    if (!id || id === 'undefined') {
-        alert("❌ Erro: Não foi possível identificar o ID desta moto para edição.");
-        return;
-    }
-
-    document.getElementById('edit-moto-id').value = id;
+    document.getElementById('edit-moto-id').value = item.id || '';
     document.getElementById('edit-moto-marca').value = item.marca || item.marca_nome || '';
     document.getElementById('edit-moto-modelo').value = item.modelo || item.modelo_nome || '';
     document.getElementById('edit-moto-cor').value = item.cor || '';
@@ -254,144 +223,150 @@ export function abrirModalEditarMoto(motoIdOuObjeto) {
     document.getElementById('edit-moto-status').value = item.status || 'DISPONIVEL';
 
     modal.classList.remove('hidden');
-    if (modal.style.display === 'none') modal.style.display = 'flex';
+    modal.style.display = 'flex';
 }
 
 export function fecharModalMoto() {
     const modal = document.getElementById('modal-editar-moto');
     if (modal) {
         modal.classList.add('hidden');
-        if (modal.style.display !== 'none') modal.style.display = 'none';
+        modal.style.display = 'none';
     }
 }
 
 export async function salvarEdicaoMoto(e) {
     if (e) e.preventDefault();
 
-    // Captura os campos do formulário de EDIÇÃO
-    const idInput = document.getElementById('edit-moto-id');
-    const id = idInput ? idInput.value.trim() : '';
-
-    if (!id || id === 'undefined') {
-        alert("❌ Erro: O ID da moto está ausente. Reabra o modal de edição.");
-        return;
-    }
-
+    const id = document.getElementById('edit-moto-id').value;
     const payload = {
-        marca: document.getElementById('edit-moto-marca')?.value?.trim(),
-        modelo: document.getElementById('edit-moto-modelo')?.value?.trim(),
-        cor: document.getElementById('edit-moto-cor')?.value?.trim(),
-        ano: parseInt(document.getElementById('edit-moto-ano')?.value, 10) || 2025,
-        placa: document.getElementById('edit-moto-placa')?.value?.trim()?.toUpperCase(),
-        km_atual: parseInt(document.getElementById('edit-moto-km')?.value, 10) || 0,
-        status: document.getElementById('edit-moto-status')?.value || 'DISPONIVEL'
+        marca: document.getElementById('edit-moto-marca').value.trim(),
+        modelo: document.getElementById('edit-moto-modelo').value.trim(),
+        cor: document.getElementById('edit-moto-cor').value.trim(),
+        ano: parseInt(document.getElementById('edit-moto-ano').value, 10) || 2025,
+        placa: document.getElementById('edit-moto-placa').value.trim().toUpperCase(),
+        km_atual: parseInt(document.getElementById('edit-moto-km').value, 10) || 0,
+        status: document.getElementById('edit-moto-status').value
     };
 
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/motos/${encodeURIComponent(id)}`, {
+        const res = await fetchComAuth(`${API_BASE}/admin/motos/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
         if (res.ok) {
-            alert('✅ Edição salva com sucesso!');
+            alert('✅ Dados da moto atualizados com sucesso!');
             fecharModalMoto();
             carregarMotosFrota();
         } else {
-            const errData = await res.json().catch(() => ({}));
-            alert(`❌ Erro ao salvar edição: ${errData.error || 'Erro no servidor'}`);
+            const errData = await res.json();
+            alert(`❌ Erro ao salvar moto: ${errData.error || 'Erro interno'}`);
         }
     } catch (err) {
         console.error('Erro ao salvar edição da moto:', err);
-        alert(`❌ Falha na conexão: ${err.message}`);
+        alert('❌ Erro de conexão.');
     }
 }
 
 // ======================================================
-// 6. TELEMETRIA E BARRAS DE DESGASTE DE PEÇAS
+// 6. MANUTENÇÃO & TELEMETRIA DE PEÇAS DA OFICINA
 // ======================================================
+
 export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = [], placa = '') {
     const placaSanitizada = (placa || '').replace(/'/g, "\\'");
 
-    let html = `
-        <div class="mt-3 pt-3 border-t border-gray-100">
-            <div class="flex justify-between items-center mb-2">
-                <span class="text-[11px] font-black uppercase text-indigo-900 tracking-tight flex items-center gap-1">
-                    📊 Desgaste de Peças (Telemetria)
-                </span>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold text-gray-500 uppercase">KM: ${Number(kmAtual || 0).toLocaleString('pt-BR')}</span>
-                    <button type="button" onclick="abrirModalNovaPeca('${placaSanitizada}', ${kmAtual})" class="bg-orange-600 hover:bg-orange-700 text-white font-black text-xs px-2.5 py-1 rounded-lg uppercase transition shadow flex items-center gap-1" title="Cadastrar nova peça">
-                        ➕ Nova Peça
-                    </button>
-                </div>
-            </div>`;
+    let html = `<div class="bg-gray-50 border border-gray-200 rounded-xl p-3.5 space-y-3 mt-2 shadow-inner">
+        <div class="flex justify-between items-center pb-2 border-b border-gray-200">
+            <span class="text-xs font-black uppercase text-gray-800 tracking-wider flex items-center gap-1">
+                📊 Desgaste de Peças (Telemetria)
+            </span>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-orange-600 font-black">KM: ${Number(kmAtual).toLocaleString('pt-BR')}</span>
+                <button type="button" onclick="abrirModalNovaPeca('${placaSanitizada}', ${kmAtual})" class="bg-orange-600 hover:bg-orange-700 text-white font-black text-xs px-2.5 py-1 rounded-lg uppercase transition shadow flex items-center gap-1" title="Cadastrar nova peça">
+                    ➕ Nova Peça
+                </button>
+            </div>
+        </div>`;
 
     if (!componentesDoBanco || componentesDoBanco.length === 0) {
-        html += `<p class="text-[10px] text-gray-400 font-bold text-center py-2 bg-gray-50 rounded-lg">Nenhum componente cadastrado para telemetria.</p></div>`;
+        html += `<div class="text-xs text-gray-500 font-bold text-center py-2">
+            Nenhuma peça cadastrada. Clique em <b class="text-orange-600">+ Nova Peça</b> para incluir.
+        </div></div>`;
         return html;
     }
 
-    html += `<div class="space-y-2">`;
-
     componentesDoBanco.forEach(peca => {
-        const kmTroca = Number(peca.km_troca || peca.km_ultima_troca || 0);
-        const vidaUtil = Number(peca.vida_util_km || peca.intervalo_km || 10000);
-        const kmRodadosDesdeTroca = Math.max(0, kmAtual - kmTroca);
-        const pctDesgaste = Math.min(100, Math.round((kmRodadosDesdeTroca / vidaUtil) * 100));
+        const limite = peca.limite_km || 5000;
+        const kmTroca = peca.km_troca || 0;
+        const rodadoDesdeTroca = Math.max(0, kmAtual - kmTroca);
+        const pctUso = Math.min(100, Math.round((rodadoDesdeTroca / limite) * 100));
 
-        let corBarra = 'bg-green-500';
-        let statusTexto = `${pctDesgaste}% gasto (${Math.max(0, vidaUtil - kmRodadosDesdeTroca).toLocaleString('pt-BR')} km restantes)`;
-        let corTexto = 'text-green-700';
-
-        if (pctDesgaste >= 90) {
-            corBarra = 'bg-red-600';
-            statusTexto = `🚨 ${pctDesgaste}% gasto (URGENTE - Trocar agora!)`;
-            corTexto = 'text-red-700';
-        } else if (pctDesgaste >= 75) {
-            corBarra = 'bg-amber-500';
-            statusTexto = `⚠️ ${pctDesgaste}% gasto (Trocar em breve)`;
-            corTexto = 'text-amber-700';
+        let dataTrocaStr = '---';
+        if (peca.data_troca) {
+            const dt = new Date(peca.data_troca.includes('T') ? peca.data_troca : peca.data_troca + 'T00:00:00');
+            if (!isNaN(dt.getTime())) {
+                dataTrocaStr = dt.toLocaleDateString('pt-BR');
+            } else {
+                dataTrocaStr = peca.data_troca;
+            }
         }
 
-        const jsonPecaSanitizado = JSON.stringify(peca).replace(/'/g, "&apos;");
+        let corBarra = 'bg-green-500';
+        let statusTexto = 'OK';
+
+        if (pctUso >= 90) {
+            corBarra = 'bg-red-600 animate-pulse';
+            statusTexto = 'Trocar Urgente';
+        } else if (pctUso >= 75) {
+            corBarra = 'bg-yellow-500';
+            statusTexto = 'Trocar em Breve';
+        }
+
+        const nomeSanitizado = (peca.nome || peca.componente_id || 'Componente').replace(/'/g, "\\'");
         const pecaIdSanitizado = (peca.id || '').replace(/'/g, "\\'");
-        const nomeSanitizado = (peca.nome || peca.componente || 'Peça').replace(/'/g, "\\'");
+        const jsonPecaSanitizado = JSON.stringify(peca).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
 
         html += `
-            <div class="bg-gray-50 border border-gray-200 p-2 rounded-xl text-xs">
-                <div class="flex justify-between items-center mb-1">
-                    <span class="font-black text-gray-900 uppercase text-[11px]">${peca.nome || peca.componente || 'Peça'}</span>
-                    <span class="text-[10px] font-black ${corTexto}">${statusTexto}</span>
+            <div class="text-xs bg-white p-3 rounded-xl border border-gray-200 shadow-sm space-y-2">
+                <div class="flex justify-between items-center font-bold text-gray-800">
+                    <span class="font-black uppercase text-gray-900 text-xs">${peca.nome || peca.componente_id || 'Peça'}</span>
+                    <span class="text-xs ${pctUso >= 90 ? 'text-red-600 font-black' : pctUso >= 75 ? 'text-amber-600 font-black' : 'text-green-600 font-bold'}">
+                        ${pctUso}% (${statusTexto})
+                    </span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden mb-1.5">
-                    <div class="${corBarra} h-full rounded-full transition-all duration-500" style="width: ${pctDesgaste}%"></div>
+
+                <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden border border-gray-200 flex items-center">
+                    <div class="${corBarra} h-full rounded-full transition-all duration-500" style="width: ${pctUso}%"></div>
                 </div>
-                <div class="flex justify-between items-center text-[10px] text-gray-500 font-bold border-t pt-1 border-gray-100">
-                    <span>Troca: ${kmTroca.toLocaleString('pt-BR')} km</span>
-                    <div class="flex gap-2">
-                        <button type="button" onclick="resetarContadorPeca('${pecaIdSanitizado}', '${nomeSanitizado}', ${kmAtual})" class="text-green-700 hover:text-green-800 font-black flex items-center gap-0.5 hover:underline transition">
-                            🔄 Zerar (${Number(kmAtual).toLocaleString('pt-BR')} km)
-                        </button>
+
+                <div class="grid grid-cols-2 gap-1.5 text-xs font-semibold text-gray-600 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                    <div>📍 Trocado com: <b class="text-gray-900">${Number(kmTroca).toLocaleString('pt-BR')} km</b></div>
+                    <div>📅 Data: <b class="text-gray-900">${dataTrocaStr}</b></div>
+                    <div>⏱️ Rodado: <b class="text-orange-600">${Number(rodadoDesdeTroca).toLocaleString('pt-BR')} km</b></div>
+                    <div>🏁 Limite: <b class="text-gray-900">${Number(limite).toLocaleString('pt-BR')} km</b></div>
+                </div>
+
+                <div class="flex justify-between items-center text-xs font-bold pt-1 border-t border-gray-100">
+                    <button type="button" onclick="resetarContadorPeca('${pecaIdSanitizado}', '${nomeSanitizado}', ${kmAtual})" class="text-green-700 hover:text-green-800 font-black flex items-center gap-0.5 hover:underline transition">
+                        🔄 Zerar Troca
+                    </button>
+                    <div class="flex items-center gap-2">
                         <button type="button" onclick='abrirModalEditarPeca("${placaSanitizada}", ${jsonPecaSanitizado})' class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-0.5 hover:underline transition">
                             ✏️ Editar
                         </button>
                         <button type="button" onclick="excluirPeca('${pecaIdSanitizado}', '${nomeSanitizado}')" class="text-red-600 hover:text-red-800 font-bold flex items-center gap-0.5 hover:underline transition" title="Excluir peça">
-                            🗑️
+                            🗑️ Excluir
                         </button>
                     </div>
                 </div>
-            </div>`;
+            </div>
+        `;
     });
 
-    html += `</div></div>`;
+    html += `</div>`;
     return html;
 }
 
-// ======================================================
-// 7. MODAIS E MANUTENÇÃO DE COMPONENTES
-// ======================================================
 export function abrirModalNovaPeca(placa, kmAtual = 0) {
     const modal = document.getElementById('modal-peca');
     if (!modal) return;
@@ -399,17 +374,26 @@ export function abrirModalNovaPeca(placa, kmAtual = 0) {
     const elId = document.getElementById('edit-peca-id') || document.getElementById('peca-id');
     const elPlaca = document.getElementById('edit-peca-placa') || document.getElementById('peca-placa');
     const elNome = document.getElementById('edit-peca-nome') || document.getElementById('peca-nome');
+    const elLimite = document.getElementById('edit-peca-limite') || document.getElementById('peca-limite');
     const elKmTroca = document.getElementById('edit-peca-km-troca') || document.getElementById('peca-km-troca');
-    const elVidaUtil = document.getElementById('edit-peca-vida-util') || document.getElementById('peca-vida-util');
+    const elDataTroca = document.getElementById('edit-peca-data-troca') || document.getElementById('peca-data-troca');
+    const elTitulo = document.getElementById('modal-peca-titulo');
+    const elSub = document.getElementById('modal-peca-subtitulo');
 
     if (elId) elId.value = '';
     if (elPlaca) elPlaca.value = placa || '';
     if (elNome) elNome.value = '';
-    if (elKmTroca) elKmTroca.value = kmAtual || 0;
-    if (elVidaUtil) elVidaUtil.value = 10000;
+    if (elLimite) elLimite.value = '5000';
+    if (elKmTroca) elKmTroca.value = kmAtual || '0';
+
+    const hoje = new Date().toISOString().split('T');
+    if (elDataTroca) elDataTroca.value = hoje;
+
+    if (elTitulo) elTitulo.innerText = '➕ Cadastrar Nova Peça';
+    if (elSub) elSub.innerText = `Moto Placa: ${placa || 'Sem placa'}`;
 
     modal.classList.remove('hidden');
-    if (modal.style.display === 'none') modal.style.display = 'flex';
+    modal.style.display = 'flex';
 }
 
 export function abrirModalEditarPeca(placa, pecaObj) {
@@ -421,61 +405,88 @@ export function abrirModalEditarPeca(placa, pecaObj) {
     const elId = document.getElementById('edit-peca-id') || document.getElementById('peca-id');
     const elPlaca = document.getElementById('edit-peca-placa') || document.getElementById('peca-placa');
     const elNome = document.getElementById('edit-peca-nome') || document.getElementById('peca-nome');
+    const elLimite = document.getElementById('edit-peca-limite') || document.getElementById('peca-limite');
     const elKmTroca = document.getElementById('edit-peca-km-troca') || document.getElementById('peca-km-troca');
-    const elVidaUtil = document.getElementById('edit-peca-vida-util') || document.getElementById('peca-vida-util');
+    const elDataTroca = document.getElementById('edit-peca-data-troca') || document.getElementById('peca-data-troca');
+    const elTitulo = document.getElementById('modal-peca-titulo');
+    const elSub = document.getElementById('modal-peca-subtitulo');
 
     if (elId) elId.value = peca.id || '';
     if (elPlaca) elPlaca.value = placa || peca.placa || '';
-    if (elNome) elNome.value = peca.nome || peca.componente || '';
-    if (elKmTroca) elKmTroca.value = peca.km_troca || peca.km_ultima_troca || 0;
-    if (elVidaUtil) elVidaUtil.value = peca.vida_util_km || peca.intervalo_km || 10000;
+    if (elNome) elNome.value = peca.nome || peca.componente_id || '';
+    if (elLimite) elLimite.value = peca.limite_km || 5000;
+    if (elKmTroca) elKmTroca.value = peca.km_troca || 0;
+
+    let dataVal = peca.data_troca;
+    if (!dataVal && peca.created_at) {
+        dataVal = peca.created_at.split('T');
+    }
+    if (!dataVal) {
+        dataVal = new Date().toISOString().split('T');
+    } else if (dataVal.includes('T')) {
+        dataVal = dataVal.split('T');
+    }
+    if (elDataTroca) elDataTroca.value = dataVal;
+
+    if (elTitulo) elTitulo.innerText = '✏️ Editar Peça de Manutenção';
+    if (elSub) elSub.innerText = `Moto Placa: ${placa || peca.placa || 'Sem placa'}`;
 
     modal.classList.remove('hidden');
-    if (modal.style.display === 'none') modal.style.display = 'flex';
+    modal.style.display = 'flex';
 }
 
 export function fecharModalPeca() {
     const modal = document.getElementById('modal-peca');
     if (modal) {
         modal.classList.add('hidden');
-        if (modal.style.display !== 'none') modal.style.display = 'none';
+        modal.style.display = 'none';
     }
 }
 
 export async function salvarModalPeca(event) {
     if (event) event.preventDefault();
 
-    const id = (document.getElementById('edit-peca-id') || document.getElementById('peca-id'))?.value?.trim();
-    const placa = (document.getElementById('edit-peca-placa') || document.getElementById('peca-placa'))?.value?.trim().toUpperCase();
+    const id = (document.getElementById('edit-peca-id') || document.getElementById('peca-id'))?.value;
+    const placa = (document.getElementById('edit-peca-placa') || document.getElementById('peca-placa'))?.value;
     const nome = (document.getElementById('edit-peca-nome') || document.getElementById('peca-nome'))?.value?.trim();
-    const km_troca = parseInt((document.getElementById('edit-peca-km-troca') || document.getElementById('peca-km-troca'))?.value, 10) || 0;
-    const vida_util_km = parseInt((document.getElementById('edit-peca-vida-util') || document.getElementById('peca-vida-util'))?.value, 10) || 10000;
+    const limiteNum = parseInt((document.getElementById('edit-peca-limite') || document.getElementById('peca-limite'))?.value, 10) || 5000;
+    const kmTrocaNum = parseInt((document.getElementById('edit-peca-km-troca') || document.getElementById('peca-km-troca'))?.value, 10) || 0;
+    const dataTroca = (document.getElementById('edit-peca-data-troca') || document.getElementById('peca-data-troca'))?.value || new Date().toISOString().split('T');
 
-    if (!placa || !nome) {
-        alert("⚠️ Placa e Nome da peça são obrigatórios!");
+    if (!nome) {
+        alert('⚠️ Digite o nome do componente/peça.');
         return;
     }
 
-    const payload = { placa, nome, km_troca, vida_util_km };
-    const url = id
-        ? `${API_BASE}/admin/manutencao-componentes/${encodeURIComponent(id)}`
+    const url = id 
+        ? `${API_BASE}/admin/manutencao-componentes/${id}` 
         : `${API_BASE}/admin/manutencao-componentes`;
+    
     const metodo = id ? 'PUT' : 'POST';
 
     try {
         const res = await fetchComAuth(url, {
             method: metodo,
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                id: id || undefined,
+                placa,
+                nome,
+                componente_id: nome.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+                limite_km: limiteNum,
+                km_troca: kmTrocaNum,
+                data_troca: dataTroca
+            })
         });
 
         if (res.ok) {
-            alert(id ? "✅ Peça atualizada com sucesso!" : "✅ Nova peça cadastrada!");
+            alert(id ? '✅ Peça atualizada com sucesso!' : '✅ Nova peça cadastrada com sucesso!');
             fecharModalPeca();
-            if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
             if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
+            if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
         } else {
-            const errData = await res.json().catch(() => ({}));
-            alert(`❌ Erro ao salvar peça: ${errData.error || 'Erro no servidor'}`);
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const errData = isJson ? await res.json() : null;
+            alert(`❌ Erro ao salvar (${res.status}): ${errData?.error || 'Erro ao processar no servidor.'}`);
         }
     } catch (err) {
         console.error('Erro ao salvar peça:', err);
@@ -484,28 +495,26 @@ export async function salvarModalPeca(event) {
 }
 
 export async function excluirPeca(id, nomePeca = '') {
-    if (!id || id === 'undefined') {
-        alert("❌ Erro: ID da peça ausente.");
+    if (!id) {
+        alert('⚠️ ID da peça não informado.');
         return;
     }
-
-    if (!confirm(`Tem certeza que deseja excluir a peça "${nomePeca || 'selecionada'}" da telemetria?`)) {
-        return;
-    }
+    if (!confirm(`Tem certeza que deseja excluir a peça "${nomePeca || 'selecionada'}"?`)) return;
 
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/manutencao-componentes/${encodeURIComponent(id)}`, {
+        const res = await fetchComAuth(`${API_BASE}/admin/manutencao-componentes/${id}`, {
             method: 'DELETE'
         });
 
         if (res.ok) {
             alert(`✅ Peça "${nomePeca || 'removida'}" excluída com sucesso!`);
             fecharModalPeca();
-            if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
             if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
+            if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
         } else {
-            const errData = await res.json().catch(() => ({}));
-            alert(`❌ Erro ao excluir peça: ${errData.error || 'Erro no servidor'}`);
+            const isJson = res.headers.get('content-type')?.includes('application/json');
+            const errData = isJson ? await res.json() : null;
+            alert(`❌ Erro ao excluir componente: ${errData?.error || 'Erro no servidor'}`);
         }
     } catch (err) {
         console.error('Erro ao excluir peça:', err);
@@ -514,43 +523,32 @@ export async function excluirPeca(id, nomePeca = '') {
 }
 
 export async function resetarContadorPeca(componenteId, nomePeca, kmAtual) {
-    if (!componenteId || componenteId === 'undefined') {
-        alert("❌ Erro: ID da peça ausente.");
-        return;
-    }
-
-    if (!confirm(`Deseja registrar a TROCA da peça "${nomePeca}" no KM ${Number(kmAtual).toLocaleString('pt-BR')}? O contador de desgaste será zerado.`)) {
-        return;
-    }
-
     const dataHoje = new Date().toISOString().split('T');
+    if (!confirm(`Confirmar a substituição da peça "${nomePeca}" no KM ${Number(kmAtual).toLocaleString('pt-BR')} (Data: ${new Date().toLocaleDateString('pt-BR')})?`)) return;
 
     try {
-        const res = await fetchComAuth(`${API_BASE}/admin/manutencao-componentes/${encodeURIComponent(componenteId)}/reset`, {
+        const res = await fetchComAuth(`${API_BASE}/admin/manutencao-componentes/${componenteId}/reset`, {
             method: 'PATCH',
-            body: JSON.stringify({
+            body: JSON.stringify({ 
                 km_troca: kmAtual,
-                km_ultima_troca: kmAtual,
                 data_troca: dataHoje
             })
         });
 
         if (res.ok) {
             alert(`✅ Troca da peça "${nomePeca}" registrada no KM ${Number(kmAtual).toLocaleString('pt-BR')}. Contador zerado!`);
-            if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
             if (typeof window.carregarLocatarios === 'function') window.carregarLocatarios();
+            if (typeof window.carregarMotosFrota === 'function') window.carregarMotosFrota();
         } else {
             alert('❌ Erro ao zerar contador da peça.');
         }
     } catch (err) {
-        console.error('Erro ao resetar contador da peça:', err);
-        alert('❌ Erro de conexão ao zerar contador.');
+        console.error('Erro ao resetar peça:', err);
+        alert('❌ Erro de conexão.');
     }
 }
 
-// ======================================================
-// 8. EXPOSIÇÃO EXPLÍCITA NO WINDOW PARA EVENTOS INLINE DO HTML
-// ======================================================
+// VINCULAÇÃO GLOBAL NO WINDOW PARA SUPORTE AOS EVENTOS HTML
 window.carregarMotosFrota = carregarMotosFrota;
 window.salvarNovaMoto = salvarNovaMoto;
 window.mudarStatusMoto = mudarStatusMoto;
@@ -558,6 +556,7 @@ window.excluirMoto = excluirMoto;
 window.abrirModalEditarMoto = abrirModalEditarMoto;
 window.fecharModalMoto = fecharModalMoto;
 window.salvarEdicaoMoto = salvarEdicaoMoto;
+
 window.renderizarBarrasDesgasteMotos = renderizarBarrasDesgasteMotos;
 window.abrirModalNovaPeca = abrirModalNovaPeca;
 window.abrirModalEditarPeca = abrirModalEditarPeca;

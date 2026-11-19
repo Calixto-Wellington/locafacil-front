@@ -7,6 +7,21 @@ import { API_BASE } from './api.js';
 import { fetchComAuth } from './auth.js';
 
 // ======================================================
+// HELPER: OBTER LIMITE DE VIDA ÚTIL PADRÃO POR TIPO DE PEÇA
+// ======================================================
+export function obterVidaUtilPadrao(nomePeca = '') {
+    const nome = String(nomePeca).toLowerCase().trim();
+    if (nome.includes('óleo') || nome.includes('oleo')) return 1000;
+    if (nome.includes('pneu traseiro') || nome.includes('pneu tras')) return 8000;
+    if (nome.includes('pneu dianteiro') || nome.includes('pneu diant') || nome.includes('pneu')) return 10000;
+    if (nome.includes('relação') || nome.includes('relacao') || nome.includes('kit relação') || nome.includes('corrente')) return 10000;
+    if (nome.includes('freio') || nome.includes('lona') || nome.includes('pastilha')) return 10000;
+    if (nome.includes('filtro')) return 10000;
+    if (nome.includes('vela')) return 10000;
+    return 10000;
+}
+
+// ======================================================
 // 1. CARREGAR INVENTÁRIO DE MOTOS DO PÁTIO E FROTA
 // ======================================================
 export async function carregarMotosFrota() {
@@ -31,7 +46,6 @@ export async function carregarMotosFrota() {
             return;
         }
 
-        // Armazena no escopo global para permitir busca por ID no modal de edição
         window.listaMotosGlobal = data;
 
         data.forEach(item => {
@@ -109,7 +123,7 @@ export async function carregarMotosFrota() {
 }
 
 // ======================================================
-// 2. CADASTRAR NOVA MOTO NO PÁTIO (FORMULÁRIO INLINE)
+// 2. CADASTRAR NOVA MOTO NO PÁTIO
 // ======================================================
 export async function salvarNovaMoto(e) {
     if (e) e.preventDefault();
@@ -156,7 +170,7 @@ export async function salvarNovaMoto(e) {
 }
 
 // ======================================================
-// 3. ALTERAR STATUS DA MOTO (DISPONÍVEL / ALUGADA / MANUTENÇÃO)
+// 3. ALTERAR STATUS DA MOTO
 // ======================================================
 export async function mudarStatusMoto(id, status) {
     if (!id || id === 'undefined') {
@@ -353,8 +367,11 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
     html += `<div class="space-y-2">`;
 
     componentesDoBanco.forEach(peca => {
+        const nomePeca = peca.nome || peca.componente || peca.componente_id || 'Peça';
         const kmTroca = Number(peca.km_troca || peca.km_ultima_troca || 0);
-        const vidaUtil = Number(peca.vida_util_km || peca.intervalo_km || 10000);
+        
+        // Lê limite_km do banco ou vida_util_km / intervalo_km, com fallback inteligente por tipo de peça
+        const vidaUtil = Number(peca.limite_km || peca.vida_util_km || peca.intervalo_km) || obterVidaUtilPadrao(nomePeca);
         const kmRodadosDesdeTroca = Math.max(0, kmAtual - kmTroca);
         const pctDesgaste = Math.min(100, Math.round((kmRodadosDesdeTroca / vidaUtil) * 100));
 
@@ -374,19 +391,19 @@ export function renderizarBarrasDesgasteMotos(kmAtual = 0, componentesDoBanco = 
 
         const jsonPecaSanitizado = JSON.stringify(peca).replace(/'/g, "&apos;");
         const pecaIdSanitizado = (peca.id || '').replace(/'/g, "\\'");
-        const nomeSanitizado = (peca.nome || peca.componente || 'Peça').replace(/'/g, "\\'");
+        const nomeSanitizado = nomePeca.replace(/'/g, "\\'");
 
         html += `
             <div class="bg-gray-50 border border-gray-200 p-2 rounded-xl text-xs">
                 <div class="flex justify-between items-center mb-1">
-                    <span class="font-black text-gray-900 uppercase text-[11px]">${peca.nome || peca.componente || 'Peça'}</span>
+                    <span class="font-black text-gray-900 uppercase text-[11px]">${nomePeca}</span>
                     <span class="text-[10px] font-black ${corTexto}">${statusTexto}</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden mb-1.5">
                     <div class="${corBarra} h-full rounded-full transition-all duration-500" style="width: ${pctDesgaste}%"></div>
                 </div>
                 <div class="flex justify-between items-center text-[10px] text-gray-500 font-bold border-t pt-1 border-gray-100">
-                    <span>Troca: ${kmTroca.toLocaleString('pt-BR')} km</span>
+                    <span>Troca: ${kmTroca.toLocaleString('pt-BR')} km | Limite: ${vidaUtil.toLocaleString('pt-BR')} km</span>
                     <div class="flex gap-2">
                         <button type="button" onclick="resetarContadorPeca('${pecaIdSanitizado}', '${nomeSanitizado}', ${kmAtual})" class="text-green-700 hover:text-green-800 font-black flex items-center gap-0.5 hover:underline transition">
                             🔄 Zerar (${Number(kmAtual).toLocaleString('pt-BR')} km)
@@ -423,7 +440,13 @@ export function abrirModalNovaPeca(placa, kmAtual = 0) {
     if (elPlaca) elPlaca.value = placa || '';
     if (elNome) elNome.value = '';
     if (elKmTroca) elKmTroca.value = kmAtual || 0;
-    if (elVidaUtil) elVidaUtil.value = 10000;
+    if (elVidaUtil) elVidaUtil.value = 1000;
+
+    if (elNome && elVidaUtil) {
+        elNome.oninput = () => {
+            elVidaUtil.value = obterVidaUtilPadrao(elNome.value);
+        };
+    }
 
     modal.classList.remove('hidden');
     if (modal.style.display === 'none') modal.style.display = 'flex';
@@ -434,6 +457,8 @@ export function abrirModalEditarPeca(placa, pecaObj) {
     if (!modal) return;
 
     const peca = (typeof pecaObj === 'object' && pecaObj !== null) ? pecaObj : { id: pecaObj };
+    const nomePeca = peca.nome || peca.componente || peca.componente_id || '';
+    const limiteCalculado = Number(peca.limite_km || peca.vida_util_km || peca.intervalo_km) || obterVidaUtilPadrao(nomePeca);
 
     const elId = document.getElementById('edit-peca-id') || document.getElementById('peca-id');
     const elPlaca = document.getElementById('edit-peca-placa') || document.getElementById('peca-placa');
@@ -443,9 +468,15 @@ export function abrirModalEditarPeca(placa, pecaObj) {
 
     if (elId) elId.value = peca.id || '';
     if (elPlaca) elPlaca.value = placa || peca.placa || '';
-    if (elNome) elNome.value = peca.nome || peca.componente || '';
+    if (elNome) elNome.value = nomePeca;
     if (elKmTroca) elKmTroca.value = peca.km_troca || peca.km_ultima_troca || 0;
-    if (elVidaUtil) elVidaUtil.value = peca.vida_util_km || peca.intervalo_km || 10000;
+    if (elVidaUtil) elVidaUtil.value = limiteCalculado;
+
+    if (elNome && elVidaUtil) {
+        elNome.oninput = () => {
+            elVidaUtil.value = obterVidaUtilPadrao(elNome.value);
+        };
+    }
 
     modal.classList.remove('hidden');
     if (modal.style.display === 'none') modal.style.display = 'flex';
@@ -466,14 +497,22 @@ export async function salvarModalPeca(event) {
     const placa = (document.getElementById('edit-peca-placa') || document.getElementById('peca-placa'))?.value?.trim().toUpperCase();
     const nome = (document.getElementById('edit-peca-nome') || document.getElementById('peca-nome'))?.value?.trim();
     const km_troca = parseInt((document.getElementById('edit-peca-km-troca') || document.getElementById('peca-km-troca'))?.value, 10) || 0;
-    const vida_util_km = parseInt((document.getElementById('edit-peca-vida-util') || document.getElementById('peca-vida-util'))?.value, 10) || 10000;
+    const vida_util_km = parseInt((document.getElementById('edit-peca-vida-util') || document.getElementById('peca-vida-util'))?.value, 10) || obterVidaUtilPadrao(nome);
 
     if (!placa || !nome) {
         alert("⚠️ Placa e Nome da peça são obrigatórios!");
         return;
     }
 
-    const payload = { placa, nome, km_troca, vida_util_km };
+    const payload = { 
+        placa, 
+        nome, 
+        componente: nome,
+        km_troca, 
+        limite_km: vida_util_km, 
+        vida_util_km: vida_util_km 
+    };
+    
     const url = id
         ? `${API_BASE}/admin/manutencao-componentes/${encodeURIComponent(id)}`
         : `${API_BASE}/admin/manutencao-componentes`;
@@ -540,7 +579,7 @@ export async function resetarContadorPeca(componenteId, nomePeca, kmAtual) {
         return;
     }
 
-    const dataHoje = new Date().toISOString().split('T');
+    const dataHoje = new Date().toISOString().split('T')[0];
 
     try {
         const res = await fetchComAuth(`${API_BASE}/admin/manutencao-componentes/${encodeURIComponent(componenteId)}/reset`, {
@@ -568,6 +607,7 @@ export async function resetarContadorPeca(componenteId, nomePeca, kmAtual) {
 // ======================================================
 // 8. EXPOSIÇÃO EXPLÍCITA NO WINDOW PARA EVENTOS INLINE DO HTML
 // ======================================================
+window.obterVidaUtilPadrao = obterVidaUtilPadrao;
 window.carregarMotosFrota = carregarMotosFrota;
 window.salvarNovaMoto = salvarNovaMoto;
 window.mudarStatusMoto = mudarStatusMoto;
